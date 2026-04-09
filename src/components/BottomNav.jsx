@@ -9,8 +9,8 @@ const NAV_ITEMS = [
 
 export default function BottomNav() {
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-gray-200">
-      <div className="flex items-center justify-around px-2 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <nav className="sticky bottom-0 left-0 right-0 z-40 px-4 pb-4">
+      <div className="flex items-center justify-around px-2 pt-2 pb-2 bg-white/100 backdrop-md rounded-xl shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" style={{padding: 10}}>
         {NAV_ITEMS.map(({ icon: Icon, label, active }) => (
           <button
             key={label}

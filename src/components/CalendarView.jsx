@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockCalendarData } from '../data/mockData';
 
-const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DARK_GREEN = '#16a34a';
 
-function formatManwon(amount) {
+function formatAmount(amount) {
   if (amount === 0) return '';
   const man = amount / 10000;
   return man >= 1
@@ -12,13 +14,14 @@ function formatManwon(amount) {
     : `${(amount / 1000).toFixed(1)}천`;
 }
 
+// 월요일 시작 기준 해당 주의 날짜 배열
 function getWeekDates(baseDate) {
-  const day = baseDate.getDay(); // 0=일
-  const sunday = new Date(baseDate);
-  sunday.setDate(baseDate.getDate() - day);
+  const day = baseDate.getDay();
+  const monday = new Date(baseDate);
+  monday.setDate(baseDate.getDate() - ((day + 6) % 7));
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(sunday);
-    d.setDate(sunday.getDate() + i);
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
     return d;
   });
 }
@@ -33,14 +36,13 @@ export default function CalendarView() {
   const [currentMonth, setCurrentMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
-  const [selectedDate, setSelectedDate] = useState(today);
 
   const weekDates = getWeekDates(today);
 
-  // 월간 달력용 날짜 배열
+  // 월간 달력 날짜 배열 (월요일 시작)
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-  const startOffset = firstDay.getDay();
+  const startOffset = (firstDay.getDay() + 6) % 7;
   const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
   const monthDates = Array.from({ length: totalCells }, (_, i) => {
     const d = new Date(firstDay);
@@ -48,45 +50,42 @@ export default function CalendarView() {
     return d;
   });
 
-  const monthLabel = currentMonth.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-  });
-
   const renderCell = (date, isMonthView = false) => {
     const key = toKey(date);
     const amount = mockCalendarData[key] ?? 0;
-    const isToday = toKey(date) === toKey(today);
-    const isSelected = toKey(date) === toKey(selectedDate);
+    const isToday = key === toKey(today);
     const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
-    const isSun = date.getDay() === 0;
-    const isSat = date.getDay() === 6;
+    // M T W T F S S 순서: Mon=0 ... Sat=5, Sun=6
+    const dayIdx = (date.getDay() + 6) % 7;
+    const isSat = dayIdx === 5;
+    const isSun = dayIdx === 6;
+
+    const textColor = isToday
+      ? `text-[${DARK_GREEN}]`
+      : isSun
+      ? 'text-rose-400'
+      : isSat
+      ? 'text-sky-400'
+      : 'text-gray-700';
+
+    const circleBg = isToday
+      ? 'bg-[#2ECC71]/20 border border-[#16a34a]'
+      : amount > 0
+      ? 'bg-gray-100'
+      : '';
 
     return (
       <button
         key={key}
-        onClick={() => setSelectedDate(date)}
-        style={{ padding: '3px' }}
-        className={`
-          flex flex-col items-center justify-start rounded-xl transition-all
-          ${isSelected ? 'bg-[#2ECC71]/20 border border-[#2ECC71]/50' : 'hover:bg-gray-50'}
-          ${isMonthView && !isCurrentMonth ? 'opacity-20' : ''}
-        `}
+        onClick={() => {}}
+        className={`flex flex-col items-center justify-start py-1 rounded-xl transition-all ${isMonthView && !isCurrentMonth ? 'opacity-20' : ''}`}
       >
-        <span
-          className={`
-            w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold mb-0.5
-            ${isToday ? 'bg-[#2ECC71] text-white shadow-md shadow-[#2ECC71]/40' : ''}
-            ${!isToday && isSun ? 'text-rose-400' : ''}
-            ${!isToday && isSat ? 'text-sky-400' : ''}
-            ${!isToday && !isSun && !isSat ? 'text-gray-700' : ''}
-          `}
-        >
+        <span className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold mb-0.5 ${circleBg} ${textColor}`}>
           {date.getDate()}
         </span>
         {amount > 0 && (
-          <span className="text-[9px] font-semibold text-[#2ECC71] leading-none">
-            {formatManwon(amount)}
+          <span className="text-[9px] font-bold leading-none" style={{ color: DARK_GREEN }}>
+            {formatAmount(amount)}
           </span>
         )}
       </button>
@@ -94,78 +93,64 @@ export default function CalendarView() {
   };
 
   return (
-    <div className="mx-4 rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden" style={{ padding: '10px' }}>
-      {/* 헤더 */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-2">
-        {expanded ? (
-          <div className="flex items-center gap-2">
+    <div className="mx-4 flex flex-col gap-2">
+      {/* 헤더 — 카드 바깥 */}
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-base font-bold text-[#000000]">소비 캘린더</h3>
+        <div className="flex items-center gap-2">
+          {expanded && (
             <button
-              onClick={() =>
-                setCurrentMonth(
-                  new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-                )
-              }
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100"
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+              className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100"
             >
-              <ChevronLeft size={14} className="text-gray-400" />
+              <ChevronLeft size={13} className="text-gray-400" />
             </button>
-            <span className="text-sm font-bold text-gray-900">{monthLabel}</span>
-            <button
-              onClick={() =>
-                setCurrentMonth(
-                  new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-                )
-              }
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100"
-            >
-              <ChevronRight size={14} className="text-gray-400" />
-            </button>
-          </div>
-        ) : (
-          <span className="text-sm font-bold text-gray-900">
-            {today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}
-          </span>
-        )}
-
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <span>{expanded ? '주간' : '월간'}</span>
-          <ChevronDown
-            size={14}
-            className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-          />
-        </button>
-      </div>
-
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 px-3 mb-1" style={{ marginTop: '10px', marginBottom: '3px' }}>
-        {DAY_LABELS.map((d, i) => (
-          <span
-            key={d}
-            className={`text-center text-[10px] font-bold mb-1
-              ${i === 0 ? 'text-rose-400/60' : i === 6 ? 'text-sky-400/60' : 'text-gray-400'}
-            `}
+          )}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-0.5 text-sm font-bold"
+            style={{ color: DARK_GREEN }}
           >
-            {d}
-          </span>
-        ))}
+            {MONTHS[expanded ? currentMonth.getMonth() : today.getMonth()]}
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+              style={{ color: DARK_GREEN }}
+            />
+          </button>
+          {expanded && (
+            <button
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+              className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100"
+            >
+              <ChevronRight size={13} className="text-gray-400" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* 캘린더 본문 */}
-      <div className="px-3 pb-4">
-        {expanded ? (
-          // 월간 뷰
-          <div className="grid grid-cols-7 gap-0.5">
-            {monthDates.map((date) => renderCell(date, true))}
-          </div>
-        ) : (
-          // 주간 뷰
-          <div className="grid grid-cols-7 gap-0.5">
-            {weekDates.map((date) => renderCell(date))}
-          </div>
-        )}
+      {/* 캘린더 카드 */}
+      <div className="rounded-2xl bg-white border border-gray-100/50 shadow-md overflow-hidden px-3 pt-3 pb-4" style={{padding : 10}}>
+        {/* 요일 헤더 */}
+        <div className="grid grid-cols-7 mb-1">
+          {DAY_LABELS.map((d, i) => (
+            <span
+              key={i}
+              className={`text-center text-[10px] font-bold mb-1 ${
+                i === 5 ? 'text-sky-400/60' : i === 6 ? 'text-rose-400/60' : 'text-gray-400'
+              }`}
+            >
+              {d}
+            </span>
+          ))}
+        </div>
+
+        {/* 날짜 그리드 */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {expanded
+            ? monthDates.map((date) => renderCell(date, true))
+            : weekDates.map((date) => renderCell(date))}
+        </div>
       </div>
     </div>
   );

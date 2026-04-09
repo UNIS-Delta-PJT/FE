@@ -2,39 +2,39 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { mockTodayExpenses } from '../data/mockData';
 
-const CATEGORY_COLORS = {
-  카페: 'bg-amber-100 text-amber-600',
-  식비: 'bg-green-100 text-green-600',
-  교통: 'bg-sky-100 text-sky-600',
-  편의점: 'bg-orange-100 text-orange-600',
-  문화: 'bg-pink-100 text-pink-600',
-};
 
-function ExpenseRow({ item }) {
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatDate(date) {
+  return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
+}
+
+function formatTime(time) {
+  const [h, m] = time.split(':').map(Number);
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function ExpenseCard({ item }) {
   return (
-    <div className="flex items-center gap-3" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+    <div className="flex items-center gap-3 rounded-2xl bg-gray-100 border border-gray-100" style={{padding: 6}}>
       {/* 아이콘 */}
-      <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">
+      <div className="w-10 h-10 rounded-3xl bg-white flex items-center justify-center text-lg flex-shrink-0">
         {item.icon}
       </div>
 
-      {/* 소비처 + 카테고리 */}
+      {/* 소비처 + 카테고리 + 시간 */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{item.place}</p>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${CATEGORY_COLORS[item.category] ?? 'bg-gray-100 text-gray-500'}`}
-          >
-            {item.category}
-          </span>
-          <span className="text-[10px] text-gray-400">{item.time}</span>
-        </div>
+        <p className="text-[11px] text-gray-900 mt-0.5">
+          {item.category} · {formatTime(item.time)}
+        </p>
       </div>
 
       {/* 금액 */}
       <span className="text-sm font-black text-gray-900 flex-shrink-0">
-        -{item.amount.toLocaleString('ko-KR')}
-        <span className="text-xs font-normal text-gray-400 ml-0.5">원</span>
+        -{item.amount.toLocaleString('ko-KR')}원
       </span>
     </div>
   );
@@ -50,11 +50,11 @@ export default function TodayExpenses() {
   const totalToday = items.reduce((sum, i) => sum + i.amount, 0);
 
   return (
-    <div className="mx-4 rounded-2xl bg-gray-50 border border-gray-200" style={{ padding: '10px' }}>
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-2">
+    <div className="mx-4 flex flex-col gap-2">
+      {/* 헤더 — 카드 바깥 */}
+      <div className="flex items-center justify-between px-1">
         <div>
-          <h3 className="text-sm font-bold text-gray-900">오늘의 소비 내역</h3>
+          <h3 className="text-base font-bold text-[#000000]">오늘의 소비 내역</h3>
           <p className="text-[10px] text-gray-400 mt-0.5">
             총 {items.length}건 ·{' '}
             <span className="text-[#2ECC71] font-semibold">
@@ -63,34 +63,26 @@ export default function TodayExpenses() {
           </p>
         </div>
         <span className="text-xs text-gray-400">
-          {new Date().toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}
+          {formatDate(new Date())}
         </span>
       </div>
 
-      {/* 구분선 */}
-      <div className="h-px bg-gray-100 mb-1" />
-
-      {/* 소비 내역 목록 */}
-      <div className="divide-y divide-gray-100">
-        {visibleItems.map((item) => (
-          <ExpenseRow key={item.id} item={item} />
-        ))}
-      </div>
+      {/* 소비 내역 카드 목록 */}
+      {visibleItems.map((item) => (
+        <ExpenseCard key={item.id} item={item} />
+      ))}
 
       {/* 더보기 / 접기 버튼 */}
       {hasMore && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-2 flex items-center justify-center gap-1 text-xs text-[#2ECC71] font-semibold rounded-xl bg-[#2ECC71]/10 active:scale-95 transition-transform" style={{ paddingTop: '8px', paddingBottom: '8px' }}
+          className="w-full flex items-center justify-center gap-1 text-xs text-[#2ECC71] font-semibold rounded-xl bg-[#2ECC71]/10 active:scale-95 transition-transform"
+          style={{ paddingTop: '8px', paddingBottom: '8px' }}
         >
           {showAll ? (
-            <>
-              접기 <ChevronUp size={13} />
-            </>
+            <>접기 <ChevronUp size={13} /></>
           ) : (
-            <>
-              {items.length - PREVIEW_COUNT}개 더보기 <ChevronDown size={13} />
-            </>
+            <>{items.length - PREVIEW_COUNT}개 더보기 <ChevronDown size={13} /></>
           )}
         </button>
       )}
