@@ -7,9 +7,10 @@ import TodayExpenses from './components/TodayExpenses';
 import WeeklyGoal from './components/WeeklyGoal';
 import BottomNav from './components/BottomNav';
 import AIScanScreen from './components/AIScanScreen';
+import ScanResultScreen from './components/ScanResultScreen';
 
 export default function App() {
-  const [showAIScan, setShowAIScan] = useState(false);
+  const [screen, setScreen] = useState('home');
 
   return (
     <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', minHeight: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
@@ -18,15 +19,25 @@ export default function App() {
 
       {/* 스크롤 가능한 콘텐츠 영역 */}
       <div className="flex-1 overflow-y-auto pb-4">
-        {showAIScan ? (
-          <AIScanScreen onBack={() => setShowAIScan(false)} />
-        ) : (
+        {screen === 'aiScan' && (
+          <AIScanScreen
+            onBack={() => setScreen('home')}
+            onUpload={() => setScreen('result')}
+          />
+        )}
+        {screen === 'result' && (
+          <ScanResultScreen
+            onBack={() => setScreen('aiScan')}
+            onHome={() => setScreen('home')}
+          />
+        )}
+        {screen === 'home' && (
           <>
             <TopBar />
             <div className="flex flex-col gap-[25px]">
               <BudgetCard />
               <CalendarView />
-              <QuickActions onScan={() => setShowAIScan(true)} />
+              <QuickActions onScan={() => setScreen('aiScan')} />
               <TodayExpenses />
               <WeeklyGoal />
             </div>
@@ -35,7 +46,7 @@ export default function App() {
       </div>
 
       {/* 하단 고정 네비게이션 */}
-      {!showAIScan && <BottomNav />}
+      {screen === 'home' && <BottomNav />}
     </div>
   );
 }
