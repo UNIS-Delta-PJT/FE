@@ -8,7 +8,11 @@ import WeeklyGoal from './components/WeeklyGoal';
 import BottomNav from './components/BottomNav';
 import AIScanScreen from './components/AIScanScreen';
 import ScanResultScreen from './components/ScanResultScreen';
+import AIGuideScreen from './components/AIGuideScreen';
 import SplashScreen from './components/SplashScreen';
+import OnboardingScreen from './components/OnboardingScreen';
+import LoginScreen from './components/LoginScreen';
+import BudgetSetupScreen from './components/BudgetSetupScreen';
 import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
 
@@ -23,13 +27,25 @@ export default function App() {
       {/* 스크롤 가능한 콘텐츠 영역 */}
       <div className="flex-1 overflow-y-auto pb-4">
         {screen === 'splash' && (
-          <SplashScreen onDone={() => setScreen('mascotStatus')} />
+          <SplashScreen onDone={() => setScreen('onboarding')} />
+        )}
+        {screen === 'onboarding' && (
+          <OnboardingScreen onNext={() => setScreen('login')} />
+        )}
+        {screen === 'login' && (
+          <LoginScreen onLogin={() => setScreen('budgetSetup')} />
+        )}
+        {screen === 'budgetSetup' && (
+          <BudgetSetupScreen onComplete={() => setScreen('home')} />
         )}
         {screen === 'mascotStatus' && (
           <MascotStatusScreen onNext={() => setScreen('attendance')} />
         )}
         {screen === 'attendance' && (
           <AttendanceScreen onNext={() => setScreen('home')} />
+        )}
+        {screen === 'aiGuide' && (
+          <AIGuideScreen onBack={() => setScreen('home')} />
         )}
         {screen === 'aiScan' && (
           <AIScanScreen
@@ -51,7 +67,7 @@ export default function App() {
               <CalendarView />
               <QuickActions onScan={() => setScreen('aiScan')} />
               <TodayExpenses />
-              <WeeklyGoal />
+              <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
             </div>
           </>
         )}
