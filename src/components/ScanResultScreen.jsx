@@ -8,7 +8,7 @@ const mockResults = [
 
 function ResultCard({ merchant, icon, amount, category }) {
   return (
-    <div className="w-[85%] self-center rounded-3xl bg-[#FFFFFF] border border-gray-100 flex flex-col gap-3" style={{ padding: '15px' }}>
+    <div className="w-[85%] self-center rounded-3xl bg-[#FFFFFF] border border-gray-100 flex flex-col gap-3 shadow-sm" style={{ padding: '15px' }}>
       <div className="flex items-center gap-3">
         <div className="w-14 h-14 rounded-4xl bg-gray-200 flex items-center justify-center text-3xl shadow-sm flex-shrink-0">
           {icon}

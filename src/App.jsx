@@ -8,9 +8,12 @@ import WeeklyGoal from './components/WeeklyGoal';
 import BottomNav from './components/BottomNav';
 import AIScanScreen from './components/AIScanScreen';
 import ScanResultScreen from './components/ScanResultScreen';
+import SplashScreen from './components/SplashScreen';
+import MascotStatusScreen from './components/MascotStatusScreen';
+import AttendanceScreen from './components/AttendanceScreen';
 
 export default function App() {
-  const [screen, setScreen] = useState('home');
+  const [screen, setScreen] = useState('splash');
 
   return (
     <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', minHeight: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
@@ -19,6 +22,15 @@ export default function App() {
 
       {/* 스크롤 가능한 콘텐츠 영역 */}
       <div className="flex-1 overflow-y-auto pb-4">
+        {screen === 'splash' && (
+          <SplashScreen onDone={() => setScreen('mascotStatus')} />
+        )}
+        {screen === 'mascotStatus' && (
+          <MascotStatusScreen onNext={() => setScreen('attendance')} />
+        )}
+        {screen === 'attendance' && (
+          <AttendanceScreen onNext={() => setScreen('home')} />
+        )}
         {screen === 'aiScan' && (
           <AIScanScreen
             onBack={() => setScreen('home')}
