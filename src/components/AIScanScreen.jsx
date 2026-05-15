@@ -95,18 +95,18 @@ export default function AIScanScreen({ onBack, onUpload }) {
       </button>
 
       {/* 가이드라인 */}
-      <div className="flex flex-col gap-2 w-[85%] self-center">
+      <div className="flex flex-col gap-3 w-[85%] self-center">
         {steps.map(({ num, text, icon }) => (
           <div
             key={num}
-            className="flex items-center gap-3 rounded-4xl bg-gray-100 border border-gray-100"
+            className="flex items-center gap-2 rounded-4xl bg-gray-100 border border-gray-100"
             style={{ padding: 8 }}
           >
-            <div className="w-8 h-8 rounded-4xl bg-gray-300 flex items-center justify-center font-bold text-white flex-shrink-0">
+            <div className="w-7 h-7 rounded-4xl bg-gray-300 flex items-center justify-center font-bold text-white flex-shrink-0">
               {num}
             </div>
-            <p className="flex-1 text-sm font-semibold text-gray-900">{text}</p>
-            <div className="w-10 h-10 rounded-4xl flex items-center justify-center flex-shrink-0">
+            <p className="flex-1 font-semibold text-gray-900" style={{ fontSize: '13px' }}>{text}</p>
+            <div className="w-7 h-7 rounded-4xl flex items-center justify-center flex-shrink-0">
               {icon}
             </div>
           </div>
