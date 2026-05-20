@@ -1,9 +1,9 @@
 import { mockBudget } from '../data/mockData';
 
 export default function BudgetCard() {
-  const { total, spent } = mockBudget;
-  const remaining = total - spent;
-  const percent = Math.round((spent / total) * 100);
+  const { total_amount, spent } = mockBudget;
+  const remaining = total_amount - spent;
+  const percent = Math.round((spent / total_amount) * 100);
 
   const formatKRW = (n) => n.toLocaleString('ko-KR');
 
@@ -64,7 +64,7 @@ export default function BudgetCard() {
           <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
           <span className="text-xs text-gray-400">예산</span>
           <span className="text-xs font-bold text-gray-600">
-            {formatKRW(total)}원
+            {formatKRW(total_amount)}원
           </span>
         </div>
       </div>

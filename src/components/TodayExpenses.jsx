@@ -28,7 +28,7 @@ function ExpenseCard({ item }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{item.place}</p>
         <p className="text-[11px] text-gray-900 mt-0.5">
-          {item.category} · {formatTime(item.time)}
+          {item.name} · {formatTime(item.expense_date)}
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export default function TodayExpenses() {
 
       {/* 소비 내역 카드 목록 */}
       {visibleItems.map((item) => (
-        <ExpenseCard key={item.id} item={item} />
+        <ExpenseCard key={item.expense_id} item={item} />
       ))}
 
       {/* 더보기 / 접기 버튼 */}

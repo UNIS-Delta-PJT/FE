@@ -1,12 +1,12 @@
 import { ArrowLeft, CheckCircle, Utensils } from 'lucide-react';
 
 const mockResults = [
-  { id: 1, merchant: '스타벅스', icon: '☕', amount: 8500, category: '식비' },
-  { id: 2, merchant: '올리브영', icon: '🛍️', amount: 23000, category: '쇼핑' },
-  { id: 3, merchant: '지하철', icon: '🚇', amount: 1400, category: '교통' },
+  { expense_id: 1, merchant: '스타벅스', icon: '☕', amount: 8500, name: '식비' },
+  { expense_id: 2, merchant: '올리브영', icon: '🛍️', amount: 23000, name: '쇼핑' },
+  { expense_id: 3, merchant: '지하철', icon: '🚇', amount: 1400, name: '교통' },
 ];
 
-function ResultCard({ merchant, icon, amount, category }) {
+function ResultCard({ merchant, icon, amount, name }) {
   return (
     <div className="w-[85%] self-center rounded-3xl bg-[#FFFFFF] border border-gray-100 flex flex-col gap-3 shadow-sm" style={{ padding: '15px' }}>
       <div className="flex items-center gap-3">
@@ -32,7 +32,7 @@ function ResultCard({ merchant, icon, amount, category }) {
           <p style={{ fontSize: '12px' }} className="text-gray-400 mb-1">카테고리</p>
           <div className="flex items-center gap-1.5 bg-gray-200 rounded-full w-fit h-6" style={{ paddingLeft: '8px', paddingRight: '8px' }}>
             <Utensils size={12} className="text-gray/800" />
-            <span className="text-xs font-semibold text-gray/800">{category}</span>
+            <span className="text-xs font-semibold text-gray/800">{name}</span>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function ScanResultScreen({ onBack, onHome }) {
 
       {/* 스캔 결과 카드 목록 */}
       {mockResults.map((result) => (
-        <ResultCard key={result.id} {...result} />
+        <ResultCard key={result.expense_id} {...result} />
       ))}
 
       <div style={{ height: '100px', flexShrink: 0 }} />

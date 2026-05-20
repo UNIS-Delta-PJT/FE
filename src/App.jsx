@@ -19,13 +19,18 @@ import AttendanceScreen from './components/AttendanceScreen';
 export default function App() {
   const [screen, setScreen] = useState('splash');
 
+  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
+
   return (
-    <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', minHeight: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
+    <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', height: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
       {/* 배경 그라데이션 장식 */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#2ECC71]/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* 스크롤 가능한 콘텐츠 영역 */}
-      <div className="flex-1 overflow-y-auto pb-4">
+      {/* 헤더 고정 */}
+      {screen === 'home' && <TopBar />}
+
+      {/* 콘텐츠 영역 */}
+      <div className={`flex-1 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'} pb-4`}>
         {screen === 'splash' && (
           <SplashScreen onDone={() => setScreen('onboarding')} />
         )}
@@ -60,16 +65,13 @@ export default function App() {
           />
         )}
         {screen === 'home' && (
-          <>
-            <TopBar />
-            <div className="flex flex-col gap-[25px]">
-              <BudgetCard />
-              <CalendarView />
-              <QuickActions onScan={() => setScreen('aiScan')} />
-              <TodayExpenses />
-              <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
-            </div>
-          </>
+          <div className="flex flex-col gap-[25px]">
+            <BudgetCard />
+            <CalendarView />
+            <QuickActions onScan={() => setScreen('aiScan')} />
+            <TodayExpenses />
+            <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
+          </div>
         )}
       </div>
 

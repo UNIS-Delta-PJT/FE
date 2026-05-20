@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 // 목업 데이터 — 추후 백엔드 연동
-const mockBudget = { total: 500000, used: 325000 };
+const mockBudget = { total_amount: 500000, used: 325000 };
 const mockCategories = [
-  { name: '식비',     icon: '🍽️', budget: 150000, used: 98000 },
-  { name: '교통',     icon: '🚇', budget: 50000,  used: 42000 },
-  { name: '문화/여가', icon: '🎭', budget: 100000, used: 35000 },
-  { name: '기타',     icon: '📦', budget: 50000,  used: 28000 },
+  { name: '식비',     icon: '🍽️', amount: 150000, used: 98000 },
+  { name: '교통',     icon: '🚇', amount: 50000,  used: 42000 },
+  { name: '문화/여가', icon: '🎭', amount: 100000, used: 35000 },
+  { name: '기타',     icon: '📦', amount: 50000,  used: 28000 },
 ];
 const mockPatterns = [
   '최근 3일 연속 식비가 일일 평균을 초과했어요',
@@ -60,7 +60,7 @@ function UsageBar({ ratio, warn }) {
 export default function AIGuideScreen({ onBack }) {
   const [selectedId, setSelectedId] = useState(null);
 
-  const totalRatio = mockBudget.used / mockBudget.total;
+  const totalRatio = mockBudget.used / mockBudget.total_amount;
 
   return (
     <div className="flex flex-col px-5 pt-4 pb-32 gap-6">
@@ -85,7 +85,7 @@ export default function AIGuideScreen({ onBack }) {
           <div className="flex justify-between items-center mb-1">
             <p className="text-sm font-bold text-gray-900">전체 예산 사용률</p>
             <p className="text-xs text-gray-400">
-              ₩{mockBudget.used.toLocaleString('ko-KR')} / ₩{mockBudget.total.toLocaleString('ko-KR')}
+              ₩{mockBudget.used.toLocaleString('ko-KR')} / ₩{mockBudget.total_amount.toLocaleString('ko-KR')}
             </p>
           </div>
           <UsageBar ratio={totalRatio} warn={totalRatio >= 0.8} />
@@ -94,8 +94,8 @@ export default function AIGuideScreen({ onBack }) {
         {/* 카테고리별 소비 비율 */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col gap-3">
           <p className="text-sm font-bold text-gray-900 mb-1">카테고리별 소비 비율</p>
-          {mockCategories.map(({ name, icon, budget, used }) => {
-            const ratio = used / budget;
+          {mockCategories.map(({ name, icon, amount, used }) => {
+            const ratio = used / amount;
             const warn = ratio >= 0.8;
             return (
               <div key={name} className="flex flex-col gap-1">
@@ -105,7 +105,7 @@ export default function AIGuideScreen({ onBack }) {
                     <span className="text-xs font-semibold text-gray-700">{name}</span>
                   </div>
                   <span className="text-xs text-gray-400">
-                    ₩{used.toLocaleString('ko-KR')} / ₩{budget.toLocaleString('ko-KR')}
+                    ₩{used.toLocaleString('ko-KR')} / ₩{amount.toLocaleString('ko-KR')}
                   </span>
                 </div>
                 <UsageBar ratio={ratio} warn={warn} />

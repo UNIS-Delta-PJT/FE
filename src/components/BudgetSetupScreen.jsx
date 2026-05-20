@@ -2,33 +2,33 @@ import { useState } from 'react';
 import { Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
 
 const DEFAULT_CATEGORIES = [
-  { id: 1, name: '식비', icon: '🍽️', amount: '' },
-  { id: 2, name: '교통', icon: '🚇', amount: '' },
-  { id: 3, name: '문화/여가', icon: '🎭', amount: '' },
-  { id: 4, name: '기타', icon: '📦', amount: '' },
+  { category_id: 1, name: '식비', icon: '🍽️', amount: '' },
+  { category_id: 2, name: '교통', icon: '🚇', amount: '' },
+  { category_id: 3, name: '문화/여가', icon: '🎭', amount: '' },
+  { category_id: 4, name: '기타', icon: '📦', amount: '' },
 ];
 
 export default function BudgetSetupScreen({ onComplete }) {
-  const [totalBudget, setTotalBudget] = useState('');
+  const [total_amount, setTotalAmount] = useState('');
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   const totalCategorySum = categories.reduce((sum, cat) => sum + (parseInt(cat.amount) || 0), 0);
-  const parsedTotal = parseInt(totalBudget) || 0;
+  const parsedTotal = parseInt(total_amount) || 0;
   const isOverBudget = parsedTotal > 0 && totalCategorySum > parsedTotal;
   const canComplete = parsedTotal > 0 && !isOverBudget;
 
-  function handleAmountChange(id, value) {
+  function handleAmountChange(category_id, value) {
     const numeric = value.replace(/[^0-9]/g, '');
-    setCategories(prev => prev.map(cat => cat.id === id ? { ...cat, amount: numeric } : cat));
+    setCategories(prev => prev.map(cat => cat.category_id === category_id ? { ...cat, amount: numeric } : cat));
   }
 
   function handleAddCategory() {
     if (!newCategoryName.trim()) return;
     setCategories(prev => [...prev, {
-      id: Date.now(),
+      category_id: Date.now(),
       name: newCategoryName.trim(),
       icon: '📌',
       amount: '',
@@ -37,13 +37,13 @@ export default function BudgetSetupScreen({ onComplete }) {
     setShowAddInput(false);
   }
 
-  function handleDeleteCategory(id) {
-    setCategories(prev => prev.filter(cat => cat.id !== id));
+  function handleDeleteCategory(category_id) {
+    setCategories(prev => prev.filter(cat => cat.category_id !== category_id));
   }
 
-  function handleRenameCategory(id, name) {
+  function handleRenameCategory(category_id, name) {
     if (!name.trim()) return;
-    setCategories(prev => prev.map(cat => cat.id === id ? { ...cat, name: name.trim() } : cat));
+    setCategories(prev => prev.map(cat => cat.category_id === category_id ? { ...cat, name: name.trim() } : cat));
     setEditingId(null);
   }
 
@@ -64,8 +64,8 @@ export default function BudgetSetupScreen({ onComplete }) {
           <input
             type="number"
             placeholder="0"
-            value={totalBudget}
-            onChange={e => setTotalBudget(e.target.value.replace(/[^0-9]/g, ''))}
+            value={total_amount}
+            onChange={e => setTotalAmount(e.target.value.replace(/[^0-9]/g, ''))}
             className="flex-1 bg-transparent text-2xl font-black text-gray-900 outline-none"
           />
         </div>
@@ -79,16 +79,16 @@ export default function BudgetSetupScreen({ onComplete }) {
       {/* 카테고리 목록 */}
       <div className="flex flex-col gap-3 mb-3">
         {categories.map(cat => (
-          <div key={cat.id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+          <div key={cat.category_id} className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
             <span style={{ fontSize: '20px' }}>{cat.icon}</span>
-            {cat.id > 4 && editingId === cat.id ? (
+            {cat.category_id > 4 && editingId === cat.category_id ? (
               <input
                 autoFocus
                 type="text"
                 defaultValue={cat.name}
-                onBlur={e => handleRenameCategory(cat.id, e.target.value)}
+                onBlur={e => handleRenameCategory(cat.category_id, e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === 'Enter') handleRenameCategory(cat.id, e.target.value);
+                  if (e.key === 'Enter') handleRenameCategory(cat.category_id, e.target.value);
                   if (e.key === 'Escape') setEditingId(null);
                 }}
                 className="flex-1 text-gray-900 font-semibold text-sm outline-none border-b border-[#2ECC71] bg-transparent"
@@ -102,16 +102,16 @@ export default function BudgetSetupScreen({ onComplete }) {
                 type="number"
                 placeholder="0"
                 value={cat.amount}
-                onChange={e => handleAmountChange(cat.id, e.target.value)}
+                onChange={e => handleAmountChange(cat.category_id, e.target.value)}
                 className="w-24 text-right text-gray-900 font-bold text-sm outline-none bg-transparent"
               />
             </div>
-            {cat.id > 4 && (
+            {cat.category_id > 4 && (
               <div className="flex items-center gap-2 ml-1">
-                <button onClick={() => setEditingId(cat.id)}>
+                <button onClick={() => setEditingId(cat.category_id)}>
                   <Pencil size={13} className="text-gray-300" />
                 </button>
-                <button onClick={() => handleDeleteCategory(cat.id)}>
+                <button onClick={() => handleDeleteCategory(cat.category_id)}>
                   <Trash2 size={13} className="text-gray-300" />
                 </button>
               </div>

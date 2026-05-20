@@ -1,6 +1,6 @@
 // 목 데이터
 export const mockBudget = {
-  total: 500000,
+  total_amount: 500000,
   spent: 187400,
 };
 
@@ -18,57 +18,57 @@ export const mockCalendarData = {
 
 export const mockTodayExpenses = [
   {
-    id: 1,
+    expense_id: 1,
     icon: '☕',
     place: '스타벅스',
-    category: '카페',
-    time: '08:32',
+    name: '카페',
+    expense_date: '08:32',
     amount: 6500,
   },
   {
-    id: 2,
+    expense_id: 2,
     icon: '🍱',
     place: '한솥도시락',
-    category: '식비',
-    time: '12:15',
+    name: '식비',
+    expense_date: '12:15',
     amount: 7900,
   },
   {
-    id: 3,
+    expense_id: 3,
     icon: '🚌',
     place: '교통카드',
-    category: '교통',
-    time: '18:04',
+    name: '교통',
+    expense_date: '18:04',
     amount: 1400,
   },
   {
-    id: 4,
+    expense_id: 4,
     icon: '🛒',
     place: 'GS25',
-    category: '편의점',
-    time: '20:30',
+    name: '편의점',
+    expense_date: '20:30',
     amount: 4800,
   },
   {
-    id: 5,
+    expense_id: 5,
     icon: '🎬',
     place: 'CGV',
-    category: '문화',
-    time: '21:00',
+    name: '문화',
+    expense_date: '21:00',
     amount: 12000,
   },
 ];
 
 export const mockWeeklyGoal = {
-  goal: 150000,
+  total_amount: 150000,
   spent: 98300,
   daysLeft: 4,
 };
 
 export const mockWeeklyGoals = [
-  { label: '이번 주', goal: 150000, spent: 98300, daysLeft: 4 },
-  { label: '지난 주', goal: 150000, spent: 162000, daysLeft: 0 },
-  { label: '이번 달', goal: 600000, spent: 312500, daysLeft: 22 },
+  { label: '이번 주', total_amount: 150000, spent: 98300, daysLeft: 4 },
+  { label: '지난 주', total_amount: 150000, spent: 162000, daysLeft: 0 },
+  { label: '이번 달', total_amount: 600000, spent: 312500, daysLeft: 22 },
 ];
 
 export const mockAttendance = {
