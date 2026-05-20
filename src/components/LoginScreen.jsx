@@ -1,7 +1,7 @@
 export default function LoginScreen({ onLogin }) {
   return (
     <div
-      className="flex flex-col items-center justify-center px-8 gap-6 overflow-hidden"
+      className="flex flex-col items-center justify-center px-8 gap-6 overflow-hidden bg-white"
       style={{ height: '100vh' }}
     >
       {/* 로고 */}

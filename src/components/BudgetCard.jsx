@@ -1,9 +1,10 @@
 import { mockBudget } from '../data/mockData';
 
-export default function BudgetCard() {
-  const { total_amount, spent } = mockBudget;
+export default function BudgetCard({ totalAmount, spent = 0 }) {
+  const { total_amount: defaultTotal } = mockBudget;
+  const total_amount = totalAmount ?? defaultTotal;
   const remaining = total_amount - spent;
-  const percent = Math.round((spent / total_amount) * 100);
+  const percent = total_amount > 0 ? Math.round((spent / total_amount) * 100) : 0;
 
   const formatKRW = (n) => n.toLocaleString('ko-KR');
 

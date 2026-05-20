@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { mockTodayExpenses } from './data/mockData';
 import TopBar from './components/TopBar';
 import BudgetCard from './components/BudgetCard';
 import CalendarView from './components/CalendarView';
@@ -13,13 +14,22 @@ import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import LoginScreen from './components/LoginScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
+import IncomeSetupScreen from './components/IncomeSetupScreen';
 import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
+  const [budgetTotal, setBudgetTotal] = useState(null);
+  const [expenses, setExpenses] = useState(mockTodayExpenses);
 
-  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
+  const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+
+  function addExpenses(newExpenses) {
+    setExpenses(prev => [...prev, ...newExpenses]);
+  }
+
+  const scrollable = ['home', 'incomeSetup', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
 
   return (
     <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', height: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
@@ -38,10 +48,13 @@ export default function App() {
           <OnboardingScreen onNext={() => setScreen('login')} />
         )}
         {screen === 'login' && (
-          <LoginScreen onLogin={() => setScreen('budgetSetup')} />
+          <LoginScreen onLogin={() => setScreen('incomeSetup')} />
+        )}
+        {screen === 'incomeSetup' && (
+          <IncomeSetupScreen onNext={() => setScreen('budgetSetup')} onBack={() => setScreen('login')} />
         )}
         {screen === 'budgetSetup' && (
-          <BudgetSetupScreen onComplete={() => setScreen('home')} />
+          <BudgetSetupScreen onComplete={(total) => { setBudgetTotal(total); setScreen('home'); }} onBack={() => setScreen('incomeSetup')} />
         )}
         {screen === 'mascotStatus' && (
           <MascotStatusScreen onNext={() => setScreen('attendance')} />
@@ -61,15 +74,15 @@ export default function App() {
         {screen === 'result' && (
           <ScanResultScreen
             onBack={() => setScreen('aiScan')}
-            onHome={() => setScreen('home')}
+            onHome={(scanned) => { addExpenses(scanned); setScreen('home'); }}
           />
         )}
         {screen === 'home' && (
           <div className="flex flex-col gap-[25px]">
-            <BudgetCard />
+            <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView />
             <QuickActions onScan={() => setScreen('aiScan')} />
-            <TodayExpenses />
+            <TodayExpenses expenses={expenses} />
             <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
           </div>
         )}

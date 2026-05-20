@@ -1,8 +1,5 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { mockTodayExpenses } from '../data/mockData';
-
-
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(date) {
@@ -40,10 +37,10 @@ function ExpenseCard({ item }) {
   );
 }
 
-export default function TodayExpenses() {
+export default function TodayExpenses({ expenses = [] }) {
   const [showAll, setShowAll] = useState(false);
   const PREVIEW_COUNT = 3;
-  const items = mockTodayExpenses;
+  const items = expenses;
   const visibleItems = showAll ? items : items.slice(0, PREVIEW_COUNT);
   const hasMore = items.length > PREVIEW_COUNT;
 

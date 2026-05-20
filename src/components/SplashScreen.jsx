@@ -7,7 +7,7 @@ export default function SplashScreen({ onDone }) {
   }, [onDone]);
 
   return (
-    <div className="flex flex-col items-center justify-center" style={{ minHeight: '844px' }}>
+    <div className="flex flex-col items-center justify-center bg-white" style={{ minHeight: '844px' }}>
       {/* 로고 — 추후 이미지로 교체 */}
       <div className="flex flex-col items-center gap-4">
         <div className="animate-bounce w-28 h-28 rounded-3xl bg-[#f0faf4] flex items-center justify-center shadow-sm">

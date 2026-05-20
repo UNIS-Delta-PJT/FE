@@ -19,7 +19,7 @@ const features = [
 export default function OnboardingScreen({ onNext }) {
   return (
     <div
-      className="flex flex-col items-center justify-center px-8 overflow-hidden"
+      className="flex flex-col items-center justify-center px-8 overflow-hidden bg-white"
       style={{ height: '100vh' }}
     >
       {/* 로고 */}

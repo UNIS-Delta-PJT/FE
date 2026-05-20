@@ -35,7 +35,7 @@ export default function AIScanScreen({ onBack, onUpload }) {
   }
 
   return (
-    <div className="flex flex-col gap-8 px-3 pt-4 pb-16">
+    <div className="flex flex-col gap-8 px-3 pt-4 pb-16 bg-white">
       {/* 타이틀 + 뒤로 가기 */}
       <div className="w-[90%] self-center relative text-center" style={{ marginTop: '20px' }}>
         <button

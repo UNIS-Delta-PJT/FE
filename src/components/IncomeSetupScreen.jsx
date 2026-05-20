@@ -1,0 +1,349 @@
+import { useState } from 'react';
+import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, PiggyBank, Briefcase, BookOpen, Gift, Building2, Star, Coins, GraduationCap, Wallet, Coffee } from 'lucide-react';
+
+const ICON_CONFIG = [
+  { id: 'piggy',      Icon: PiggyBank,      bg: '#FED02333', color: '#735C00' },
+  { id: 'briefcase',  Icon: Briefcase,      bg: '#5FBAFF33', color: '#006397' },
+  { id: 'book',       Icon: BookOpen,       bg: '#2ECC7133', color: '#2ECC71' },
+  { id: 'gift',       Icon: Gift,           bg: '#FF69B433', color: '#BE185D' },
+  { id: 'building',   Icon: Building2,      bg: '#FCA52233', color: '#B45309' },
+  { id: 'star',       Icon: Star,           bg: '#FDE68A33', color: '#92400E' },
+  { id: 'coins',      Icon: Coins,          bg: '#6EE7B733', color: '#065F46' },
+  { id: 'graduation', Icon: GraduationCap,  bg: '#A78BFA33', color: '#6D28D9' },
+  { id: 'wallet',     Icon: Wallet,         bg: '#E5E7EB',   color: '#6B7280' },
+  { id: 'coffee',     Icon: Coffee,         bg: '#D9770633', color: '#92400E' },
+];
+
+function getIconConfig(id) {
+  return ICON_CONFIG.find(c => c.id === id) || ICON_CONFIG[0];
+}
+
+function IconCircle({ iconId, size = 40 }) {
+  const { Icon, bg, color } = getIconConfig(iconId);
+  return (
+    <div
+      className="rounded-full flex items-center justify-center flex-shrink-0"
+      style={{ width: size, height: size, backgroundColor: bg }}
+    >
+      <Icon size={size * 0.45} style={{ color }} strokeWidth={1.8} />
+    </div>
+  );
+}
+
+function IconPicker({ selected, onSelect }) {
+  return (
+    <div className="flex flex-wrap gap-2 p-3 bg-white rounded-2xl border border-gray-100 shadow-md">
+      {ICON_CONFIG.map(({ id, Icon, bg, color }) => (
+        <button
+          key={id}
+          onClick={() => onSelect(id)}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{
+            backgroundColor: bg,
+            outline: selected === id ? `2px solid ${color}` : 'none',
+            outlineOffset: 1,
+          }}
+        >
+          <Icon size={17} style={{ color }} strokeWidth={1.8} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelect, onNameChange, onAmountChange, onConfirm }) {
+  return (
+    <div className="px-4 py-3 flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <button onClick={onIconClick} className="active:scale-90 transition-transform flex-shrink-0">
+          <IconCircle iconId={iconId} />
+        </button>
+        <input
+          type="text"
+          placeholder="카테고리명"
+          value={name}
+          onChange={e => onNameChange(e.target.value)}
+          className="flex-1 text-sm outline-none bg-transparent py-1"
+          style={{ color: '#6B7280', fontWeight: 'normal' }}
+        />
+        <button
+          onClick={onConfirm}
+          className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
+        >
+          <Check size={15} className="text-white" strokeWidth={2.5} />
+        </button>
+      </div>
+
+      {showPicker && (
+        <IconPicker selected={iconId} onSelect={onIconSelect} />
+      )}
+
+      <input
+        type="number"
+        placeholder="금액 입력"
+        value={amount}
+        onChange={e => onAmountChange(e.target.value.replace(/[^0-9]/g, ''))}
+        className="text-sm outline-none bg-gray-50"
+        style={{
+          width: 236,
+          height: 37,
+          borderRadius: 50,
+          borderWidth: 1,
+          borderStyle: 'solid',
+          borderColor: '#E5E7EB',
+          paddingTop: 8,
+          paddingBottom: 8,
+          paddingLeft: 16,
+          color: '#6B7280',
+          fontWeight: 'normal',
+        }}
+      />
+    </div>
+  );
+}
+
+const INITIAL_INCOMES = [
+  { income_id: 1, iconId: 'piggy',     name: '용돈',       amount: 300000 },
+  { income_id: 2, iconId: 'briefcase', name: '아르바이트', amount: 500000 },
+  { income_id: 3, iconId: 'book',      name: '과외',        amount: 200000 },
+];
+
+export default function IncomeSetupScreen({ onNext, onBack }) {
+  const [incomes, setIncomes] = useState(INITIAL_INCOMES);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formIconId, setFormIconId] = useState('piggy');
+  const [formName, setFormName] = useState('');
+  const [formAmount, setFormAmount] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
+  const totalIncome = incomes.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
+
+  function openAdd() {
+    setEditingId(null);
+    setFormIconId('piggy');
+    setFormName('');
+    setFormAmount('');
+    setShowPicker(false);
+    setIsAdding(true);
+  }
+
+  function openEdit(income) {
+    setIsAdding(false);
+    setFormIconId(income.iconId);
+    setFormName(income.name);
+    setFormAmount(String(income.amount));
+    setShowPicker(false);
+    setEditingId(income.income_id);
+  }
+
+  function handleAdd() {
+    if (!formName.trim() || !formAmount) return;
+    setIncomes(prev => [...prev, {
+      income_id: Date.now(),
+      iconId: formIconId,
+      name: formName.trim(),
+      amount: parseInt(formAmount),
+    }]);
+    resetForm();
+  }
+
+  function handleDelete(income_id) {
+    setIncomes(prev => prev.filter(item => item.income_id !== income_id));
+    resetForm();
+  }
+
+  function handleSaveEdit() {
+    if (!formName.trim() || !formAmount) return;
+    setIncomes(prev => prev.map(item =>
+      item.income_id === editingId
+        ? { ...item, iconId: formIconId, name: formName.trim(), amount: parseInt(formAmount) }
+        : item
+    ));
+    resetForm();
+  }
+
+  function resetForm() {
+    setIsAdding(false);
+    setEditingId(null);
+    setFormIconId('piggy');
+    setFormName('');
+    setFormAmount('');
+    setShowPicker(false);
+  }
+
+  return (
+    <div className="flex flex-col overflow-y-auto bg-white" style={{ minHeight: '100%', paddingTop: '20px', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '17px' }}>
+
+      {/* 헤더 */}
+      <div className="flex items-center gap-3" style={{ marginBottom: '30px' }}>
+        <button onClick={onBack} className="active:scale-90 transition-transform p-1">
+          <ArrowLeft size={20} className="text-gray-800" />
+        </button>
+        <h1 className="font-black text-gray-900" style={{ fontSize: '18px' }}>
+          이번 달 수입 리스트
+        </h1>
+      </div>
+
+      {/* 총합 박스 */}
+      <div
+        className="border-[#2ECC71] bg-gray-50 flex flex-col items-center justify-center"
+        style={{
+          width: 353,
+          height: 104,
+          borderRadius: 20,
+          borderWidth: 1.5,
+          borderStyle: 'solid',
+          paddingTop: 20,
+          paddingRight: 24,
+          paddingBottom: 20,
+          paddingLeft: 24,
+          marginBottom: 15,
+        }}
+      >
+        <p className="font-bold text-gray-500" style={{ fontSize: '12px' }}>총합</p>
+        <p className="font-black text-[#2ECC71]" style={{ fontSize: '24px' }}>
+          {totalIncome.toLocaleString('ko-KR')}원
+        </p>
+      </div>
+
+      {/* 수입 목록 */}
+      <div className="flex flex-col gap-1 mb-1" style={{ width: 353 }}>
+        {incomes.map(income => {
+          const isEditing = editingId === income.income_id;
+          return (
+            <div key={income.income_id}>
+              <div className="px-4 flex items-center gap-3" style={{ height: 66 }}>
+                {isEditing ? (
+                  <button onClick={() => setShowPicker(p => !p)} className="active:scale-90 transition-transform flex-shrink-0">
+                    <IconCircle iconId={formIconId} />
+                  </button>
+                ) : (
+                  <IconCircle iconId={income.iconId} />
+                )}
+
+                <div className="flex-1 min-w-0">
+                  {isEditing ? (
+                    <>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={formName}
+                        onChange={e => setFormName(e.target.value)}
+                        className="text-sm outline-none bg-transparent"
+                        style={{ color: '#6B7280', fontWeight: 'normal', width: 200, height: 24 }}
+                      />
+                      <input
+                        type="number"
+                        value={formAmount}
+                        onChange={e => setFormAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder="금액"
+                        className="text-sm outline-none bg-gray-50"
+                        style={{
+                          width: 200,
+                          height: 37,
+                          borderRadius: 50,
+                          borderWidth: 1,
+                          borderStyle: 'solid',
+                          borderColor: '#E5E7EB',
+                          paddingTop: 8,
+                          paddingBottom: 8,
+                          paddingLeft: 16,
+                          color: '#6B7280',
+                          fontWeight: 'normal',
+                          marginTop: 4,
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm truncate" style={{ color: '#6B7280', fontWeight: 'normal' }}>
+                        {income.name}
+                      </p>
+                      <p className="text-sm" style={{ color: '#6B7280', fontWeight: 'normal' }}>
+                        {income.amount.toLocaleString('ko-KR')}원
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleDelete(income.income_id)}
+                      className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center active:scale-90 transition-transform"
+                    >
+                      <Trash2 size={14} className="text-red-400" />
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center active:scale-90 transition-transform"
+                    >
+                      <Check size={15} className="text-white" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => openEdit(income)} className="active:scale-90 transition-transform">
+                    <Pencil size={15} className="text-gray-300" />
+                  </button>
+                )}
+              </div>
+
+              {isEditing && showPicker && (
+                <div className="px-4 pb-3">
+                  <IconPicker selected={formIconId} onSelect={id => { setFormIconId(id); setShowPicker(false); }} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* 추가 폼 */}
+        {isAdding && (
+          <IncomeForm
+            iconId={formIconId}
+            name={formName}
+            amount={formAmount}
+            showPicker={showPicker}
+            onIconClick={() => setShowPicker(p => !p)}
+            onIconSelect={id => { setFormIconId(id); setShowPicker(false); }}
+            onNameChange={setFormName}
+            onAmountChange={setFormAmount}
+            onConfirm={handleAdd}
+          />
+        )}
+      </div>
+
+      {/* 카테고리 추가 버튼 */}
+      {!isAdding && editingId === null && (
+        <div className="flex justify-center" style={{ width: 353 }}>
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 text-[#2ECC71] font-semibold active:opacity-60"
+            style={{ fontSize: '15px', padding: '8px' }}
+          >
+            <PlusCircle size={20} color="#2ECC71" />
+            카테고리 추가하기
+          </button>
+        </div>
+      )}
+
+      {/* 다음 버튼 */}
+      <button
+        onClick={onNext}
+        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        style={{
+          position: 'fixed',
+          bottom: '32px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: `${390 * 0.85}px`,
+          height: '48px',
+          fontSize: '15px',
+        }}
+      >
+        <span className="text-white font-bold">다음</span>
+      </button>
+    </div>
+  );
+}

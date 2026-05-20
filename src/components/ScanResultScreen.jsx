@@ -40,9 +40,25 @@ function ResultCard({ merchant, icon, amount, name }) {
   );
 }
 
+function getNowTime() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
 export default function ScanResultScreen({ onBack, onHome }) {
+  function handleHome() {
+    const scannedExpenses = mockResults.map(r => ({
+      expense_id: Date.now() + r.expense_id,
+      icon: r.icon,
+      place: r.merchant,
+      name: r.name,
+      expense_date: getNowTime(),
+      amount: r.amount,
+    }));
+    onHome(scannedExpenses);
+  }
   return (
-    <div className="flex flex-col gap-4 px-3 pt-4">
+    <div className="flex flex-col gap-4 px-3 pt-4 bg-white">
       {/* 타이틀 + 뒤로 가기 */}
       <div className="w-[90%] self-center relative text-center" style={{ marginTop: '20px' }}>
         <button
@@ -80,7 +96,7 @@ export default function ScanResultScreen({ onBack, onHome }) {
 
       {/* 홈으로 버튼 (floating) */}
       <button
-        onClick={onHome}
+        onClick={handleHome}
         className="bg-[#2ECC71] rounded-4xl active:scale-95 transition-transform shadow-lg flex items-center justify-center"
         style={{
           position: 'fixed',

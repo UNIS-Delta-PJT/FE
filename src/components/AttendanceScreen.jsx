@@ -8,7 +8,7 @@ const mascotMessage = '오늘 벌써 예산 설정을 다시 해보는 날이야
 
 export default function AttendanceScreen({ onNext }) {
   return (
-    <div className="overflow-hidden px-6" style={{ height: '100vh', position: 'relative' }}>
+    <div className="overflow-hidden px-6 bg-white" style={{ height: '100vh', position: 'relative' }}>
 
       {/* 상단: 말풍선 + 빼꼼 마스코트 */}
       <div className="flex items-start justify-between" style={{ paddingTop: '180px' }}>

@@ -63,7 +63,7 @@ export default function AIGuideScreen({ onBack }) {
   const totalRatio = mockBudget.used / mockBudget.total_amount;
 
   return (
-    <div className="flex flex-col px-5 pt-4 pb-32 gap-6">
+    <div className="flex flex-col px-5 pt-4 pb-32 gap-6 bg-white">
 
       {/* 헤더 */}
       <div className="w-[90%] self-center relative text-center" style={{ marginTop: '20px' }}>
