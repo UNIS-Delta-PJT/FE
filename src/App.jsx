@@ -46,10 +46,10 @@ export default function App() {
     setExpenses(prev => [...prev, ...newExpenses]);
   }
 
-  const scrollable = ['home', 'incomeSetup', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
+  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
 
   return (
-    <div className="flex flex-col bg-[#FFFFFF] relative mx-auto" style={{ width: '390px', height: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
+    <div className="flex flex-col bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '390px', height: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
       {/* 배경 그라데이션 장식 */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#2ECC71]/10 rounded-full blur-3xl pointer-events-none" />
 

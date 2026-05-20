@@ -6,11 +6,12 @@
   padding: 0;
 }
 
-body {
+html, body {
   font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
   background: #ffffff;
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
 
 #root {
