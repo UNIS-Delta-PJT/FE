@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, PiggyBank, Briefcase, BookOpen, Gift, Building2, Star, Coins, GraduationCap, Wallet, Coffee } from 'lucide-react';
+import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, X, PiggyBank, Briefcase, BookOpen, Gift, Building2, Star, Coins, GraduationCap, Wallet, Coffee } from 'lucide-react';
 
 const ICON_CONFIG = [
   { id: 'piggy',      Icon: PiggyBank,      bg: '#FED02333', color: '#735C00' },
@@ -51,53 +51,66 @@ function IconPicker({ selected, onSelect }) {
   );
 }
 
-function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelect, onNameChange, onAmountChange, onConfirm }) {
+function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelect, onNameChange, onAmountChange, onConfirm, onCancel }) {
   return (
-    <div className="px-4 py-3 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col">
+      <div className="px-4 flex items-center gap-3" style={{ minHeight: 66 }}>
         <button onClick={onIconClick} className="active:scale-90 transition-transform flex-shrink-0">
           <IconCircle iconId={iconId} />
         </button>
-        <input
-          type="text"
-          placeholder="카테고리명"
-          value={name}
-          onChange={e => onNameChange(e.target.value)}
-          className="flex-1 text-sm outline-none bg-transparent py-1"
-          style={{ color: '#6B7280', fontWeight: 'normal' }}
-        />
-        <button
-          onClick={onConfirm}
-          className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
-        >
-          <Check size={15} className="text-white" strokeWidth={2.5} />
-        </button>
+        <div className="flex-1 min-w-0">
+          <input
+            autoFocus
+            type="text"
+            placeholder="카테고리명"
+            value={name}
+            onChange={e => onNameChange(e.target.value)}
+            className="text-sm outline-none bg-transparent"
+            style={{ color: '#6B7280', fontWeight: 'normal', width: 200, height: 24 }}
+          />
+          <input
+            type="number"
+            placeholder="금액 입력"
+            value={amount}
+            onChange={e => onAmountChange(e.target.value.replace(/[^0-9]/g, ''))}
+            className="text-sm outline-none bg-gray-50"
+            style={{
+              width: 200,
+              height: 37,
+              borderRadius: 50,
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: '#E5E7EB',
+              paddingTop: 8,
+              paddingBottom: 8,
+              paddingLeft: 16,
+              color: '#6B7280',
+              fontWeight: 'normal',
+              marginTop: 4,
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={onCancel}
+            className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center active:scale-90 transition-transform"
+          >
+            <X size={15} className="text-gray-500" strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={onConfirm}
+            className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center active:scale-90 transition-transform"
+          >
+            <Check size={15} className="text-white" strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
       {showPicker && (
-        <IconPicker selected={iconId} onSelect={onIconSelect} />
+        <div className="px-4 pb-3">
+          <IconPicker selected={iconId} onSelect={onIconSelect} />
+        </div>
       )}
-
-      <input
-        type="number"
-        placeholder="금액 입력"
-        value={amount}
-        onChange={e => onAmountChange(e.target.value.replace(/[^0-9]/g, ''))}
-        className="text-sm outline-none bg-gray-50"
-        style={{
-          width: 236,
-          height: 37,
-          borderRadius: 50,
-          borderWidth: 1,
-          borderStyle: 'solid',
-          borderColor: '#E5E7EB',
-          paddingTop: 8,
-          paddingBottom: 8,
-          paddingLeft: 16,
-          color: '#6B7280',
-          fontWeight: 'normal',
-        }}
-      />
     </div>
   );
 }
@@ -313,6 +326,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
             onNameChange={setFormName}
             onAmountChange={setFormAmount}
             onConfirm={handleAdd}
+            onCancel={resetForm}
           />
         )}
       </div>

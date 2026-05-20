@@ -4,7 +4,7 @@ import { mockCalendarData } from '../data/mockData';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const DARK_GREEN = '#16a34a';
+const DARK_GREEN = '#006D37';
 
 function formatAmount(amount) {
   if (amount === 0) return '';
@@ -60,8 +60,8 @@ export default function CalendarView() {
     const isSat = dayIdx === 5;
     const isSun = dayIdx === 6;
 
-    const textColor = isToday
-      ? `text-[${DARK_GREEN}]`
+    const textColorClass = isToday || amount > 0
+      ? ''
       : isSun
       ? 'text-rose-400'
       : isSat
@@ -69,10 +69,12 @@ export default function CalendarView() {
       : 'text-gray-700';
 
     const circleBg = isToday
-      ? 'bg-[#2ECC71]/20 border border-[#16a34a]'
+      ? 'bg-[#2ECC71]/20 border border-[#2ECC71]/20'
       : amount > 0
-      ? 'bg-gray-100'
+      ? 'bg-[#F3F4F5]'
       : '';
+
+    const dateStyle = isToday || amount > 0 ? { color: '#006D37' } : {};
 
     return (
       <button
@@ -80,11 +82,14 @@ export default function CalendarView() {
         onClick={() => {}}
         className={`flex flex-col items-center justify-start py-1 rounded-xl transition-all ${isMonthView && !isCurrentMonth ? 'opacity-20' : ''}`}
       >
-        <span className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold mb-0.5 ${circleBg} ${textColor}`}>
+        <span
+          className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold mb-0.5 ${circleBg} ${textColorClass}`}
+          style={dateStyle}
+        >
           {date.getDate()}
         </span>
         {amount > 0 && (
-          <span className="text-[9px] font-bold leading-none" style={{ color: DARK_GREEN }}>
+          <span className="text-[9px] font-bold leading-none" style={{ color: '#006D37' }}>
             {formatAmount(amount)}
           </span>
         )}

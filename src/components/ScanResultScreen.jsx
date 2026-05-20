@@ -1,5 +1,25 @@
 import { ArrowLeft, CheckCircle, Utensils } from 'lucide-react';
 
+function ReceiptIcon({ color = '#3D4A3E', width = 18, height = 20 }) {
+  return (
+    <svg width={width} height={height} viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1 2C1 1.45 1.45 1 2 1H16C16.55 1 17 1.45 17 2V15L14.5 19L12 15L9.5 19L7 15L4.5 19L2 15L1 15V2Z"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4.5 6H13.5M4.5 9H13.5M4.5 12H9.5"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const mockResults = [
   { expense_id: 1, merchant: '스타벅스', icon: '☕', amount: 8500, name: '식비' },
   { expense_id: 2, merchant: '올리브영', icon: '🛍️', amount: 23000, name: '쇼핑' },
@@ -10,8 +30,8 @@ function ResultCard({ merchant, icon, amount, name }) {
   return (
     <div className="w-[85%] self-center rounded-3xl bg-[#FFFFFF] border border-gray-100 flex flex-col gap-3 shadow-sm" style={{ padding: '15px' }}>
       <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-4xl bg-gray-200 flex items-center justify-center text-3xl shadow-sm flex-shrink-0">
-          {icon}
+        <div className="w-14 h-14 rounded-4xl bg-gray-200 flex items-center justify-center shadow-sm flex-shrink-0">
+          <ReceiptIcon />
         </div>
         <div className="flex flex-col gap-0.5">
           <p style={{ fontSize: '12px' }} className="text-gray-400">가맹점</p>

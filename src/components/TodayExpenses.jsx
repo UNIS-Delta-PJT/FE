@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import CategoryIcon from './CategoryIcons';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(date) {
@@ -17,8 +18,8 @@ function ExpenseCard({ item }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-gray-100 border border-gray-100" style={{padding: 6}}>
       {/* 아이콘 */}
-      <div className="w-10 h-10 rounded-3xl bg-white flex items-center justify-center text-lg flex-shrink-0">
-        {item.icon}
+      <div className="w-10 h-10 rounded-3xl bg-white flex items-center justify-center flex-shrink-0">
+        <CategoryIcon name={item.name} />
       </div>
 
       {/* 소비처 + 카테고리 + 시간 */}
@@ -64,24 +65,34 @@ export default function TodayExpenses({ expenses = [] }) {
         </span>
       </div>
 
-      {/* 소비 내역 카드 목록 */}
-      {visibleItems.map((item) => (
-        <ExpenseCard key={item.expense_id} item={item} />
-      ))}
-
-      {/* 더보기 / 접기 버튼 */}
-      {hasMore && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full flex items-center justify-center gap-1 text-xs text-[#2ECC71] font-semibold rounded-xl bg-[#2ECC71]/10 active:scale-95 transition-transform"
-          style={{ paddingTop: '8px', paddingBottom: '8px' }}
+      {/* 소비 내역 카드 목록 / 빈 상태 */}
+      {items.length === 0 ? (
+        <div
+          className="flex items-center justify-center rounded-2xl bg-gray-100"
+          style={{ height: 172 }}
         >
-          {showAll ? (
-            <>접기 <ChevronUp size={13} /></>
-          ) : (
-            <>{items.length - PREVIEW_COUNT}개 더보기 <ChevronDown size={13} /></>
+          <p className="text-sm font-medium text-gray-400">아직 소비 내역이 없어요!</p>
+        </div>
+      ) : (
+        <>
+          {visibleItems.map((item) => (
+            <ExpenseCard key={item.expense_id} item={item} />
+          ))}
+
+          {hasMore && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="w-full flex items-center justify-center gap-1 text-xs text-[#2ECC71] font-semibold rounded-xl bg-[#2ECC71]/10 active:scale-95 transition-transform"
+              style={{ paddingTop: '8px', paddingBottom: '8px' }}
+            >
+              {showAll ? (
+                <>접기 <ChevronUp size={13} /></>
+              ) : (
+                <>{items.length - PREVIEW_COUNT}개 더보기 <ChevronDown size={13} /></>
+              )}
+            </button>
           )}
-        </button>
+        </>
       )}
     </div>
   );

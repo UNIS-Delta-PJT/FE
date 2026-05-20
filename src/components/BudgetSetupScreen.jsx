@@ -8,7 +8,7 @@ const ICON_MAP = {
   '기타':     { Icon: Package  },
 };
 
-const MAX_AMOUNT = 1000000;
+const FALLBACK_BUDGET = 1000000;
 
 const DEFAULT_CATEGORIES = [
   { category_id: 1, name: '식비',      amount: 0 },
@@ -17,11 +17,11 @@ const DEFAULT_CATEGORIES = [
   { category_id: 4, name: '기타',      amount: 0 },
 ];
 
-function CategoryItem({ cat, onAmountChange }) {
+function CategoryItem({ cat, totalBudget, onAmountChange }) {
   const [editing, setEditing] = useState(false);
   const [inputVal, setInputVal] = useState(String(cat.amount));
 
-  const pct = Math.min((cat.amount / MAX_AMOUNT) * 100, 100);
+  const pct = totalBudget > 0 ? Math.min(Math.round((cat.amount / totalBudget) * 100), 100) : 0;
   const { Icon } = ICON_MAP[cat.name] || ICON_MAP['기타'];
 
   function handleConfirm() {
@@ -120,14 +120,14 @@ function CategoryItem({ cat, onAmountChange }) {
         </div>
       </div>
 
-      {/* 슬라이더 */}
+      {/* 슬라이더 — 전체 예산 대비 % */}
       <input
         type="range"
         min={0}
-        max={MAX_AMOUNT}
-        step={10000}
-        value={cat.amount}
-        onChange={e => onAmountChange(cat.category_id, parseInt(e.target.value))}
+        max={100}
+        step={1}
+        value={pct}
+        onChange={e => onAmountChange(cat.category_id, Math.round(parseInt(e.target.value) * totalBudget / 100))}
         className="budget-slider"
         style={{
           width: 319,
@@ -147,8 +147,18 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
       return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
     } catch { return DEFAULT_CATEGORIES; }
   });
+
+  const totalBudget = (() => {
+    try {
+      const incomes = JSON.parse(localStorage.getItem('delta_incomes') || '[]');
+      const total = incomes.reduce((sum, i) => sum + (parseInt(i.amount) || 0), 0);
+      return total > 0 ? total : FALLBACK_BUDGET;
+    } catch { return FALLBACK_BUDGET; }
+  })();
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
+  const [budgetToast, setBudgetToast] = useState(null);
+  const [budgetToastFading, setBudgetToastFading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('delta_budget_categories', JSON.stringify(categories));
@@ -158,6 +168,27 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
     setCategories(prev => prev.map(cat =>
       cat.category_id === category_id ? { ...cat, amount } : cat
     ));
+  }
+
+  function showBudgetToast(message) {
+    setBudgetToast(message);
+    setBudgetToastFading(false);
+    setTimeout(() => {
+      setBudgetToastFading(true);
+      setTimeout(() => setBudgetToast(null), 300);
+    }, 1700);
+  }
+
+  function handleComplete() {
+    const totalAllocated = categories.reduce((sum, cat) => sum + cat.amount, 0);
+    const diff = totalAllocated - totalBudget;
+    if (diff > 0) {
+      showBudgetToast(`${diff.toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
+    } else if (diff < 0) {
+      showBudgetToast(`${(-diff).toLocaleString('ko-KR')}원 덜 입력했어요!`);
+    } else {
+      onComplete(totalAllocated);
+    }
   }
 
   function handleCopyLastMonth() {
@@ -172,7 +203,30 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
   return (
     <div className="flex flex-col overflow-y-auto bg-white" style={{ minHeight: '100%', paddingTop: '20px', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '17px' }}>
 
-      {/* 토스트 */}
+      {/* 예산 초과/부족 토스트 */}
+      {budgetToast && (
+        <div
+          className={`fixed z-50 flex items-center rounded-2xl shadow-md ${budgetToastFading ? 'toast-exit' : 'toast-enter'}`}
+          style={{
+            bottom: '96px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#FECACA',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: '#FECACA',
+            whiteSpace: 'nowrap',
+            paddingTop: '4px',
+            paddingBottom: '4px',
+            paddingLeft: '12px',
+            paddingRight: '12px',
+          }}
+        >
+          <span className="font-medium text-red-400" style={{ fontSize: '11px' }}>{budgetToast}</span>
+        </div>
+      )}
+
+      {/* 지난달 토스트 */}
       {toast && (
         <div
           className={`fixed z-50 flex items-center rounded-2xl shadow-md ${toastFading ? 'toast-exit' : 'toast-enter'}`}
@@ -259,6 +313,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
           <CategoryItem
             key={cat.category_id}
             cat={cat}
+            totalBudget={totalBudget}
             onAmountChange={handleAmountChange}
           />
         ))}
@@ -266,7 +321,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
 
       {/* 완료 버튼 */}
       <button
-        onClick={() => onComplete(categories.reduce((sum, cat) => sum + cat.amount, 0))}
+        onClick={handleComplete}
         className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{
           position: 'fixed',

@@ -25,7 +25,16 @@ export default function TopBar() {
             onClick={() => setShowAttendance(true)}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 border border-gray-200 active:scale-95 transition-transform"
           >
-            <span className="text-lg">📅</span>
+            <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
+              <circle cx="9" cy="4.5" r="3" stroke="#555555" strokeWidth="1.5"/>
+              <path
+                d="M6.5 7.8C4.5 9 3 11.5 3 15V18.5H15V15C15 11.5 13.5 9 11.5 7.8"
+                stroke="#555555"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             {/* 출석 뱃지 */}
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#2ECC71] rounded-full text-[9px] font-bold text-white flex items-center justify-center">
               4

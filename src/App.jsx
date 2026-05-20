@@ -49,15 +49,38 @@ export default function App() {
   const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
 
   return (
-    <div className="flex flex-col bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '390px', height: '844px', paddingTop: 'env(safe-area-inset-top, 54px)' }}>
+    <div className="bg-white min-h-screen">
+    <div className="bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '390px', height: '844px', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
       {/* 배경 그라데이션 장식 */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#2ECC71]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#FFFFFF]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* 헤더 고정 */}
-      {screen === 'home' && <TopBar />}
+      {screen === 'home' && (
+        <div style={{ position: 'fixed', top: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, paddingTop: 'env(safe-area-inset-top, 54px)' }}>
+          <TopBar />
+        </div>
+      )}
+
+      {/* 네비바 뒤 흰 배경 (절반 높이) */}
+      {screen === 'home' && (
+        <div style={{ position: 'fixed', bottom: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', height: 36, backgroundColor: 'white', zIndex: 10 }} />
+      )}
+
+      {/* 하단 고정 네비게이션 */}
+      {screen === 'home' && (
+        <div style={{ position: 'fixed', bottom: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
+          <BottomNav />
+        </div>
+      )}
 
       {/* 콘텐츠 영역 */}
-      <div className={`flex-1 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'} pb-4`}>
+      <div
+        className={`absolute inset-0 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
+        style={{
+          paddingTop: screen === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 54px)' : 'env(safe-area-inset-top, 54px)',
+          paddingBottom: screen === 'home' ? '90px' : '0px',
+        }}
+      >
         {screen === 'splash' && (
           <SplashScreen onDone={() => setScreen('onboarding')} />
         )}
@@ -95,7 +118,7 @@ export default function App() {
           />
         )}
         {screen === 'home' && (
-          <div className="flex flex-col gap-[25px]">
+          <div className="flex flex-col gap-[25px] pb-4">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView />
             <QuickActions onScan={() => setScreen('aiScan')} />
@@ -104,9 +127,7 @@ export default function App() {
           </div>
         )}
       </div>
-
-      {/* 하단 고정 네비게이션 */}
-      {screen === 'home' && <BottomNav />}
+    </div>
     </div>
   );
 }
