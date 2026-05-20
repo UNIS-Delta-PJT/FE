@@ -7,7 +7,7 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="flex items-center justify-between px-5 pt-[max(3rem,env(safe-area-inset-top))] pb-4" style={{ padding: '7px'}}>
+      <header className="flex items-center justify-between px-5 bg-white sticky top-0 z-10" style={{ padding: '7px'}}>
         {/* 로고 */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-[#2ECC71] flex items-center justify-center text-sm font-black text-white shadow-lg shadow-[#2ECC71]/30">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, SquarePen, Check, Utensils, Bus, Film, Package, Sparkles } from 'lucide-react';
 
 const ICON_MAP = {
@@ -11,10 +11,10 @@ const ICON_MAP = {
 const MAX_AMOUNT = 1000000;
 
 const DEFAULT_CATEGORIES = [
-  { category_id: 1, name: '식비',      amount: 150000 },
-  { category_id: 2, name: '교통',      amount: 50000  },
-  { category_id: 3, name: '문화/여가', amount: 100000 },
-  { category_id: 4, name: '기타',      amount: 50000  },
+  { category_id: 1, name: '식비',      amount: 0 },
+  { category_id: 2, name: '교통',      amount: 0 },
+  { category_id: 3, name: '문화/여가', amount: 0 },
+  { category_id: 4, name: '기타',      amount: 0 },
 ];
 
 function CategoryItem({ cat, onAmountChange }) {
@@ -141,9 +141,18 @@ function CategoryItem({ cat, onAmountChange }) {
 }
 
 export default function BudgetSetupScreen({ onComplete, onBack }) {
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('delta_budget_categories');
+      return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+    } catch { return DEFAULT_CATEGORIES; }
+  });
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('delta_budget_categories', JSON.stringify(categories));
+  }, [categories]);
 
   function handleAmountChange(category_id, amount) {
     setCategories(prev => prev.map(cat =>

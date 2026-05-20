@@ -1,5 +1,4 @@
-import { useState, useMemo } from 'react';
-import { mockTodayExpenses } from './data/mockData';
+import { useState, useMemo, useEffect } from 'react';
 import TopBar from './components/TopBar';
 import BudgetCard from './components/BudgetCard';
 import CalendarView from './components/CalendarView';
@@ -20,10 +19,28 @@ import AttendanceScreen from './components/AttendanceScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
-  const [budgetTotal, setBudgetTotal] = useState(null);
-  const [expenses, setExpenses] = useState(mockTodayExpenses);
+  const [budgetTotal, setBudgetTotal] = useState(() => {
+    try {
+      const saved = localStorage.getItem('delta_budget_total');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const saved = localStorage.getItem('delta_expenses');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+
+  useEffect(() => {
+    localStorage.setItem('delta_budget_total', JSON.stringify(budgetTotal));
+  }, [budgetTotal]);
+
+  useEffect(() => {
+    localStorage.setItem('delta_expenses', JSON.stringify(expenses));
+  }, [expenses]);
 
   function addExpenses(newExpenses) {
     setExpenses(prev => [...prev, ...newExpenses]);

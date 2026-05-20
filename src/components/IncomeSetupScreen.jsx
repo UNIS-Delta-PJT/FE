@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, PiggyBank, Briefcase, BookOpen, Gift, Building2, Star, Coins, GraduationCap, Wallet, Coffee } from 'lucide-react';
 
 const ICON_CONFIG = [
@@ -102,14 +102,13 @@ function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelec
   );
 }
 
-const INITIAL_INCOMES = [
-  { income_id: 1, iconId: 'piggy',     name: '용돈',       amount: 300000 },
-  { income_id: 2, iconId: 'briefcase', name: '아르바이트', amount: 500000 },
-  { income_id: 3, iconId: 'book',      name: '과외',        amount: 200000 },
-];
-
 export default function IncomeSetupScreen({ onNext, onBack }) {
-  const [incomes, setIncomes] = useState(INITIAL_INCOMES);
+  const [incomes, setIncomes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('delta_incomes');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formIconId, setFormIconId] = useState('piggy');
@@ -118,6 +117,10 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
   const [showPicker, setShowPicker] = useState(false);
 
   const totalIncome = incomes.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
+
+  useEffect(() => {
+    localStorage.setItem('delta_incomes', JSON.stringify(incomes));
+  }, [incomes]);
 
   function openAdd() {
     setEditingId(null);
