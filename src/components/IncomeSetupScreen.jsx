@@ -189,10 +189,16 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
   }
 
   return (
-    <div className="flex flex-col overflow-y-auto bg-white" style={{ minHeight: '100%', paddingTop: '20px', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '17px' }}>
+    <div className="flex flex-col overflow-y-auto bg-white" style={{ minHeight: '100%', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '17px' }}>
+
+      {/* 헤더 고정 (spacer) */}
+      <div style={{ height: '64px', flexShrink: 0 }} />
 
       {/* 헤더 */}
-      <div className="flex items-center gap-3" style={{ marginBottom: '30px' }}>
+      <div
+        className="flex items-center gap-3 bg-white z-10"
+        style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '390px', paddingTop: '20px', paddingBottom: '12px', paddingLeft: '20px', paddingRight: '17px' }}
+      >
         <button onClick={onBack} className="active:scale-90 transition-transform p-1">
           <ArrowLeft size={20} className="text-gray-800" />
         </button>
