@@ -16,9 +16,11 @@ import BudgetSetupScreen from './components/BudgetSetupScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
 import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
+import BudgetScreen from './components/BudgetScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
+  const [tab, setTab] = useState('home');
   const [budgetTotal, setBudgetTotal] = useState(() => {
     try {
       const saved = localStorage.getItem('delta_budget_total');
@@ -55,7 +57,7 @@ export default function App() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#FFFFFF]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* 헤더 고정 */}
-      {screen === 'home' && (
+      {screen === 'home' && tab === 'home' && (
         <div style={{ position: 'fixed', top: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, paddingTop: 'env(safe-area-inset-top, 54px)' }}>
           <TopBar />
         </div>
@@ -69,7 +71,7 @@ export default function App() {
       {/* 하단 고정 네비게이션 */}
       {screen === 'home' && (
         <div style={{ position: 'fixed', bottom: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
-          <BottomNav />
+          <BottomNav activeTab={tab} onTabChange={setTab} />
         </div>
       )}
 
@@ -117,7 +119,7 @@ export default function App() {
             onHome={(scanned) => { addExpenses(scanned); setScreen('home'); }}
           />
         )}
-        {screen === 'home' && (
+        {screen === 'home' && tab === 'home' && (
           <div className="flex flex-col gap-[25px] pb-4">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView />
@@ -125,6 +127,9 @@ export default function App() {
             <TodayExpenses expenses={expenses} />
             <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
           </div>
+        )}
+        {screen === 'home' && tab === 'budget' && (
+          <BudgetScreen />
         )}
       </div>
     </div>

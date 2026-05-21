@@ -153,7 +153,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
   })();
 
   const hasIncome = totalIncome > 0;
-  const totalBudget = budgetInput ? parseInt(budgetInput) : (totalIncome > 0 ? totalIncome : FALLBACK_BUDGET);
+  const totalBudget = budgetInput ? parseInt(budgetInput) : 0;
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
   const [budgetToast, setBudgetToast] = useState(null);
