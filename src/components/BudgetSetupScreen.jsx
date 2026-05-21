@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, SquarePen, Check, Utensils, Bus, Film, Package, Sparkles } from 'lucide-react';
+import { ArrowLeft, SquarePen, Check, Utensils, Bus, Film, Package, Sparkles, Wallet } from 'lucide-react';
 
 const ICON_MAP = {
   '식비':     { Icon: Utensils },
@@ -141,20 +141,19 @@ function CategoryItem({ cat, totalBudget, onAmountChange }) {
 }
 
 export default function BudgetSetupScreen({ onComplete, onBack }) {
-  const [categories, setCategories] = useState(() => {
-    try {
-      const saved = localStorage.getItem('delta_budget_categories');
-      return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
-    } catch { return DEFAULT_CATEGORIES; }
-  });
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
-  const totalBudget = (() => {
+  const [budgetInput, setBudgetInput] = useState('');
+
+  const totalIncome = (() => {
     try {
       const incomes = JSON.parse(localStorage.getItem('delta_incomes') || '[]');
-      const total = incomes.reduce((sum, i) => sum + (parseInt(i.amount) || 0), 0);
-      return total > 0 ? total : FALLBACK_BUDGET;
-    } catch { return FALLBACK_BUDGET; }
+      return incomes.reduce((sum, i) => sum + (parseInt(i.amount) || 0), 0);
+    } catch { return 0; }
   })();
+
+  const hasIncome = totalIncome > 0;
+  const totalBudget = budgetInput ? parseInt(budgetInput) : (totalIncome > 0 ? totalIncome : FALLBACK_BUDGET);
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
   const [budgetToast, setBudgetToast] = useState(null);
@@ -180,6 +179,14 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
   }
 
   function handleComplete() {
+    if (!hasIncome) {
+      showBudgetToast('수입 설정을 먼저 진행해주세요!');
+      return;
+    }
+    if (!budgetInput) {
+      showBudgetToast('총 예산을 먼저 입력해주세요!');
+      return;
+    }
     const totalAllocated = categories.reduce((sum, cat) => sum + cat.amount, 0);
     const diff = totalAllocated - totalBudget;
     if (diff > 0) {
@@ -313,6 +320,51 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
         예산 항목별 설정
       </p>
 
+      {/* 총 예산 입력 */}
+      <div
+        className="flex items-center"
+        style={{
+          width: 353,
+          minHeight: 97.5,
+          borderRadius: 32,
+          borderWidth: 1.5,
+          borderStyle: 'solid',
+          borderColor: '#2ECC7166',
+          paddingTop: 24,
+          paddingBottom: 24,
+          paddingLeft: 24,
+          gap: 20,
+          marginBottom: 24,
+        }}
+      >
+        <div
+          className="rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ width: 40, height: 40, backgroundColor: '#2ECC7133' }}
+        >
+          <Wallet size={18} color="#2ECC71" />
+        </div>
+        <div className="flex flex-col items-start gap-1.5 flex-1">
+          <span className="text-gray-800 font-semibold text-sm">이번 달 총 예산</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              placeholder="금액 입력"
+              value={budgetInput}
+              onChange={e => {
+                const v = e.target.value.replace(/[^0-9]/g, '');
+                if (!v || parseInt(v) <= totalIncome) setBudgetInput(v);
+              }}
+              className="text-sm outline-none bg-transparent placeholder-[#2ECC71]"
+              style={{ color: '#2ECC71', fontWeight: 600, width: 150 }}
+            />
+            <span className="text-sm font-semibold" style={{ color: '#2ECC71' }}>원</span>
+          </div>
+          <span className="text-xs text-gray-400">
+            수입 총액: {totalIncome.toLocaleString('ko-KR')}원
+          </span>
+        </div>
+      </div>
+
       {/* 카테고리 목록 */}
       <div className="flex flex-col gap-3">
         {categories.map(cat => (
@@ -339,7 +391,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
           fontSize: '15px',
         }}
       >
-        <span className="text-white font-bold">완료</span>
+        <span className="text-white font-bold">설정 완료</span>
       </button>
     </div>
   );
