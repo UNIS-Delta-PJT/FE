@@ -17,6 +17,7 @@ import IncomeSetupScreen from './components/IncomeSetupScreen';
 import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
+import ReportScreen from './components/ReportScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
@@ -170,6 +171,9 @@ export default function App() {
             <TodayExpenses expenses={expenses} />
             <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
           </div>
+        )}
+        {screen === 'home' && tab === 'report' && (
+          <ReportScreen />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
