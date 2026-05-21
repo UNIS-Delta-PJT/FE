@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import TopBar from './components/TopBar';
 import BudgetCard from './components/BudgetCard';
 import CalendarView from './components/CalendarView';
@@ -49,6 +49,11 @@ export default function App() {
   }
 
   const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [screen, tab]);
 
   return (
     <div className="bg-white min-h-screen">
@@ -65,21 +70,22 @@ export default function App() {
 
       {/* 네비바 뒤 흰 배경 (절반 높이) */}
       {screen === 'home' && (
-        <div style={{ position: 'fixed', bottom: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', height: 36, backgroundColor: 'white', zIndex: 10 }} />
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 36, backgroundColor: 'white', zIndex: 10 }} />
       )}
 
       {/* 하단 고정 네비게이션 */}
       {screen === 'home' && (
-        <div style={{ position: 'fixed', bottom: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20 }}>
           <BottomNav activeTab={tab} onTabChange={setTab} />
         </div>
       )}
 
       {/* 콘텐츠 영역 */}
       <div
+        ref={scrollRef}
         className={`absolute inset-0 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
         style={{
-          paddingTop: screen === 'home' && tab === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 54px)' : 'calc(env(safe-area-inset-top, 0px) + 20px)',
+          paddingTop: screen === 'home' && tab === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 74px)' : 'calc(env(safe-area-inset-top, 0px) + 20px)',
           paddingBottom: screen === 'home' ? '90px' : '0px',
         }}
       >
@@ -120,7 +126,7 @@ export default function App() {
           />
         )}
         {screen === 'home' && tab === 'home' && (
-          <div className="flex flex-col gap-[25px] pb-4">
+          <div className="flex flex-col items-center gap-[25px] pb-4">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView />
             <QuickActions onScan={() => setScreen('aiScan')} />

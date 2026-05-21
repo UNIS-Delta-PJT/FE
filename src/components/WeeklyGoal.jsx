@@ -44,7 +44,7 @@ export default function WeeklyGoal({ onAIGuide }) {
   }
 
   return (
-    <div className="mx-4" style={{ marginBottom: '50px' }}>
+    <div style={{ width: 353, marginBottom: '50px' }}>
       {/* 카드 */}
       <div
         className="rounded-2xl relative overflow-hidden select-none"

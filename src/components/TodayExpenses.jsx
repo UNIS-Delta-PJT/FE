@@ -48,7 +48,7 @@ export default function TodayExpenses({ expenses = [] }) {
   const totalToday = items.reduce((sum, i) => sum + i.amount, 0);
 
   return (
-    <div className="mx-4 flex flex-col gap-2">
+    <div className="flex flex-col gap-2" style={{ width: 353 }}>
       {/* 헤더 — 카드 바깥 */}
       <div className="flex items-center justify-between px-1">
         <div>

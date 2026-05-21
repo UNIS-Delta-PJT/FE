@@ -98,7 +98,7 @@ export default function CalendarView() {
   };
 
   return (
-    <div className="mx-4 flex flex-col gap-2">
+    <div className="flex flex-col gap-2" style={{ width: 353 }}>
       {/* 헤더 — 카드 바깥 */}
       <div className="flex items-center justify-between px-1">
         <h3 className="text-base font-bold text-[#000000]">소비 캘린더</h3>
