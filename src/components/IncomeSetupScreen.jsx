@@ -208,25 +208,33 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       </div>
 
       {/* 총합 박스 */}
-      <div
-        className="border-[#2ECC71] bg-gray-50 flex flex-col items-center justify-center"
-        style={{
-          width: 353,
-          height: 104,
-          borderRadius: 20,
-          borderWidth: 1.5,
-          borderStyle: 'solid',
-          paddingTop: 20,
-          paddingRight: 24,
-          paddingBottom: 20,
-          paddingLeft: 24,
-          marginBottom: 15,
-        }}
-      >
-        <p className="font-bold text-gray-500" style={{ fontSize: '12px' }}>총합</p>
-        <p className="font-black text-[#2ECC71]" style={{ fontSize: '24px' }}>
-          {totalIncome.toLocaleString('ko-KR')}원
-        </p>
+      <div style={{ width: 353, marginBottom: 15 }}>
+        <div
+          className="border-[#2ECC71] bg-gray-50 flex flex-col items-center justify-center"
+          style={{
+            height: 104,
+            borderRadius: 20,
+            borderWidth: 1.5,
+            borderStyle: 'solid',
+            paddingTop: 20,
+            paddingRight: 24,
+            paddingBottom: 20,
+            paddingLeft: 24,
+          }}
+        >
+          <p className="font-bold text-gray-500" style={{ fontSize: '12px' }}>총합</p>
+          <p className="font-black text-[#2ECC71]" style={{ fontSize: '24px' }}>
+            {totalIncome.toLocaleString('ko-KR')}원
+          </p>
+        </div>
+        <div className="flex justify-end" style={{ marginTop: 6 }}>
+          <button
+            onClick={() => { setIncomes([]); resetForm(); }}
+            className="text-xs text-gray-400 underline active:opacity-60"
+          >
+            초기화
+          </button>
+        </div>
       </div>
 
       {/* 수입 목록 */}

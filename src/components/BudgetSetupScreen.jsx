@@ -355,7 +355,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
                 if (!v || parseInt(v) <= totalIncome) setBudgetInput(v);
               }}
               className="text-sm outline-none bg-transparent placeholder-[#2ECC71]"
-              style={{ color: '#2ECC71', fontWeight: 600, width: 150 }}
+              style={{ color: '#2ECC71', fontWeight: 400, width: 150 }}
             />
             <span className="text-sm font-semibold" style={{ color: '#2ECC71' }}>원</span>
           </div>
@@ -363,6 +363,16 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
             수입 총액: {totalIncome.toLocaleString('ko-KR')}원
           </span>
         </div>
+      </div>
+
+      {/* 카테고리 초기화 버튼 */}
+      <div className="flex justify-end" style={{ width: 353, marginBottom: 8 }}>
+        <button
+          onClick={() => { setCategories(DEFAULT_CATEGORIES); setBudgetInput(''); }}
+          className="text-xs text-gray-400 underline active:opacity-60"
+        >
+          초기화
+        </button>
       </div>
 
       {/* 카테고리 목록 */}
