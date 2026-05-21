@@ -79,7 +79,7 @@ export default function App() {
       <div
         className={`absolute inset-0 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
         style={{
-          paddingTop: screen === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 54px)' : 'env(safe-area-inset-top, 54px)',
+          paddingTop: screen === 'home' && tab === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 54px)' : 'calc(env(safe-area-inset-top, 0px) + 20px)',
           paddingBottom: screen === 'home' ? '90px' : '0px',
         }}
       >

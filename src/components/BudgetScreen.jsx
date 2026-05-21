@@ -152,21 +152,15 @@ export default function BudgetScreen() {
   const savingsPct = totalIncome > 0 ? Math.min(100, (savings / totalIncome) * 100) : 0;
 
   return (
-    <div className="relative flex flex-col bg-white" style={{ minHeight: '100%', paddingBottom: 100 }}>
+    <div className="relative flex flex-col bg-white" style={{ minHeight: '100%', paddingBottom: 20 }}>
 
-      {/* 헤더 고정 */}
-      <div
-        className="flex items-center justify-between bg-white"
-        style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 390, zIndex: 20, paddingTop: 'env(safe-area-inset-top, 54px)', paddingLeft: 20, paddingRight: 20, paddingBottom: 12 }}
-      >
+      {/* 섹션 제목 */}
+      <div className="flex items-center justify-between" style={{ marginLeft: 16, marginRight: 16, marginBottom: 12 }}>
         <h1 className="font-bold text-gray-900" style={{ fontSize: 20 }}>예산 설정</h1>
         <button className="active:scale-90 transition-transform">
           <Settings size={22} color="#555555" strokeWidth={1.8} />
         </button>
       </div>
-
-      {/* 헤더 spacer */}
-      <div style={{ height: 80, flexShrink: 0 }} />
 
       {/* 메인 카드 */}
       <div
