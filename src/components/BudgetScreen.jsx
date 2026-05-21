@@ -39,33 +39,94 @@ function IncomeEditPopup({ onClose }) {
     try { return JSON.parse(localStorage.getItem('delta_incomes') || '[]'); }
     catch { return []; }
   });
+  const [newName, setNewName] = useState('');
+  const [newAmount, setNewAmount] = useState('');
 
-  function save(updated) {
-    setIncomes(updated);
-    localStorage.setItem('delta_incomes', JSON.stringify(updated));
+  function handleDelete(income_id) {
+    setIncomes(prev => prev.filter(i => i.income_id !== income_id));
+  }
+
+  function handleAdd() {
+    if (!newName.trim() || !newAmount) return;
+    setIncomes(prev => [...prev, { income_id: Date.now(), name: newName.trim(), amount: parseInt(newAmount) }]);
+    setNewName('');
+    setNewAmount('');
+  }
+
+  function handleSave() {
+    localStorage.setItem('delta_incomes', JSON.stringify(incomes));
+    onClose();
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-end" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
-      <div className="w-full bg-white" style={{ borderRadius: '20px 20px 0 0', maxHeight: '70%', overflowY: 'auto', paddingBottom: 32 }} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <span className="font-bold text-gray-900" style={{ fontSize: 16 }}>수입 리스트</span>
-          <button onClick={onClose} className="active:scale-90 transition-transform"><X size={20} className="text-gray-500" /></button>
-        </div>
-        <div className="flex flex-col gap-2 px-5">
+    <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: '0 20px' }} onClick={onClose}>
+      <div className="w-full bg-white" style={{ borderRadius: 20, maxHeight: '70%', overflowY: 'auto', padding: 32 }} onClick={e => e.stopPropagation()}>
+        <p className="font-bold text-gray-900" style={{ fontSize: 16, marginBottom: 20 }}>수입 리스트</p>
+        <div className="flex flex-col" style={{ gap: 12 }}>
           {incomes.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">등록된 수입이 없어요</p>
+            <p className="text-sm text-gray-400 text-center" style={{ paddingTop: 16, paddingBottom: 16 }}>등록된 수입이 없어요</p>
           ) : incomes.map(item => (
-            <div key={item.income_id} className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3">
+            <div key={item.income_id} className="flex items-center justify-between bg-gray-50 rounded-2xl" style={{ padding: '14px 20px' }}>
               <div>
                 <p className="text-sm font-semibold text-gray-800">{item.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{item.amount.toLocaleString('ko-KR')}원</p>
+                <p className="text-xs text-gray-400" style={{ marginTop: 2 }}>{item.amount.toLocaleString('ko-KR')}원</p>
               </div>
-              <button onClick={() => save(incomes.filter(i => i.income_id !== item.income_id))} className="active:scale-90 transition-transform">
+              <button onClick={() => handleDelete(item.income_id)} className="active:scale-90 transition-transform">
                 <Trash2 size={15} className="text-red-400" />
               </button>
             </div>
           ))}
+        </div>
+
+        {/* 새 수입 추가 */}
+        <div className="flex flex-col" style={{ gap: 8, marginTop: 20 }}>
+          <p className="text-sm font-semibold text-gray-700">새 수입 추가</p>
+          <div className="flex flex-col bg-gray-50 rounded-2xl" style={{ padding: '14px 20px', gap: 10 }}>
+            <input
+              type="text"
+              placeholder="수입 이름"
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              className="text-sm outline-none bg-transparent text-gray-800 placeholder-gray-300"
+              style={{ width: '100%' }}
+            />
+            <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+            <div className="flex items-center justify-between">
+              <input
+                type="number"
+                placeholder="금액 입력"
+                value={newAmount}
+                onChange={e => setNewAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                className="text-sm outline-none bg-transparent placeholder-gray-300"
+                style={{ color: '#2ECC71', fontWeight: 600, width: '80%' }}
+              />
+              <span className="text-sm text-gray-400">원</span>
+            </div>
+          </div>
+          <button
+            onClick={handleAdd}
+            className="active:scale-95 transition-transform"
+            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 14, fontWeight: 600, color: '#2ECC71', border: 'none' }}
+          >
+            + 추가
+          </button>
+        </div>
+
+        <div className="flex gap-3" style={{ marginTop: 24 }}>
+          <button
+            onClick={onClose}
+            className="flex-1 active:scale-95 transition-transform"
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 15, fontWeight: 600, color: '#6B7280' }}
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 active:scale-95 transition-transform"
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#2ECC71', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
+          >
+            저장
+          </button>
         </div>
       </div>
     </div>
@@ -79,34 +140,53 @@ function BudgetEditPopup({ onClose }) {
   });
 
   function handleChange(id, val) {
-    const updated = cats.map(c => c.category_id === id ? { ...c, amount: parseInt(val) || 0 } : c);
-    setCats(updated);
-    localStorage.setItem('delta_budget_categories', JSON.stringify(updated));
+    setCats(prev => prev.map(c => c.category_id === id ? { ...c, amount: parseInt(val) || 0 } : c));
+  }
+
+  function handleSave() {
+    localStorage.setItem('delta_budget_categories', JSON.stringify(cats));
+    onClose();
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-end" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
-      <div className="w-full bg-white" style={{ borderRadius: '20px 20px 0 0', maxHeight: '70%', overflowY: 'auto', paddingBottom: 32 }} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <span className="font-bold text-gray-900" style={{ fontSize: 16 }}>카테고리별 예산 수정</span>
-          <button onClick={onClose} className="active:scale-90 transition-transform"><X size={20} className="text-gray-500" /></button>
-        </div>
-        <div className="flex flex-col gap-2 px-5">
+    <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: '0 20px' }} onClick={onClose}>
+      <div className="w-full bg-white" style={{ borderRadius: 20, maxHeight: '70%', overflowY: 'auto', padding: 32 }} onClick={e => e.stopPropagation()}>
+        <p className="font-bold text-gray-900" style={{ fontSize: 16, marginBottom: 20 }}>카테고리별 예산 수정</p>
+        <div className="flex flex-col" style={{ gap: 16 }}>
           {cats.map(cat => (
-            <div key={cat.category_id} className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3">
-              <span className="text-sm font-semibold text-gray-800">{cat.name}</span>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={cat.amount}
-                  onChange={e => handleChange(cat.category_id, e.target.value.replace(/[^0-9]/g, ''))}
-                  className="text-sm outline-none text-right bg-transparent"
-                  style={{ width: 100, color: '#2ECC71', fontWeight: 600 }}
-                />
-                <span className="text-sm text-gray-400">원</span>
+            <div key={cat.category_id} className="flex flex-col" style={{ gap: 8 }}>
+              <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+              <div className="flex items-center justify-between bg-gray-50 rounded-2xl" style={{ padding: '14px 20px' }}>
+                <span className="text-sm text-gray-400">예산</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={cat.amount}
+                    onChange={e => handleChange(cat.category_id, e.target.value.replace(/[^0-9]/g, ''))}
+                    className="text-sm outline-none text-right bg-transparent"
+                    style={{ width: 120, color: '#2ECC71', fontWeight: 600 }}
+                  />
+                  <span className="text-sm text-gray-400">원</span>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+        <div className="flex gap-3" style={{ marginTop: 24 }}>
+          <button
+            onClick={onClose}
+            className="flex-1 active:scale-95 transition-transform"
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 15, fontWeight: 600, color: '#6B7280' }}
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 active:scale-95 transition-transform"
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#2ECC71', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
+          >
+            저장
+          </button>
         </div>
       </div>
     </div>
