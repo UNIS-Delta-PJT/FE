@@ -18,6 +18,7 @@ import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
+import DirectInputScreen from './components/DirectInputScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
@@ -61,7 +62,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result'].includes(screen);
+  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -163,11 +164,19 @@ export default function App() {
             onHome={(scanned) => { addExpenses(scanned); setScreen('home'); showScanToast(); }}
           />
         )}
+        {screen === 'directInput' && (
+          <DirectInputScreen
+            onBack={() => setScreen('home')}
+            onSave={(exps) => addExpenses(exps)}
+            onHome={() => setScreen('home')}
+            allExpenses={expenses}
+          />
+        )}
         {screen === 'home' && tab === 'home' && (
           <div className="flex flex-col items-center gap-[25px] pb-4">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView />
-            <QuickActions onScan={() => setScreen('aiScan')} />
+            <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
             <TodayExpenses expenses={expenses} />
             <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
           </div>

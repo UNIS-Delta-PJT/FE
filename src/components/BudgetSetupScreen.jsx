@@ -179,23 +179,16 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
   }
 
   function handleComplete() {
-    if (!hasIncome) {
-      showBudgetToast('수입 설정을 먼저 진행해주세요!');
-      return;
-    }
     if (!budgetInput) {
       showBudgetToast('총 예산을 먼저 입력해주세요!');
       return;
     }
     const totalAllocated = categories.reduce((sum, cat) => sum + cat.amount, 0);
-    const diff = totalAllocated - totalBudget;
-    if (diff > 0) {
-      showBudgetToast(`${diff.toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
-    } else if (diff < 0) {
-      showBudgetToast(`${(-diff).toLocaleString('ko-KR')}원 덜 입력했어요!`);
-    } else {
-      onComplete(totalAllocated);
+    if (totalAllocated > totalBudget) {
+      showBudgetToast(`${(totalAllocated - totalBudget).toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
+      return;
     }
+    onComplete(totalBudget);
   }
 
   function handleCopyLastMonth() {
@@ -352,7 +345,7 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
               value={budgetInput}
               onChange={e => {
                 const v = e.target.value.replace(/[^0-9]/g, '');
-                if (!v || parseInt(v) <= totalIncome) setBudgetInput(v);
+                setBudgetInput(v);
               }}
               className="text-sm outline-none bg-transparent placeholder-[#2ECC71]"
               style={{ color: '#2ECC71', fontWeight: 400, width: 150 }}
