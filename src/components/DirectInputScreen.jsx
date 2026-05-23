@@ -265,12 +265,18 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
   function handleSave() {
     const valid = entries.filter(e => e.amount && e.category);
     if (!valid.length) return;
-    const parsed = valid.map(e => ({
-      expense_id: Date.now() + Math.random(),
-      place: e.category, name: e.category,
-      amount: parseInt(e.amount),
-      date: e.date.toISOString(), memo: e.memo,
-    }));
+    const parsed = valid.map(e => {
+      const hh = String(e.date.getHours()).padStart(2, '0');
+      const mm = String(e.date.getMinutes()).padStart(2, '0');
+      return {
+        expense_id: Date.now() + Math.random(),
+        place: e.memo || e.category,
+        name: e.category,
+        amount: parseInt(e.amount),
+        expense_date: `${hh}:${mm}`,
+        memo: e.memo,
+      };
+    });
     onSave(parsed);
     localStorage.setItem('delta_streak', String(newStreak));
     setSavedEntries(parsed);
