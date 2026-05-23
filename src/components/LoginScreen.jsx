@@ -1,4 +1,18 @@
-export default function LoginScreen({ onLogin }) {
+import { useState } from 'react';
+
+export default function LoginScreen({ onLogin, onTempLogin }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleTempLogin() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await onTempLogin();
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div
       className="flex flex-col items-center justify-center px-8 gap-6 overflow-hidden bg-white"
@@ -35,10 +49,11 @@ export default function LoginScreen({ onLogin }) {
 
       {/* 임시 로그인 */}
       <button
-        onClick={onLogin}
-        className="text-gray-400 text-xs underline underline-offset-2 mt-2 active:opacity-60 transition-opacity"
+        onClick={handleTempLogin}
+        disabled={loading}
+        className="text-gray-400 text-xs underline underline-offset-2 mt-2 active:opacity-60 transition-opacity disabled:opacity-40"
       >
-        임시 로그인으로 시작
+        {loading ? '로그인 중...' : '임시 로그인으로 시작'}
       </button>
     </div>
   );

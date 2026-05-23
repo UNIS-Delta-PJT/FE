@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import TopBar from './components/TopBar';
 import BudgetCard from './components/BudgetCard';
 import CalendarView from './components/CalendarView';
@@ -20,36 +20,93 @@ import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
 
+import { tempLogin } from './api/auth';
+import {
+  getExpenses,
+  transformExpense,
+  todayString,
+  currentYearMonth,
+} from './api/expenses';
+
 export default function App() {
   const [screen, setScreen] = useState('splash');
   const [tab, setTab] = useState('home');
+
   const [budgetTotal, setBudgetTotal] = useState(() => {
     try {
       const saved = localStorage.getItem('delta_budget_total');
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const [expenses, setExpenses] = useState(() => {
-    try {
-      const saved = localStorage.getItem('delta_expenses');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
 
+  // 이번 달 전체 소비 내역 (API에서 로드)
+  const [expenses, setExpenses] = useState([]);
+
+  // 이번 달 총 지출액
   const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+
+  // 오늘 소비 내역만 필터링
+  const todayExpenses = useMemo(() => {
+    const today = todayString();
+    return expenses.filter(e => e.expense_date === today);
+  }, [expenses]);
+
+  // 캘린더용 날짜 → 금액 맵
+  const calendarData = useMemo(() => {
+    return expenses.reduce((map, e) => {
+      map[e.expense_date] = (map[e.expense_date] || 0) + e.amount;
+      return map;
+    }, {});
+  }, [expenses]);
 
   useEffect(() => {
     localStorage.setItem('delta_budget_total', JSON.stringify(budgetTotal));
   }, [budgetTotal]);
 
-  useEffect(() => {
-    localStorage.setItem('delta_expenses', JSON.stringify(expenses));
-  }, [expenses]);
+  // ─── API: 소비 내역 로드 ────────────────────────────────────────
+  const loadExpenses = useCallback(async () => {
+    if (!localStorage.getItem('delta_uuid')) return;
+    try {
+      const raw = await getExpenses(currentYearMonth());
+      setExpenses(raw.map(transformExpense));
+    } catch (err) {
+      console.error('[loadExpenses]', err);
+    }
+  }, []);
 
-  function addExpenses(newExpenses) {
-    setExpenses(prev => [...prev, ...newExpenses]);
+  // home 화면 진입 시마다 새로고침
+  useEffect(() => {
+    if (screen === 'home') loadExpenses();
+  }, [screen, loadExpenses]);
+
+  // ─── API: 임시 로그인 ───────────────────────────────────────────
+  async function handleTempLogin() {
+    try {
+      const data = await tempLogin();
+      localStorage.setItem('delta_uuid', data.uuid);
+      setScreen('incomeSetup');
+    } catch (err) {
+      console.error('[tempLogin]', err);
+      alert('로그인에 실패했어요. 다시 시도해주세요.');
+    }
   }
 
+  // 스플래시 완료: UUID 있으면 home, 없으면 onboarding
+  function handleSplashDone() {
+    if (localStorage.getItem('delta_uuid')) {
+      setScreen('home');
+    } else {
+      setScreen('onboarding');
+    }
+  }
+
+  // DirectInputScreen에서 저장 완료 후 호출 (옵티미스틱 업데이트 + 리프레시)
+  function addExpenses(newExpenses) {
+    setExpenses(prev => [...prev, ...newExpenses]);
+    loadExpenses(); // 백그라운드에서 API 동기화
+  }
+
+  // ─── 토스트 ─────────────────────────────────────────────────────
   const [scanToast, setScanToast] = useState(false);
   const [scanToastFading, setScanToastFading] = useState(false);
 
@@ -107,12 +164,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 네비바 뒤 흰 배경 (절반 높이) */}
+      {/* 네비바 뒤 흰 배경 */}
       {screen === 'home' && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 36, backgroundColor: 'white', zIndex: 10 }} />
       )}
 
-      {/* 하단 고정 네비게이션 */}
+      {/* 하단 네비게이션 */}
       {screen === 'home' && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20 }}>
           <BottomNav activeTab={tab} onTabChange={setTab} />
@@ -129,13 +186,16 @@ export default function App() {
         }}
       >
         {screen === 'splash' && (
-          <SplashScreen onDone={() => setScreen('onboarding')} />
+          <SplashScreen onDone={handleSplashDone} />
         )}
         {screen === 'onboarding' && (
           <OnboardingScreen onNext={() => setScreen('login')} />
         )}
         {screen === 'login' && (
-          <LoginScreen onLogin={() => setScreen('incomeSetup')} />
+          <LoginScreen
+            onLogin={() => setScreen('incomeSetup')}
+            onTempLogin={handleTempLogin}
+          />
         )}
         {screen === 'incomeSetup' && (
           <IncomeSetupScreen onNext={() => setScreen('budgetSetup')} onBack={() => setScreen('login')} />
@@ -175,9 +235,9 @@ export default function App() {
         {screen === 'home' && tab === 'home' && (
           <div className="flex flex-col items-center gap-[25px] pb-4">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
-            <CalendarView />
+            <CalendarView calendarData={calendarData} />
             <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
-            <TodayExpenses expenses={expenses} />
+            <TodayExpenses expenses={todayExpenses} />
             <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
           </div>
         )}

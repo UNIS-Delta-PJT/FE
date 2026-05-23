@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
+import { createExpense, CATEGORY_ID_MAP, toDateString } from '../api/expenses';
 
 const CATEGORIES = ['식비', '교통', '문화', '기타'];
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
@@ -249,6 +250,7 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
   const [view, setView]             = useState('input');
   const [toastVisible, setToastVisible] = useState(false);
   const [toastFading, setToastFading]   = useState(false);
+  const [saving, setSaving]         = useState(false);
 
   const streak = (() => { try { return parseInt(localStorage.getItem('delta_streak') || '0'); } catch { return 0; } })();
   const newStreak = streak + 1;
@@ -262,31 +264,50 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
     setOpenCalId(null);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const valid = entries.filter(e => e.amount && e.category);
-    if (!valid.length) return;
-    const parsed = valid.map(e => {
-      const hh = String(e.date.getHours()).padStart(2, '0');
-      const mm = String(e.date.getMinutes()).padStart(2, '0');
-      return {
+    if (!valid.length || saving) return;
+
+    setSaving(true);
+    try {
+      // API 저장
+      for (const e of valid) {
+        const categoryId = CATEGORY_ID_MAP[e.category] ?? 4;
+        const expenseDate = toDateString(e.date);
+        await createExpense({
+          categoryId,
+          amount: parseInt(e.amount),
+          expenseDate,
+          memo: e.memo || '',
+        });
+      }
+
+      // 옵티미스틱 업데이트용 로컬 형식 생성
+      const parsed = valid.map(e => ({
         expense_id: Date.now() + Math.random(),
         place: e.memo || e.category,
         name: e.category,
         amount: parseInt(e.amount),
-        expense_date: `${hh}:${mm}`,
+        expense_date: toDateString(e.date), // 'YYYY-MM-DD'
         memo: e.memo,
-      };
-    });
-    onSave(parsed);
-    localStorage.setItem('delta_streak', String(newStreak));
-    setSavedEntries(parsed);
-    setView('saved');
-    setToastVisible(true);
-    setToastFading(false);
-    setTimeout(() => {
-      setToastFading(true);
-      setTimeout(() => setToastVisible(false), 300);
-    }, 2500);
+      }));
+
+      onSave(parsed);
+      localStorage.setItem('delta_streak', String(newStreak));
+      setSavedEntries(parsed);
+      setView('saved');
+      setToastVisible(true);
+      setToastFading(false);
+      setTimeout(() => {
+        setToastFading(true);
+        setTimeout(() => setToastVisible(false), 300);
+      }, 2500);
+    } catch (err) {
+      console.error('[handleSave]', err);
+      alert('저장에 실패했어요. 다시 시도해주세요.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const isValid = entries.some(e => e.amount && e.category);
@@ -361,10 +382,11 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
         </button>
         <button
           onClick={handleSave}
-          className="active:scale-95 transition-transform"
-          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid ? '#2ECC71' : '#A7F3C8', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
+          disabled={saving}
+          className="active:scale-95 transition-transform disabled:opacity-60"
+          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid && !saving ? '#2ECC71' : '#A7F3C8', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
         >
-          저장하기
+          {saving ? '저장 중...' : '저장하기'}
         </button>
       </div>
     </div>

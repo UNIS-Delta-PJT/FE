@@ -8,6 +8,12 @@ function formatDate(date) {
 }
 
 function formatTime(time) {
+  // YYYY-MM-DD 형식이면 월/일로 표시
+  if (/^\d{4}-\d{2}-\d{2}$/.test(time)) {
+    const parts = time.split('-');
+    return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
+  }
+  // HH:MM 형식
   const [h, m] = time.split(':').map(Number);
   const period = h < 12 ? 'AM' : 'PM';
   const hour = h % 12 || 12;

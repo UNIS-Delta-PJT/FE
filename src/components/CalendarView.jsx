@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockCalendarData } from '../data/mockData';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -30,7 +29,7 @@ function toKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export default function CalendarView() {
+export default function CalendarView({ calendarData = {} }) {
   const today = new Date();
   const [expanded, setExpanded] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(
@@ -52,7 +51,7 @@ export default function CalendarView() {
 
   const renderCell = (date, isMonthView = false) => {
     const key = toKey(date);
-    const amount = mockCalendarData[key] ?? 0;
+    const amount = calendarData[key] ?? 0;
     const isToday = key === toKey(today);
     const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
     // M T W T F S S 순서: Mon=0 ... Sat=5, Sun=6
