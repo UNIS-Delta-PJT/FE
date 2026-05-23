@@ -188,6 +188,10 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
       showBudgetToast(`${(totalAllocated - totalBudget).toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
       return;
     }
+    if (totalAllocated < totalBudget) {
+      showBudgetToast(`${(totalBudget - totalAllocated).toLocaleString('ko-KR')}원이 아직 배분되지 않았어요!`);
+      return;
+    }
     onComplete(totalBudget);
   }
 
