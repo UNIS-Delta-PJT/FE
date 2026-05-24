@@ -1,3 +1,5 @@
+import logoImg from '../assets/logo.png';
+
 const features = [
   {
     icon: '📸',
@@ -24,7 +26,7 @@ export default function OnboardingScreen({ onNext }) {
     >
       {/* 로고 */}
       <div className="flex flex-col items-center gap-1 mb-14">
-        <p className="text-2xl font-black text-[#2ECC71] tracking-widest">DELTA</p>
+        <img src={logoImg} alt="DELTA" className="h-12 object-contain" />
         <p className="text-xs text-gray-400">서비스 소개</p>
       </div>
 

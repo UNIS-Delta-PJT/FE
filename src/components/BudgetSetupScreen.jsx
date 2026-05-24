@@ -210,46 +210,48 @@ export default function BudgetSetupScreen({ onComplete, onBack }) {
       {/* 예산 초과/부족 토스트 */}
       {budgetToast && (
         <div
-          className={`fixed z-50 flex items-center rounded-2xl shadow-md ${budgetToastFading ? 'toast-exit' : 'toast-enter'}`}
+          className={budgetToastFading ? 'toast-exit' : 'toast-enter'}
           style={{
+            position: 'fixed',
             bottom: '96px',
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#FECACA',
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: '#FECACA',
+            width: '179px',
+            height: '40px',
+            backgroundColor: 'rgba(255, 90, 95, 0.5)',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
             whiteSpace: 'nowrap',
-            paddingTop: '4px',
-            paddingBottom: '4px',
-            paddingLeft: '12px',
-            paddingRight: '12px',
           }}
         >
-          <span className="font-medium text-red-400" style={{ fontSize: '11px' }}>{budgetToast}</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 400, color: '#FFFFFF' }}>{budgetToast}</span>
         </div>
       )}
 
       {/* 지난달 토스트 */}
       {toast && (
         <div
-          className={`fixed z-50 flex items-center rounded-2xl shadow-md ${toastFading ? 'toast-exit' : 'toast-enter'}`}
+          className={toastFading ? 'toast-exit' : 'toast-enter'}
           style={{
+            position: 'fixed',
             bottom: '96px',
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#FECACA',
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: '#FECACA',
+            width: '179px',
+            height: '40px',
+            backgroundColor: 'rgba(255, 90, 95, 0.5)',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
             whiteSpace: 'nowrap',
-            paddingTop: '4px',
-            paddingBottom: '4px',
-            paddingLeft: '12px',
-            paddingRight: '12px',
           }}
         >
-          <span className="font-medium text-red-400" style={{ fontSize: '11px' }}>지난달에 설정한 계획이 없어요!</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 400, color: '#FFFFFF' }}>지난달에 설정한 계획이 없어요!</span>
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import AttendancePopup from './AttendancePopup';
+import logoImg from '../assets/logo.png';
 
 export default function TopBar() {
   const [showAttendance, setShowAttendance] = useState(false);
@@ -9,13 +10,8 @@ export default function TopBar() {
     <>
       <header className="flex items-center justify-between bg-white sticky top-0 z-10" style={{ paddingTop: '7px', paddingBottom: '7px', paddingLeft: '18.5px', paddingRight: '18.5px' }}>
         {/* 로고 */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#2ECC71] flex items-center justify-center text-sm font-black text-white shadow-lg shadow-[#2ECC71]/30">
-            D
-          </div>
-          <span className="text-lg font-black tracking-tight text-gray-900">
-            DELTA
-          </span>
+        <div className="flex items-center">
+          <img src={logoImg} alt="DELTA" className="h-8 object-contain" />
         </div>
 
         {/* 우측 아이콘들 */}

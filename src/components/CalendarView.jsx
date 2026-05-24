@@ -82,16 +82,16 @@ export default function CalendarView({ calendarData = {} }) {
         className={`flex flex-col items-center justify-start py-1 rounded-xl transition-all ${isMonthView && !isCurrentMonth ? 'opacity-20' : ''}`}
       >
         <span
-          className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold mb-0.5 ${circleBg} ${textColorClass}`}
-          style={dateStyle}
+          className={`flex flex-col items-center justify-center font-bold gap-0.5 ${circleBg} ${textColorClass}`}
+          style={{ ...dateStyle, width: 42, height: 42, borderRadius: 50 }}
         >
-          {date.getDate()}
+          <span className="text-xs leading-none">{date.getDate()}</span>
+          {amount > 0 && (
+            <span className="text-[8px] leading-none" style={{ color: '#006D37' }}>
+              {formatAmount(amount)}
+            </span>
+          )}
         </span>
-        {amount > 0 && (
-          <span className="text-[9px] font-bold leading-none" style={{ color: '#006D37' }}>
-            {formatAmount(amount)}
-          </span>
-        )}
       </button>
     );
   };

@@ -7,17 +7,22 @@ function formatDate(date) {
   return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
 }
 
-function formatTime(time) {
-  // YYYY-MM-DD 형식이면 월/일로 표시
-  if (/^\d{4}-\d{2}-\d{2}$/.test(time)) {
-    const parts = time.split('-');
+function formatTime(savedAt, expenseDate) {
+  // saved_at (ISO) 있으면 정확한 시각 표시
+  if (savedAt) {
+    const d = new Date(savedAt);
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const period = h < 12 ? 'AM' : 'PM';
+    const hour = h % 12 || 12;
+    return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  }
+  // fallback: YYYY-MM-DD → 월/일
+  if (expenseDate && /^\d{4}-\d{2}-\d{2}$/.test(expenseDate)) {
+    const parts = expenseDate.split('-');
     return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
   }
-  // HH:MM 형식
-  const [h, m] = time.split(':').map(Number);
-  const period = h < 12 ? 'AM' : 'PM';
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  return '';
 }
 
 function ExpenseCard({ item }) {
@@ -32,7 +37,7 @@ function ExpenseCard({ item }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{item.place}</p>
         <p className="text-[11px] text-gray-900 mt-0.5">
-          {item.name} · {formatTime(item.expense_date)}
+          {item.name} · {formatTime(item.saved_at, item.expense_date)}
         </p>
       </div>
 

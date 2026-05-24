@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import logoImg from '../assets/logo.png';
 
 export default function SplashScreen({ onDone }) {
   useEffect(() => {
@@ -8,14 +9,8 @@ export default function SplashScreen({ onDone }) {
 
   return (
     <div className="flex flex-col items-center justify-center bg-white" style={{ minHeight: '844px' }}>
-      {/* 로고 — 추후 이미지로 교체 */}
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-bounce w-28 h-28 rounded-3xl bg-[#f0faf4] flex items-center justify-center shadow-sm">
-          <span style={{ fontSize: '64px' }}>💚</span>
-        </div>
-        <p className="text-3xl font-black text-[#2ECC71] tracking-widest">DELTA</p>
-        <p className="text-gray-400 text-sm font-medium">소비를 기록하고 예산을 관리해보세요</p>
-      </div>
+      {/* 로고 */}
+      <img src={logoImg} alt="DELTA" style={{ width: '85px', height: '76.4px', objectFit: 'contain' }} />
     </div>
   );
 }

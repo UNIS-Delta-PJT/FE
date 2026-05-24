@@ -45,10 +45,17 @@ export default function App() {
   // 이번 달 총 지출액
   const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
 
-  // 오늘 소비 내역만 필터링
+  // 오늘 소비 내역만 필터링 — 최신 저장 순(saved_at) 정렬
   const todayExpenses = useMemo(() => {
     const today = todayString();
-    return expenses.filter(e => e.expense_date === today);
+    return expenses
+      .filter(e => e.expense_date === today)
+      .sort((a, b) => {
+        if (a.saved_at && b.saved_at) return new Date(b.saved_at) - new Date(a.saved_at);
+        if (a.saved_at) return -1;
+        if (b.saved_at) return 1;
+        return b.expense_id - a.expense_id;
+      });
   }, [expenses]);
 
   // 캘린더용 날짜 → 금액 맵
@@ -63,12 +70,21 @@ export default function App() {
     localStorage.setItem('delta_budget_total', JSON.stringify(budgetTotal));
   }, [budgetTotal]);
 
-  // ─── API: 소비 내역 로드 ────────────────────────────────────────
+  // ─── API: 소비 내역 로드 (saved_at 보존) ─────────────────────────
   const loadExpenses = useCallback(async () => {
     if (!localStorage.getItem('delta_uuid')) return;
     try {
       const raw = await getExpenses(currentYearMonth());
-      setExpenses(raw.map(transformExpense));
+      setExpenses(prev => {
+        // 기존 항목의 saved_at을 expense_id 기준으로 보존
+        const savedAtMap = {};
+        prev.forEach(e => { if (e.saved_at) savedAtMap[e.expense_id] = e.saved_at; });
+        return raw.map(e => {
+          const item = transformExpense(e);
+          if (savedAtMap[item.expense_id]) item.saved_at = savedAtMap[item.expense_id];
+          return item;
+        });
+      });
     } catch (err) {
       console.error('[loadExpenses]', err);
     }
@@ -91,12 +107,12 @@ export default function App() {
     }
   }
 
-  // 스플래시 완료: UUID 있으면 home, 없으면 onboarding
+  // 스플래시 완료: UUID 있으면 home, 없으면 login
   function handleSplashDone() {
     if (localStorage.getItem('delta_uuid')) {
       setScreen('home');
     } else {
-      setScreen('onboarding');
+      setScreen('login');
     }
   }
 

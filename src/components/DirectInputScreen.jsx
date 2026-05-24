@@ -268,28 +268,33 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
     const valid = entries.filter(e => e.amount && e.category);
     if (!valid.length || saving) return;
 
+    const savedAt = new Date(); // 저장 버튼 누른 시각
+
     setSaving(true);
     try {
-      // API 저장
+      // API 저장 — 응답에서 실제 expenseId 수집
+      const apiResults = [];
       for (const e of valid) {
         const categoryId = CATEGORY_ID_MAP[e.category] ?? 4;
         const expenseDate = toDateString(e.date);
-        await createExpense({
+        const result = await createExpense({
           categoryId,
           amount: parseInt(e.amount),
           expenseDate,
           memo: e.memo || '',
         });
+        apiResults.push(result);
       }
 
-      // 옵티미스틱 업데이트용 로컬 형식 생성
-      const parsed = valid.map(e => ({
-        expense_id: Date.now() + Math.random(),
+      // 옵티미스틱 업데이트용 로컬 형식 생성 (실제 ID + 저장 시각 포함)
+      const parsed = valid.map((e, i) => ({
+        expense_id: apiResults[i]?.expenseId ?? (Date.now() + Math.random()),
         place: e.memo || e.category,
         name: e.category,
         amount: parseInt(e.amount),
-        expense_date: toDateString(e.date), // 'YYYY-MM-DD'
+        expense_date: toDateString(e.date), // 'YYYY-MM-DD' (필터링용)
         memo: e.memo,
+        saved_at: savedAt.toISOString(),    // 저장 시각 (표시·정렬용)
       }));
 
       onSave(parsed);
@@ -303,8 +308,10 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
         setTimeout(() => setToastVisible(false), 300);
       }, 2500);
     } catch (err) {
-      console.error('[handleSave]', err);
-      alert('저장에 실패했어요. 다시 시도해주세요.');
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message ?? err?.message ?? '알 수 없는 오류';
+      console.error('[handleSave]', status, msg, err);
+      alert(`저장에 실패했어요. (${status ?? 'network'}: ${msg})`);
     } finally {
       setSaving(false);
     }
