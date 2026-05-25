@@ -2,6 +2,7 @@ import { useState } from 'react';
 import appleIcon from '../assets/icon-apple.png';
 import kakaoIcon from '../assets/icon-kakao.png';
 import googleIcon from '../assets/icon-google.png';
+import deltaHappyImg from '../assets/delta_happy.png';
 
 const TOAST_STYLE = {
   position: 'fixed',
@@ -56,7 +57,22 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
           </span>
         </div>
       )}
-      {/* 헤딩 영역 */}
+      {/* delta_happy 마스코트 이미지 */}
+      <img
+        src={deltaHappyImg}
+        alt="delta happy"
+        style={{
+          position: 'absolute',
+          left: '140px',
+          top: '240px',
+          width: '113px',
+          height: '141px',
+          objectFit: 'contain',
+          zIndex: 1,
+        }}
+      />
+
+      {/* 헤딩 영역 (텍스트만) */}
       <div style={{ position: 'absolute', top: '128px', left: '20px', right: '20px' }}>
         <p
           style={{
@@ -84,6 +100,10 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
         >
           {`지루한 가계부 대신\n델타와 함께하는 매일의 미션을 즐겨보세요!`}
         </p>
+      </div>
+
+      {/* 버튼 영역 — y:410부터 시작 */}
+      <div style={{ position: 'absolute', top: '410px', left: '20px', right: '20px' }}>
 
         {/* 계정 생성하기 버튼 */}
         <button
@@ -97,9 +117,9 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: '48px',
             border: 'none',
             cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(46, 204, 113, 0.40)',
           }}
         >
           <span
@@ -197,6 +217,7 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
                 justifyContent: 'center',
                 gap: '12px',
                 cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
               }}
             >
               <img src={icon} alt={label} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />

@@ -13,6 +13,7 @@ import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import LoginScreen from './components/LoginScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
+import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
 import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
@@ -31,6 +32,8 @@ import {
 export default function App() {
   const [screen, setScreen] = useState('splash');
   const [tab, setTab] = useState('home');
+
+  const [budgetGoal, setBudgetGoal] = useState(0);
 
   const [budgetTotal, setBudgetTotal] = useState(() => {
     try {
@@ -70,7 +73,7 @@ export default function App() {
     localStorage.setItem('delta_budget_total', JSON.stringify(budgetTotal));
   }, [budgetTotal]);
 
-  // ─── API: 소비 내역 로드 (saved_at 보존) ─────────────────────────
+  // ─── API: 소비 내역 로드 (saved_at 보존 + 로컬 전용 항목 유지) ──────
   const loadExpenses = useCallback(async () => {
     if (!localStorage.getItem('delta_uuid')) return;
     try {
@@ -79,11 +82,18 @@ export default function App() {
         // 기존 항목의 saved_at을 expense_id 기준으로 보존
         const savedAtMap = {};
         prev.forEach(e => { if (e.saved_at) savedAtMap[e.expense_id] = e.saved_at; });
-        return raw.map(e => {
+
+        const apiItems = raw.map(e => {
           const item = transformExpense(e);
           if (savedAtMap[item.expense_id]) item.saved_at = savedAtMap[item.expense_id];
           return item;
         });
+
+        // API에 없는 로컬 전용 항목(스캔 결과 등) 보존
+        const apiIds = new Set(apiItems.map(i => i.expense_id));
+        const localOnly = prev.filter(e => e.saved_at && !apiIds.has(e.expense_id));
+
+        return [...apiItems, ...localOnly];
       });
     } catch (err) {
       console.error('[loadExpenses]', err);
@@ -135,7 +145,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const scrollable = ['home', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -209,15 +219,26 @@ export default function App() {
         )}
         {screen === 'login' && (
           <LoginScreen
-            onLogin={() => setScreen('incomeSetup')}
+            onLogin={handleTempLogin}
             onTempLogin={handleTempLogin}
           />
         )}
         {screen === 'incomeSetup' && (
-          <IncomeSetupScreen onNext={() => setScreen('budgetSetup')} onBack={() => setScreen('login')} />
+          <IncomeSetupScreen onNext={() => setScreen('budgetGoal')} onBack={() => setScreen('login')} />
+        )}
+        {screen === 'budgetGoal' && (
+          <BudgetGoalScreen
+            onNext={(amount) => { setBudgetGoal(amount); setScreen('budgetSetup'); }}
+            onBack={() => setScreen('incomeSetup')}
+            initialBudget={budgetGoal}
+          />
         )}
         {screen === 'budgetSetup' && (
-          <BudgetSetupScreen onComplete={(total) => { setBudgetTotal(total); setScreen('home'); }} onBack={() => setScreen('incomeSetup')} />
+          <BudgetSetupScreen
+            onComplete={(total) => { setBudgetTotal(total); setScreen('home'); }}
+            onBack={() => setScreen('budgetGoal')}
+            initialBudget={budgetGoal}
+          />
         )}
         {screen === 'mascotStatus' && (
           <MascotStatusScreen onNext={() => setScreen('attendance')} />
@@ -237,7 +258,11 @@ export default function App() {
         {screen === 'result' && (
           <ScanResultScreen
             onBack={() => setScreen('aiScan')}
-            onHome={(scanned) => { addExpenses(scanned); setScreen('home'); showScanToast(); }}
+            onHome={(scanned) => {
+              setExpenses(prev => [...prev, ...scanned]);
+              setScreen('home');
+              showScanToast();
+            }}
           />
         )}
         {screen === 'directInput' && (

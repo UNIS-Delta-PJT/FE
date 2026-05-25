@@ -20,7 +20,7 @@ export const mockTodayExpenses = [
   {
     expense_id: 1,
     icon: '☕',
-    place: '스타벅스',
+    place: '바나프레소 커피',
     name: '카페',
     expense_date: '08:32',
     amount: 6500,

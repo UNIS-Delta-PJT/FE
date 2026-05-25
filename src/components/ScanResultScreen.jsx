@@ -1,4 +1,5 @@
 import { ArrowLeft, CheckCircle, Utensils } from 'lucide-react';
+import { todayString } from '../api/expenses';
 
 function ReceiptIcon({ color = '#3D4A3E', width = 18, height = 20 }) {
   return (
@@ -21,7 +22,7 @@ function ReceiptIcon({ color = '#3D4A3E', width = 18, height = 20 }) {
 }
 
 const mockResults = [
-  { expense_id: 1, merchant: '스타벅스', icon: '☕', amount: 8500, name: '식비' },
+  { expense_id: 1, merchant: '바나프레소 커피', icon: '☕', amount: 8500, name: '식비' },
   { expense_id: 2, merchant: '올리브영', icon: '🛍️', amount: 23000, name: '쇼핑' },
   { expense_id: 3, merchant: '지하철', icon: '🚇', amount: 1400, name: '교통' },
 ];
@@ -67,12 +68,14 @@ function getNowTime() {
 
 export default function ScanResultScreen({ onBack, onHome }) {
   function handleHome() {
+    const now = new Date();
     const scannedExpenses = mockResults.map(r => ({
       expense_id: Date.now() + r.expense_id,
       icon: r.icon,
       place: r.merchant,
       name: r.name,
-      expense_date: getNowTime(),
+      expense_date: todayString(),
+      saved_at: now.toISOString(),
       amount: r.amount,
     }));
     onHome(scannedExpenses);

@@ -8,9 +8,7 @@ const DARK_GREEN = '#006D37';
 function formatAmount(amount) {
   if (amount === 0) return '';
   const man = amount / 10000;
-  return man >= 1
-    ? `${man % 1 === 0 ? man : man.toFixed(1)}만`
-    : `${(amount / 1000).toFixed(1)}천`;
+  return `${man % 1 === 0 ? man : man.toFixed(1)}만`;
 }
 
 // 월요일 시작 기준 해당 주의 날짜 배열
