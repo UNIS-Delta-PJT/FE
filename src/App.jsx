@@ -151,7 +151,11 @@ export default function App() {
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    // 새 콘텐츠가 레이아웃된 뒤 스크롤 리셋 (requestAnimationFrame으로 타이밍 보장)
+    const id = requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(id);
   }, [screen, tab]);
 
   return (
@@ -295,7 +299,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={expenses} />
+          <ReportScreen expenses={expenses} budgetTotal={budgetTotal} spent={spent} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
