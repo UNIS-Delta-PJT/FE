@@ -111,7 +111,7 @@ export default function App() {
     try {
       const data = await tempLogin();
       localStorage.setItem('delta_uuid', data.uuid);
-      setScreen('incomeSetup');
+      setScreen('budgetGoal'); // MVP: incomeSetup 화면 임시 스킵
     } catch (err) {
       console.error('[tempLogin]', err);
       alert('로그인에 실패했어요. 다시 시도해주세요.');
@@ -235,7 +235,7 @@ export default function App() {
         {screen === 'budgetGoal' && (
           <BudgetGoalScreen
             onNext={(amount) => { setBudgetGoal(amount); setScreen('budgetSetup'); }}
-            onBack={() => setScreen('incomeSetup')}
+            onBack={() => setScreen('login')} // MVP: incomeSetup 스킵으로 login으로 복귀
             initialBudget={budgetGoal}
           />
         )}
