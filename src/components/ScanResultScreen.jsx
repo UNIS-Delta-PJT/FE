@@ -1,137 +1,349 @@
-import { ArrowLeft, CheckCircle, Utensils } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ArrowLeft, CheckCircle, Pencil, ChevronDown } from 'lucide-react';
 import { todayString } from '../api/expenses';
+import CategoryIcon from './CategoryIcons';
 
-function ReceiptIcon({ color = '#3D4A3E', width = 18, height = 20 }) {
+// ── 상수 ────────────────────────────────────────────────────────────────────
+const CATEGORIES = ['식비', '카페', '교통', '쇼핑', '문화비', '생활비'];
+
+const mockResults = [
+  { expense_id: 1, merchant: '바나프레소 커피', icon: '☕', amount: 8500,  category: '카페' },
+  { expense_id: 2, merchant: '올리브영',        icon: '🛍️', amount: 23000, category: '쇼핑' },
+  { expense_id: 3, merchant: '지하철',          icon: '🚇', amount: 1400,  category: '교통' },
+];
+
+// ── 영수증 아이콘 ─────────────────────────────────────────────────────────
+function ReceiptIcon({ color = '#2ECC71', size = 20 }) {
   return (
-    <svg width={width} height={height} viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size * (20 / 18)} viewBox="0 0 18 20" fill="none">
       <path
         d="M1 2C1 1.45 1.45 1 2 1H16C16.55 1 17 1.45 17 2V15L14.5 19L12 15L9.5 19L7 15L4.5 19L2 15L1 15V2Z"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
+        stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"
       />
       <path
         d="M4.5 6H13.5M4.5 9H13.5M4.5 12H9.5"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        stroke={color} strokeWidth="1.5" strokeLinecap="round"
       />
     </svg>
   );
 }
 
-const mockResults = [
-  { expense_id: 1, merchant: '바나프레소 커피', icon: '☕', amount: 8500, name: '식비' },
-  { expense_id: 2, merchant: '올리브영', icon: '🛍️', amount: 23000, name: '쇼핑' },
-  { expense_id: 3, merchant: '지하철', icon: '🚇', amount: 1400, name: '교통' },
-];
+// ── 편집 가능한 카드 ──────────────────────────────────────────────────────
+function EditableCard({ item, onChange }) {
+  const [editingField, setEditingField] = useState(null); // null | 'merchant' | 'amount' | 'category'
+  const [draftMerchant, setDraftMerchant] = useState(item.merchant);
+  const [draftAmount, setDraftAmount]   = useState(String(item.amount));
+  const merchantRef = useRef(null);
+  const amountRef   = useRef(null);
 
-function ResultCard({ merchant, icon, amount, name }) {
+  function startEdit(field) {
+    setEditingField(field);
+    if (field === 'merchant') setTimeout(() => merchantRef.current?.focus(), 40);
+    if (field === 'amount')   setTimeout(() => amountRef.current?.focus(), 40);
+  }
+
+  function commitMerchant() {
+    const val = draftMerchant.trim() || item.merchant;
+    setDraftMerchant(val);
+    onChange({ ...item, merchant: val });
+    setEditingField(null);
+  }
+
+  function commitAmount() {
+    const parsed = parseInt(draftAmount.replace(/[^0-9]/g, ''), 10);
+    const val = isNaN(parsed) || parsed <= 0 ? item.amount : parsed;
+    setDraftAmount(String(val));
+    onChange({ ...item, amount: val });
+    setEditingField(null);
+  }
+
+  function selectCategory(cat) {
+    onChange({ ...item, category: cat });
+    setEditingField(null);
+  }
+
   return (
-    <div className="w-[85%] self-center rounded-3xl bg-[#FFFFFF] border border-gray-100 flex flex-col gap-3 shadow-sm" style={{ padding: '15px' }}>
-      <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-4xl bg-gray-200 flex items-center justify-center shadow-sm flex-shrink-0">
-          <ReceiptIcon />
+    <div
+      style={{
+        borderRadius: 20,
+        background: '#FFFFFF',
+        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+        padding: '16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+      }}
+    >
+      {/* 가맹점 행 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* 아이콘 */}
+        <div
+          style={{
+            width: 44, height: 44,
+            borderRadius: 14,
+            background: '#F0FAF4',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <ReceiptIcon size={20} color="#2ECC71" />
         </div>
-        <div className="flex flex-col gap-0.5">
-          <p style={{ fontSize: '12px' }} className="text-gray-400">가맹점</p>
-          <p className="text-base font-bold text-gray-900">{merchant}</p>
-        </div>
-      </div>
 
-      <div className="border-t border-gray-100" />
-
-      <div className="flex items-start w-full">
-        <div className="w-1/2">
-          <p style={{ fontSize: '12px' }} className="text-gray-400 mb-1">금액</p>
-          <p className="text-xl font-bold text-gray-800">
-            ₩{amount.toLocaleString('ko-KR')}
+        {/* 가맹점명 */}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 2px 0', fontFamily: 'Pretendard, sans-serif' }}>
+            가맹점
           </p>
-        </div>
-        <div className="w-1/2">
-          <p style={{ fontSize: '12px' }} className="text-gray-400 mb-1">카테고리</p>
-          <div className="flex items-center gap-1.5 bg-gray-200 rounded-full w-fit h-6" style={{ paddingLeft: '8px', paddingRight: '8px' }}>
-            <Utensils size={12} className="text-gray/800" />
-            <span className="text-xs font-semibold text-gray/800">{name}</span>
-          </div>
+          {editingField === 'merchant' ? (
+            <input
+              ref={merchantRef}
+              value={draftMerchant}
+              onChange={e => setDraftMerchant(e.target.value)}
+              onBlur={commitMerchant}
+              onKeyDown={e => { if (e.key === 'Enter') commitMerchant(); }}
+              style={{
+                width: '100%',
+                fontSize: 15, fontWeight: 700, color: '#1A1A1A',
+                fontFamily: 'Pretendard, sans-serif',
+                border: 'none', borderBottom: '1.5px solid #2ECC71',
+                outline: 'none', background: 'transparent',
+                padding: '2px 0',
+              }}
+            />
+          ) : (
+            <button
+              onClick={() => startEdit('merchant')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A', fontFamily: 'Pretendard, sans-serif' }}>
+                {item.merchant}
+              </span>
+              <Pencil size={12} color="#BBBBBB" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* 구분선 */}
+      <div style={{ height: 1, background: '#F3F4F6', margin: '12px 0' }} />
+
+      {/* 금액 + 카테고리 행 */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+
+        {/* 금액 */}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
+            금액
+          </p>
+          {editingField === 'amount' ? (
+            <input
+              ref={amountRef}
+              type="number"
+              value={draftAmount}
+              onChange={e => setDraftAmount(e.target.value)}
+              onBlur={commitAmount}
+              onKeyDown={e => { if (e.key === 'Enter') commitAmount(); }}
+              style={{
+                width: '100%',
+                fontSize: 17, fontWeight: 700, color: '#1A1A1A',
+                fontFamily: 'Pretendard, sans-serif',
+                border: 'none', borderBottom: '1.5px solid #2ECC71',
+                outline: 'none', background: 'transparent',
+                padding: '2px 0',
+              }}
+            />
+          ) : (
+            <button
+              onClick={() => startEdit('amount')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 17, fontWeight: 700, color: '#1A1A1A', fontFamily: 'Pretendard, sans-serif' }}>
+                ₩{item.amount.toLocaleString('ko-KR')}
+              </span>
+              <Pencil size={12} color="#BBBBBB" />
+            </button>
+          )}
+        </div>
+
+        {/* 카테고리 */}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
+            카테고리
+          </p>
+          <button
+            onClick={() => setEditingField(f => f === 'category' ? null : 'category')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: '#E8F8EF', borderRadius: 100,
+              padding: '4px 10px',
+              border: 'none', cursor: 'pointer',
+            }}
+          >
+            <CategoryIcon name={item.category} width={13} height={13} color="#27AE60" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#27AE60', fontFamily: 'Pretendard, sans-serif' }}>
+              {item.category}
+            </span>
+            <ChevronDown
+              size={13}
+              color="#27AE60"
+              style={{
+                transform: editingField === 'category' ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s',
+              }}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* 카테고리 선택 패널 */}
+      {editingField === 'category' && (
+        <div
+          style={{
+            display: 'flex', flexWrap: 'wrap', gap: 8,
+            marginTop: 12, paddingTop: 12,
+            borderTop: '1px solid #F3F4F6',
+          }}
+        >
+          {CATEGORIES.map(cat => {
+            const active = cat === item.category;
+            return (
+              <button
+                key={cat}
+                onClick={() => selectCategory(cat)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 12px', borderRadius: 100, border: 'none',
+                  background: active ? '#2ECC71' : '#F3F4F6',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                <CategoryIcon name={cat} width={12} height={12} color={active ? '#fff' : '#555'} />
+                <span
+                  style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: active ? '#fff' : '#555',
+                    fontFamily: 'Pretendard, sans-serif',
+                  }}
+                >
+                  {cat}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-function getNowTime() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-}
-
+// ── 메인 화면 ─────────────────────────────────────────────────────────────
 export default function ScanResultScreen({ onBack, onHome }) {
+  const [results, setResults] = useState(mockResults);
+
+  function updateItem(updated) {
+    setResults(prev => prev.map(r => r.expense_id === updated.expense_id ? updated : r));
+  }
+
   function handleHome() {
     const now = new Date();
-    const scannedExpenses = mockResults.map(r => ({
+    const scannedExpenses = results.map(r => ({
       expense_id: Date.now() + r.expense_id,
       icon: r.icon,
       place: r.merchant,
-      name: r.name,
+      name: r.category,
       expense_date: todayString(),
       saved_at: now.toISOString(),
       amount: r.amount,
     }));
     onHome(scannedExpenses);
   }
+
   return (
-    <div className="flex flex-col gap-4 px-3 pt-4 bg-white">
+    <div
+      style={{
+        display: 'flex', flexDirection: 'column', gap: 12,
+        padding: '0 20px 120px 20px',
+        background: '#FFFFFF',
+        minHeight: '100%',
+      }}
+    >
       {/* 타이틀 + 뒤로 가기 */}
-      <div className="w-[90%] self-center relative text-center" style={{ marginTop: '20px' }}>
+      <div
+        style={{
+          position: 'relative', textAlign: 'center',
+          marginTop: 20, marginBottom: 8,
+        }}
+      >
         <button
           onClick={onBack}
-          className="absolute left-0 top-1/2 -translate-y-1/2 p-1 active:scale-90 transition-transform"
+          style={{
+            position: 'absolute', left: -4, top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none', border: 'none',
+            padding: 4, cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+          }}
         >
-          <ArrowLeft size={20} className="text-gray-800" />
+          <ArrowLeft size={20} color="#1A1A1A" />
         </button>
+
         <h1
-          style={{ fontSize: '20px' }}
-          className="font-bold text-gray-900 flex items-center justify-center gap-2"
+          style={{
+            fontSize: 20, fontWeight: 700, color: '#1A1A1A',
+            fontFamily: 'Pretendard, sans-serif',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            margin: 0,
+          }}
         >
-          <CheckCircle size={22} className="text-[#2ECC71]" />
+          <CheckCircle size={22} color="#2ECC71" />
           스캔 완료!
         </h1>
-        <p style={{ fontSize: '12px' }} className="text-gray-400 mt-1">
+        <p
+          style={{
+            fontSize: 13, color: '#9CA3AF',
+            fontFamily: 'Pretendard, sans-serif',
+            margin: '4px 0 0 0',
+          }}
+        >
           스크린샷을 성공적으로 읽었어요
         </p>
       </div>
 
-      {/* 캐릭터 영역 */}
-      <div
-        className="w-80 self-center rounded-[40px] bg-[#f0faf4] flex items-center justify-center"
-        style={{ height: '280px' }}
-      >
-        <span className="animate-bounce" style={{ fontSize: '90px', lineHeight: 1 }}>🥳</span>
-      </div>
-
-      {/* 스캔 결과 카드 목록 */}
-      {mockResults.map((result) => (
-        <ResultCard key={result.expense_id} {...result} />
+      {/* 편집 가능한 카드 목록 */}
+      {results.map(item => (
+        <EditableCard key={item.expense_id} item={item} onChange={updateItem} />
       ))}
-
-      <div style={{ height: '100px', flexShrink: 0 }} />
 
       {/* 홈으로 버튼 (floating) */}
       <button
         onClick={handleHome}
-        className="bg-[#2ECC71] rounded-4xl active:scale-95 transition-transform shadow-lg flex items-center justify-center"
         style={{
           position: 'fixed',
-          bottom: '32px',
+          bottom: 32,
           left: '50%',
           transform: 'translateX(-50%)',
           width: `${390 * 0.85}px`,
-          height: '48px',
-          fontSize: '15px',
+          height: 48,
+          background: '#2ECC71',
+          borderRadius: 100,
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: 15, fontWeight: 700, color: '#FFFFFF',
+          fontFamily: 'Pretendard, sans-serif',
+          boxShadow: '0px 4px 16px rgba(46, 204, 113, 0.35)',
+          transition: 'transform 0.15s, box-shadow 0.15s',
         }}
+        onMouseDown={e => e.currentTarget.style.transform = 'translateX(-50%) scale(0.97)'}
+        onMouseUp={e => e.currentTarget.style.transform = 'translateX(-50%) scale(1)'}
       >
-        <span className="text-[#FFFFFF] font-bold">홈으로</span>
+        홈으로
       </button>
     </div>
   );

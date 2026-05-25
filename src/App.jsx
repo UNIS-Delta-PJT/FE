@@ -20,6 +20,7 @@ import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
+import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 
 import { tempLogin } from './api/auth';
 import {
@@ -146,6 +147,7 @@ export default function App() {
   }
 
   const scrollable = ['home', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const fullscreen = screen === 'aiAnalyzing'; // 패딩 없이 꽉 채우는 화면
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -207,7 +209,11 @@ export default function App() {
         ref={scrollRef}
         className={`absolute inset-0 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
         style={{
-          paddingTop: screen === 'home' && tab === 'home' ? 'calc(env(safe-area-inset-top, 54px) + 74px)' : 'calc(env(safe-area-inset-top, 0px) + 20px)',
+          paddingTop: (screen === 'home' && tab === 'home')
+            ? 'calc(env(safe-area-inset-top, 54px) + 74px)'
+            : fullscreen
+            ? '0px'
+            : 'calc(env(safe-area-inset-top, 0px) + 20px)',
           paddingBottom: screen === 'home' ? '90px' : '0px',
         }}
       >
@@ -252,7 +258,13 @@ export default function App() {
         {screen === 'aiScan' && (
           <AIScanScreen
             onBack={() => setScreen('home')}
-            onUpload={() => setScreen('result')}
+            onUpload={() => setScreen('aiAnalyzing')}
+          />
+        )}
+        {screen === 'aiAnalyzing' && (
+          <AIAnalyzingScreen
+            onComplete={() => setScreen('result')}
+            // progress={externalProgress} ← 백엔드 연동 시 여기에 진행률 전달
           />
         )}
         {screen === 'result' && (
@@ -283,7 +295,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen />
+          <ReportScreen expenses={expenses} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />

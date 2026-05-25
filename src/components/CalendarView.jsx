@@ -6,7 +6,7 @@ const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const DARK_GREEN = '#006D37';
 
 function formatAmount(amount) {
-  if (amount === 0) return '';
+  if (amount === 0) return '0원';
   const man = amount / 10000;
   return `${man % 1 === 0 ? man : man.toFixed(1)}만`;
 }
@@ -84,11 +84,9 @@ export default function CalendarView({ calendarData = {} }) {
           style={{ ...dateStyle, width: 42, height: 42, borderRadius: 50 }}
         >
           <span className="text-xs leading-none">{date.getDate()}</span>
-          {amount > 0 && (
-            <span className="text-[8px] leading-none" style={{ color: '#006D37' }}>
-              {formatAmount(amount)}
-            </span>
-          )}
+          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#006D37' : '#C4C4C4' }}>
+            {formatAmount(amount)}
+          </span>
         </span>
       </button>
     );
