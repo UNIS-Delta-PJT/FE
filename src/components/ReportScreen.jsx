@@ -629,6 +629,106 @@ function YearlySummaryCard({ expenses }) {
   );
 }
 
+/** 절약 금액 아이콘 — 코인 스택 (savings) */
+function SavingsCoinIcon({ color = '#2ECC71', size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <ellipse cx="12" cy="8" rx="7" ry="4" stroke={color} strokeWidth="1.6"/>
+      <path d="M5 8v4c0 2.2 3.1 4 7 4s7-1.8 7-4V8" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M5 12v4c0 2.2 3.1 4 7 4s7-1.8 7-4v-4" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function YearlyMiniCards({ expenses }) {
+  const today    = new Date();
+  const thisYear = today.getFullYear();
+
+  const monthlyTotals = useMemo(() => {
+    const totals = Array(12).fill(0);
+    expenses.forEach(e => {
+      if (!e.expense_date || !/^\d{4}-\d{2}-\d{2}$/.test(e.expense_date)) return;
+      const [y, m] = e.expense_date.split('-').map(Number);
+      if (y === thisYear) totals[m - 1] += e.amount;
+    });
+    return totals;
+  }, [expenses, thisYear]);
+
+  const thisYearTotal = monthlyTotals.reduce((s, v) => s + v, 0);
+  const savings = Math.max(MOCK_PREV_YEAR_TOTAL - thisYearTotal, 0);
+  const fmtSavings = savings === 0 ? '0원'
+    : savings >= 10000 ? `${Math.round(savings / 10000)}만원`
+    : `${savings.toLocaleString('ko-KR')}원`;
+
+  const cardBase = {
+    width: 167,
+    backgroundColor: '#F3F4F5',
+    borderRadius: 32,
+    padding: 20,
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  };
+
+  const headingStyle = {
+    fontFamily: 'Pretendard, sans-serif',
+    fontWeight: 500,
+    fontSize: 16,
+    color: '#555555',
+    textAlign: 'center',
+    margin: 0,
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: 19, width: 353 }}>
+
+      {/* 올해의 소비 뱃지 */}
+      <div style={cardBase}>
+        <p style={headingStyle}>올해의 소비 뱃지</p>
+        <div style={{ paddingTop: 12 }}>
+          <CategoryIcon name="카페" width={48} height={48} color="#FED023" />
+        </div>
+        <span style={{
+          paddingTop: 12,
+          fontFamily: 'Pretendard, sans-serif',
+          fontWeight: 600,
+          fontSize: 16,
+          color: '#FED023',
+          textAlign: 'center',
+        }}>
+          프로 카페인러
+        </span>
+      </div>
+
+      {/* 총 절약 금액 */}
+      <div style={cardBase}>
+        <p style={headingStyle}>총 절약 금액</p>
+        <div style={{ paddingTop: 12 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            backgroundColor: '#BDECD1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <SavingsCoinIcon color="#2ECC71" size={24} />
+          </div>
+        </div>
+        <span style={{
+          paddingTop: 12,
+          fontFamily: 'Pretendard, sans-serif',
+          fontWeight: 600,
+          fontSize: 16,
+          color: '#2ECC71',
+          textAlign: 'center',
+        }}>
+          {fmtSavings}
+        </span>
+      </div>
+
+    </div>
+  );
+}
+
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0 }) {
   const [mainTab,   setMainTab]   = useState('stats');
@@ -702,6 +802,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <YearlyFlowCard expenses={expenses} />
               <YearlySummaryCard expenses={expenses} />
+              <YearlyMiniCards expenses={expenses} />
             </div>
           )}
         </>
