@@ -576,6 +576,59 @@ function YearlyFlowCard({ expenses }) {
   );
 }
 
+function YearlySummaryCard({ expenses }) {
+  const today    = new Date();
+  const thisYear = today.getFullYear();
+  const MONTH_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  const monthlyTotals = useMemo(() => {
+    const totals = Array(12).fill(0);
+    expenses.forEach(e => {
+      if (!e.expense_date || !/^\d{4}-\d{2}-\d{2}$/.test(e.expense_date)) return;
+      const [y, m] = e.expense_date.split('-').map(Number);
+      if (y === thisYear) totals[m - 1] += e.amount;
+    });
+    return totals;
+  }, [expenses, thisYear]);
+
+  const nonZero = monthlyTotals
+    .map((val, idx) => ({ val, idx }))
+    .filter(({ val }) => val > 0);
+
+  const maxEntry = nonZero.length ? nonZero.reduce((a, b) => a.val > b.val ? a : b) : null;
+  const minEntry = nonZero.length ? nonZero.reduce((a, b) => a.val < b.val ? a : b) : null;
+
+  const mostSpendingMonth = maxEntry ? MONTH_LABELS[maxEntry.idx] : '-';
+  const mostSavingMonth   = minEntry ? MONTH_LABELS[minEntry.idx] : '-';
+
+  const Row = ({ dotColor, label, value }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: dotColor, flexShrink: 0 }} />
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#555555' }}>
+        {label}&nbsp;<span style={{ fontWeight: 700 }}>{value}</span>
+      </span>
+    </div>
+  );
+
+  return (
+    <div style={{
+      width: 353,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 24,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      padding: 20,
+      boxSizing: 'border-box',
+    }}>
+      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#1A1A1A', margin: '0 0 18px 0' }}>
+        올해의 소비 요약
+      </p>
+      <Row dotColor="#BA1A1A" label="가장 많이 쓴 달:" value={mostSpendingMonth} />
+      <div style={{ height: 14 }} />
+      <Row dotColor="#2ECC71" label="가장 절약한 달:" value={mostSavingMonth} />
+    </div>
+  );
+}
+
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0 }) {
   const [mainTab,   setMainTab]   = useState('stats');
@@ -648,6 +701,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
           {periodTab === 'yearly' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <YearlyFlowCard expenses={expenses} />
+              <YearlySummaryCard expenses={expenses} />
             </div>
           )}
         </>
