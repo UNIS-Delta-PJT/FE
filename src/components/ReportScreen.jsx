@@ -687,7 +687,13 @@ function YearlyMiniCards({ expenses }) {
       <div style={cardBase}>
         <p style={headingStyle}>올해의 소비 뱃지</p>
         <div style={{ paddingTop: 12 }}>
-          <CategoryIcon name="카페" width={48} height={48} color="#FED023" />
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            backgroundColor: '#FED023',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <CategoryIcon name="카페" width={24} height={24} color="#FFFFFF" />
+          </div>
         </div>
         <span style={{
           paddingTop: 12,
