@@ -160,13 +160,13 @@ export default function App() {
 
   return (
     <div className="bg-white min-h-screen">
-    <div className="bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '390px', height: '844px', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
+    <div className="bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '100%', maxWidth: '390px', minHeight: '100svh' }}>
       {/* 배경 그라데이션 장식 */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#FFFFFF]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* 헤더 고정 */}
       {screen === 'home' && tab === 'home' && (
-        <div style={{ position: 'fixed', top: 0, width: '390px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, paddingTop: 'env(safe-area-inset-top, 54px)' }}>
+        <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(100vw, 390px)', zIndex: 20, paddingTop: 'env(safe-area-inset-top, 44px)' }}>
           <TopBar />
         </div>
       )}

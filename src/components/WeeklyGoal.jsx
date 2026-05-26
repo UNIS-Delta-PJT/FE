@@ -32,30 +32,30 @@ export default function WeeklyGoal() {
   }
 
   return (
-    <div style={{ width: 353, marginBottom: '50px' }}>
+    <div style={{ width: '100%', marginBottom: '50px' }}>
       {/* 헤딩 */}
       <p style={{
         fontFamily: 'Pretendard, sans-serif',
         fontSize: 24,
         fontWeight: 700,
         color: '#1A1A1A',
-        margin: '0 0 12px 0',
+        margin: '0 0 12px 18.5px',
       }}>
         도전할 수 있는 미션
       </p>
 
-      {/* 슬라이더 — 우측은 overflow hidden으로 자연스럽게 잘림 */}
+      {/* 슬라이더 — 화면 우측 끝에서 자연스럽게 잘림 */}
       <div
-        style={{ width: 353, overflow: 'hidden' }}
+        style={{ width: '100%', overflow: 'hidden' }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* 카드 트랙 — x=20에서 시작, 스와이프 시 전체 이동 */}
+        {/* 카드 트랙 — 18.5px 왼쪽 여백에서 시작, 스와이프 시 전체 이동 */}
         <div
           style={{
             display: 'flex',
             gap: GAP,
-            paddingLeft: 0,
+            paddingLeft: 18.5,
             transform: `translateX(-${trackOffset}px)`,
             transition: 'transform 0.3s ease',
           }}
