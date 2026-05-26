@@ -459,6 +459,123 @@ function MonthlyInfoCards({ fixedExpense, grade, peerRank }) {
   );
 }
 
+// ── 연간 컴포넌트 ─────────────────────────────────────────────────────────────
+
+/** 전년 대비 추세 아이콘 (13×8) */
+function YearTrendIcon({ color = '#2ECC71', isUp = false }) {
+  return (
+    <svg width="13" height="8" viewBox="0 0 13 8" fill="none">
+      {isUp ? (
+        <>
+          {/* 증가: 우상향 지그재그 + 화살표 */}
+          <path d="M1 6.5L4.5 3L8 5.5L12 1.5"
+            stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9.5 1.5H12V4"
+            stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      ) : (
+        <>
+          {/* 감소: 우하향 지그재그 + 화살표 */}
+          <path d="M1 1.5L4.5 5L8 2.5L12 6.5"
+            stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9.5 6.5H12V4"
+            stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+const MOCK_PREV_YEAR_TOTAL = 4_800_000; // 전년 연간 지출 mock
+
+function YearlyFlowCard({ expenses }) {
+  const LABEL_MONTHS = new Set([0, 2, 4, 6, 8, 11]); // 1·3·5·7·9·12월만 표시
+  const MONTH_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  const today          = new Date();
+  const thisYear       = today.getFullYear();
+  const currentMonthIdx = today.getMonth();
+
+  const monthlyTotals = useMemo(() => {
+    const totals = Array(12).fill(0);
+    expenses.forEach(e => {
+      if (!e.expense_date || !/^\d{4}-\d{2}-\d{2}$/.test(e.expense_date)) return;
+      const [y, m] = e.expense_date.split('-').map(Number);
+      if (y === thisYear) totals[m - 1] += e.amount;
+    });
+    return totals;
+  }, [expenses, thisYear]);
+
+  const thisYearTotal = monthlyTotals.reduce((s, v) => s + v, 0);
+  const rawChange = MOCK_PREV_YEAR_TOTAL > 0
+    ? ((thisYearTotal - MOCK_PREV_YEAR_TOTAL) / MOCK_PREV_YEAR_TOTAL) * 100
+    : 0;
+  const isUp       = rawChange > 0;
+  const changeAbs  = Math.abs(rawChange).toFixed(1);
+  const changeColor = isUp ? '#EF4444' : '#2ECC71';
+
+  const BAR_H  = 145;
+  const MIN_BAR = 8;
+  const maxVal  = Math.max(...monthlyTotals, 1);
+
+  return (
+    <div style={{
+      width: 353, height: 263,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 24,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      padding: 20,
+      boxSizing: 'border-box',
+    }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 20, color: '#1A1A1A', lineHeight: 1.2 }}>
+          올해의 지출 흐름
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingTop: 5 }}>
+          <YearTrendIcon color={changeColor} isUp={isUp} />
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: changeColor, whiteSpace: 'nowrap' }}>
+            전년 대비 {changeAbs}% {isUp ? '증가' : '감소'}
+          </span>
+        </div>
+      </div>
+
+      {/* 바 차트 */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: BAR_H }}>
+        {monthlyTotals.map((val, idx) => {
+          const isCurrent = idx === currentMonthIdx;
+          const barH = maxVal > 0
+            ? Math.max(Math.round((val / maxVal) * BAR_H), MIN_BAR)
+            : MIN_BAR;
+          return (
+            <div key={idx} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: BAR_H }}>
+              <div style={{
+                width: 16,
+                height: barH,
+                backgroundColor: isCurrent ? '#2ECC71' : '#E8F8EF',
+                borderRadius: '4px 4px 0 0',
+              }} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* X축 레이블 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7 }}>
+        {MONTH_LABELS.map((label, idx) => (
+          <div key={idx} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            {LABEL_MONTHS.has(idx) && (
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#555555', lineHeight: 1 }}>
+                {label}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0 }) {
   const [mainTab,   setMainTab]   = useState('stats');
@@ -529,8 +646,8 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
 
           {/* 연간 */}
           {periodTab === 'yearly' && (
-            <div style={{ marginTop: 80, display: 'flex', justifyContent: 'center', fontFamily: 'Pretendard, sans-serif', fontSize: 14, color: '#94A3B8' }}>
-              연간 통계 준비 중이에요
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <YearlyFlowCard expenses={expenses} />
             </div>
           )}
         </>
