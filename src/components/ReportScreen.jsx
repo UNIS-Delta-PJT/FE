@@ -747,7 +747,7 @@ function YearlyShareCard() {
       paddingTop: 20,
       paddingLeft: 20,
       paddingRight: 20,
-      paddingBottom: 24,
+      paddingBottom: 14,
       boxSizing: 'border-box',
       position: 'relative',
       overflow: 'hidden',
