@@ -29,6 +29,8 @@ import {
   todayString,
   currentYearMonth,
 } from './api/expenses';
+// TODO: 백엔드 연동 후 아래 import 및 사용 제거
+import { MOCK_YEARLY_EXPENSES } from './data/mockData';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
@@ -48,6 +50,13 @@ export default function App() {
 
   // 이번 달 총 지출액
   const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+
+  // TODO: 백엔드 연동 후 제거 — 리포트용 더미 데이터 병합 (API expense_id와 겹치지 않는 9000번대)
+  const reportExpenses = useMemo(() => {
+    const apiIds = new Set(expenses.map(e => e.expense_id));
+    const mockFiltered = MOCK_YEARLY_EXPENSES.filter(e => !apiIds.has(e.expense_id));
+    return [...expenses, ...mockFiltered];
+  }, [expenses]);
 
   // 오늘 소비 내역만 필터링 — 최신 저장 순(saved_at) 정렬
   const todayExpenses = useMemo(() => {
@@ -299,7 +308,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={expenses} budgetTotal={budgetTotal} spent={spent} />
+          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
