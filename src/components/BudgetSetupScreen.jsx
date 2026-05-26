@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, SquarePen, Check, Utensils, Bus, Film,
   Sparkles, Wallet, ShoppingBag, Home, Dumbbell,
@@ -63,18 +63,22 @@ function CustomIconPicker({ selected, onSelect }) {
 }
 
 // ─── 고정 카테고리 아이템 ─────────────────────────────────────────────
-function CategoryItem({ cat, totalBudget, onAmountChange, onConfirmCheck }) {
+// maxAllowed: 이 카테고리에 배분 가능한 최대 금액 (= 현재 금액 + 아직 배분 안 된 예산)
+function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
   const [editing, setEditing] = useState(false);
   const [inputVal, setInputVal] = useState(String(cat.amount));
 
   const pct = totalBudget > 0 ? Math.min(Math.round((cat.amount / totalBudget) * 100), 100) : 0;
   const { Icon } = ICON_MAP[cat.name] || { Icon: Film };
+  const sliderMax = Math.max(0, maxAllowed);
 
   function handleConfirm() {
-    const newAmount = parseInt(inputVal) || 0;
-    onAmountChange(cat.category_id, newAmount);
+    const raw = parseInt(inputVal) || 0;
+    // 남은 예산을 초과하지 않도록 강제 클램프
+    const clamped = Math.min(raw, sliderMax);
+    setInputVal(String(clamped));
+    onAmountChange(cat.category_id, clamped);
     setEditing(false);
-    onConfirmCheck?.(cat.category_id, newAmount, false);
   }
 
   return (
@@ -134,9 +138,17 @@ function CategoryItem({ cat, totalBudget, onAmountChange, onConfirmCheck }) {
           )}
         </div>
       </div>
+      {/* 슬라이더: pct(%)는 시각용, max는 실제 배분 가능 금액으로 제한 */}
       <input
-        type="range" min={0} max={100} step={1} value={pct}
-        onChange={e => onAmountChange(cat.category_id, Math.round(parseInt(e.target.value) * totalBudget / 100))}
+        type="range"
+        min={0}
+        max={Math.max(1, sliderMax)}
+        step={1}
+        value={cat.amount}
+        onChange={e => {
+          const val = Math.min(parseInt(e.target.value) || 0, sliderMax);
+          onAmountChange(cat.category_id, val);
+        }}
         className="budget-slider"
         style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
       />
@@ -145,7 +157,7 @@ function CategoryItem({ cat, totalBudget, onAmountChange, onConfirmCheck }) {
 }
 
 // ─── 커스텀 카테고리 아이템 ───────────────────────────────────────────
-function CustomCategoryItem({ cat, totalBudget, onUpdate, onDelete, onConfirmCheck }) {
+function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }) {
   const [editingAmount, setEditingAmount] = useState(false);
   const [editingName, setEditingName] = useState(!cat.name);
   const [inputVal, setInputVal] = useState(String(cat.amount));
@@ -154,12 +166,15 @@ function CustomCategoryItem({ cat, totalBudget, onUpdate, onDelete, onConfirmChe
 
   const pct = totalBudget > 0 ? Math.min(Math.round((cat.amount / totalBudget) * 100), 100) : 0;
   const { Icon, bg, color } = getCustomIcon(cat.iconId);
+  const sliderMax = Math.max(0, maxAllowed);
 
   function confirmAmount() {
-    const val = parseInt(inputVal) || 0;
-    onUpdate({ ...cat, amount: val });
+    const raw = parseInt(inputVal) || 0;
+    // 남은 예산을 초과하지 않도록 강제 클램프
+    const clamped = Math.min(raw, sliderMax);
+    setInputVal(String(clamped));
+    onUpdate({ ...cat, amount: clamped });
     setEditingAmount(false);
-    onConfirmCheck?.(cat.category_id, val, true);
   }
 
   function confirmName() {
@@ -168,7 +183,7 @@ function CustomCategoryItem({ cat, totalBudget, onUpdate, onDelete, onConfirmChe
   }
 
   function handleSlider(e) {
-    const newAmount = Math.round(parseInt(e.target.value) * totalBudget / 100);
+    const newAmount = Math.min(parseInt(e.target.value) || 0, sliderMax);
     onUpdate({ ...cat, amount: newAmount });
     setInputVal(String(newAmount));
   }
@@ -239,7 +254,11 @@ function CustomCategoryItem({ cat, totalBudget, onUpdate, onDelete, onConfirmChe
         <CustomIconPicker selected={cat.iconId} onSelect={id => { onUpdate({ ...cat, iconId: id }); setShowIconPicker(false); }} />
       )}
       <input
-        type="range" min={0} max={100} step={1} value={pct}
+        type="range"
+        min={0}
+        max={Math.max(1, sliderMax)}
+        step={1}
+        value={cat.amount}
         onChange={handleSlider}
         className="budget-slider"
         style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
@@ -259,7 +278,6 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   const [budgetToast, setBudgetToast] = useState(null);
   const [budgetToastFading, setBudgetToastFading] = useState(false);
 
-  // 말풍선 토스트
   const [completionToast, setCompletionToast] = useState(false);
   const [completionToastFading, setCompletionToastFading] = useState(false);
 
@@ -272,23 +290,24 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
 
   const totalBudget = budgetInput ? parseInt(budgetInput) : 0;
 
+  // ── 실시간 배분 현황 ──────────────────────────────────────────────
+  // 카테고리별 금액 합산 (모든 렌더마다 최신 state 기반으로 계산)
+  const totalAllocated = [...categories, ...customCategories].reduce((sum, c) => sum + (c.amount || 0), 0);
+  // 아직 배분 안 된 잔여 예산
+  const unallocated = totalBudget - totalAllocated;
+
   useEffect(() => {
     localStorage.setItem('delta_budget_categories', JSON.stringify([...categories, ...customCategories]));
   }, [categories, customCategories]);
 
-  // 체크 버튼 클릭 시 배분 완료 여부 즉시 계산 → 말풍선 토스트 표시
-  function handleConfirmCheck(category_id, newAmount, isCustom) {
-    if (totalBudget <= 0) return;
-
-    const updatedCats = isCustom
-      ? categories
-      : categories.map(c => c.category_id === category_id ? { ...c, amount: newAmount } : c);
-    const updatedCustom = isCustom
-      ? customCategories.map(c => c.category_id === category_id ? { ...c, amount: newAmount } : c)
-      : customCategories;
-
-    const total = [...updatedCats, ...updatedCustom].reduce((s, c) => s + (c.amount || 0), 0);
-    if (total === totalBudget) {
+  // ── 배분 완료 감지 → 말풍선 토스트 ──────────────────────────────
+  const prevAllocatedRef = useRef(0);
+  useEffect(() => {
+    if (
+      totalBudget > 0 &&
+      totalAllocated === totalBudget &&
+      prevAllocatedRef.current !== totalBudget
+    ) {
       setCompletionToast(true);
       setCompletionToastFading(false);
       setTimeout(() => {
@@ -296,7 +315,8 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         setTimeout(() => setCompletionToast(false), 300);
       }, 2000);
     }
-  }
+    prevAllocatedRef.current = totalAllocated;
+  }, [totalAllocated, totalBudget]);
 
   function handleAmountChange(category_id, amount) {
     setCategories(prev => prev.map(cat =>
@@ -318,14 +338,14 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       showBudgetToast('총 예산을 먼저 입력해주세요!');
       return;
     }
-    const allCats = [...categories, ...customCategories];
-    const totalAllocated = allCats.reduce((sum, c) => sum + (c.amount || 0), 0);
-    if (totalAllocated > totalBudget) {
-      showBudgetToast(`${(totalAllocated - totalBudget).toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
+    // 안전망: 입력값 클램프 이후에도 혹시 불일치라면 최종 차단
+    const sum = [...categories, ...customCategories].reduce((s, c) => s + (c.amount || 0), 0);
+    if (sum > totalBudget) {
+      showBudgetToast(`${(sum - totalBudget).toLocaleString('ko-KR')}원 초과해서 입력되었어요!`);
       return;
     }
-    if (totalAllocated < totalBudget) {
-      showBudgetToast(`${(totalBudget - totalAllocated).toLocaleString('ko-KR')}원이 아직 배분되지 않았어요!`);
+    if (sum < totalBudget) {
+      showBudgetToast(`${(totalBudget - sum).toLocaleString('ko-KR')}원이 아직 배분되지 않았어요!`);
       return;
     }
     onComplete(totalBudget);
@@ -434,7 +454,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       {/* ── 총 예산 입력 ─────────────────────────────────────────────── */}
       <div
         className="flex items-center"
-        style={{ width: 353, minHeight: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#2ECC7166', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 24 }}
+        style={{ width: 353, minHeight: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#2ECC7166', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 12 }}
       >
         <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#2ECC7133' }}>
           <Wallet size={18} color="#2ECC71" />
@@ -454,6 +474,23 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         </div>
       </div>
 
+      {/* ── 남은 예산 실시간 표시 ────────────────────────────────────── */}
+      {totalBudget > 0 && (
+        <div
+          className="flex items-center justify-between"
+          style={{ width: 353, marginBottom: 12, paddingLeft: 6, paddingRight: 6 }}
+        >
+          <span style={{ fontSize: 12, color: '#8C8C8C' }}>배분 가능 남은 예산</span>
+          <span style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: unallocated < 0 ? '#EF4444' : unallocated === 0 ? '#2ECC71' : '#1F2937',
+          }}>
+            {unallocated.toLocaleString('ko-KR')}원
+          </span>
+        </div>
+      )}
+
       {/* ── 카테고리 초기화 ──────────────────────────────────────────── */}
       <div className="flex justify-end" style={{ width: 353, marginBottom: 8 }}>
         <button onClick={() => { setCategories(DEFAULT_CATEGORIES); setCustomCategories([]); setBudgetInput(''); }} className="text-xs text-gray-400 underline active:opacity-60">
@@ -465,17 +502,23 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       <div className="flex flex-col gap-3">
         {categories.map(cat => (
           <CategoryItem
-            key={cat.category_id} cat={cat} totalBudget={totalBudget}
+            key={cat.category_id}
+            cat={cat}
+            totalBudget={totalBudget}
+            // 이 카테고리의 배분 가능 최대 금액 = 현재 금액 + 아직 남은 예산
+            // → 슬라이더와 직접 입력 모두 이 값 초과 불가
+            maxAllowed={cat.amount + Math.max(0, unallocated)}
             onAmountChange={handleAmountChange}
-            onConfirmCheck={handleConfirmCheck}
           />
         ))}
         {customCategories.map(cat => (
           <CustomCategoryItem
-            key={cat.category_id} cat={cat} totalBudget={totalBudget}
+            key={cat.category_id}
+            cat={cat}
+            totalBudget={totalBudget}
+            maxAllowed={cat.amount + Math.max(0, unallocated)}
             onUpdate={updateCustomCategory}
             onDelete={() => deleteCustomCategory(cat.category_id)}
-            onConfirmCheck={handleConfirmCheck}
           />
         ))}
       </div>
