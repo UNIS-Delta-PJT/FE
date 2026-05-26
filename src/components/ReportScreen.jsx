@@ -702,7 +702,13 @@ function YearlyMiniCards({ expenses }) {
       <div style={cardBase}>
         <p style={headingStyle}>총 절약 금액</p>
         <div style={{ paddingTop: 12 }}>
-          <img src={savingsIconImg} alt="절약" width={48} height={48} draggable={false} style={{ objectFit: 'contain' }} />
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            backgroundColor: '#BDECD1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src={savingsIconImg} alt="절약" width={24} height={24} draggable={false} style={{ objectFit: 'contain' }} />
+          </div>
         </div>
         <span style={{
           paddingTop: 12,
