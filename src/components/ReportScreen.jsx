@@ -493,18 +493,16 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
       {mainTab === 'stats' && (
         <>
           {/* 주간/월간/연간 탭 */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-            <div style={{ width: 211, height: 26, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', marginBottom: 20 }}>
               {PERIOD_TABS.map(({ key, label }) => {
                 const active = periodTab === key;
                 return (
-                  <button key={key} onClick={() => setPeriodTab(key)} style={{ width: 55, height: 26, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: '0 0 4px 0', boxSizing: 'border-box' }}>
+                  <button key={key} onClick={() => setPeriodTab(key)} style={{ width: 70, height: 26, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: '0 0 4px 0', boxSizing: 'border-box' }}>
                     <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 700 : 400, fontSize: 14, color: active ? '#006D37' : '#94A3B8', lineHeight: 1 }}>{label}</span>
                     {active && <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, backgroundColor: '#006D37', borderRadius: 1 }} />}
                   </button>
                 );
               })}
-            </div>
           </div>
 
           {/* 주간 */}
