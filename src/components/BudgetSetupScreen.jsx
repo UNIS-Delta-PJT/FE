@@ -5,6 +5,7 @@ import {
   Heart, Coffee, BookOpen, X, PlusCircle,
 } from 'lucide-react';
 import deltaClappingImg from '../assets/delta_clapping.png';
+import WarningToast from './WarningToast';
 
 // ─── 고정 카테고리 아이콘 맵 ──────────────────────────────────────────
 const ICON_MAP = {
@@ -388,23 +389,8 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       )}
 
       {/* ── 에러 토스트 ──────────────────────────────────────────────── */}
-      {budgetToast && (
-        <div
-          className={budgetToastFading ? 'toast-exit' : 'toast-enter'}
-          style={{ position: 'fixed', bottom: '96px', left: '50%', transform: 'translateX(-50%)', width: '240px', height: '40px', backgroundColor: 'rgba(255, 90, 95, 0.5)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, whiteSpace: 'nowrap' }}
-        >
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 400, color: '#FFFFFF' }}>{budgetToast}</span>
-        </div>
-      )}
-
-      {toast && (
-        <div
-          className={toastFading ? 'toast-exit' : 'toast-enter'}
-          style={{ position: 'fixed', bottom: '96px', left: '50%', transform: 'translateX(-50%)', width: '220px', height: '40px', backgroundColor: 'rgba(255, 90, 95, 0.5)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, whiteSpace: 'nowrap' }}
-        >
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 400, color: '#FFFFFF' }}>지난달에 설정한 계획이 없어요!</span>
-        </div>
-      )}
+      <WarningToast visible={!!budgetToast} fading={budgetToastFading} message={budgetToast} bottom={96} />
+      <WarningToast visible={toast} fading={toastFading} message="지난달에 설정한 계획이 없어요!" bottom={96} />
 
       {/* ── 헤더 spacer ──────────────────────────────────────────────── */}
       <div style={{ height: '64px', flexShrink: 0 }} />

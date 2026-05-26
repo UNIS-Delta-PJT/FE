@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Settings } from 'lucide-react';
 import AttendancePopup from './AttendancePopup';
-import logoImg from '../assets/logo.png';
+import logoImg   from '../assets/logo.png';
+import stampImg  from '../assets/stamp.png';
+import settingImg from '../assets/setting.png';
 
 export default function TopBar() {
   const [showAttendance, setShowAttendance] = useState(false);
@@ -19,18 +20,9 @@ export default function TopBar() {
           {/* 출석 체크 버튼 */}
           <button
             onClick={() => setShowAttendance(true)}
-            className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 border border-gray-200 active:scale-95 transition-transform"
+            className="relative active:scale-95 transition-transform"
           >
-            <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
-              <circle cx="9" cy="4.5" r="3" stroke="#555555" strokeWidth="1.5"/>
-              <path
-                d="M6.5 7.8C4.5 9 3 11.5 3 15V18.5H15V15C15 11.5 13.5 9 11.5 7.8"
-                stroke="#555555"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <img src={stampImg} alt="출석체크" width={40} height={40} draggable={false} />
             {/* 출석 뱃지 */}
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#2ECC71] rounded-full text-[9px] font-bold text-white flex items-center justify-center">
               4
@@ -38,8 +30,8 @@ export default function TopBar() {
           </button>
 
           {/* 환경설정 버튼 */}
-          <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 border border-gray-200 active:scale-95 transition-transform">
-            <Settings size={18} className="text-gray-500" />
+          <button className="active:scale-95 transition-transform">
+            <img src={settingImg} alt="환경설정" width={40} height={40} draggable={false} />
           </button>
         </div>
       </header>

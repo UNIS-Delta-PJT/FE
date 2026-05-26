@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import WarningToast from './WarningToast';
 
 // 연필 아이콘 (이미지 #1 기반 인라인 SVG)
 function EditIcon({ size = 20, color = '#2ECC71' }) {
@@ -61,30 +62,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
       style={{ minHeight: '100%', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '20px' }}
     >
       {/* 토스트 */}
-      {toast && (
-        <div
-          className={toastFading ? 'toast-exit' : 'toast-enter'}
-          style={{
-            position: 'fixed',
-            bottom: '100px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            height: '40px',
-            backgroundColor: 'rgba(255, 90, 95, 0.5)',
-            borderRadius: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            whiteSpace: 'nowrap',
-            padding: '0 20px',
-          }}
-        >
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 400, color: '#FFFFFF' }}>
-            목표 예산이 입력되지 않았어요!
-          </span>
-        </div>
-      )}
+      <WarningToast visible={toast} fading={toastFading} message="목표 예산이 입력되지 않았어요!" bottom={100} />
 
       {/* 헤더 spacer */}
       <div style={{ height: '39px', flexShrink: 0 }} />

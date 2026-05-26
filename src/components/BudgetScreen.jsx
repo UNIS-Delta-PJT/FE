@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings, X, Trash2, PlusCircle, Check, Pencil } from 'lucide-react';
+import { X, Trash2, PlusCircle, Check, Pencil } from 'lucide-react';
+import settingImg from '../assets/setting.png';
 import CategoryIcon from './CategoryIcons';
 
 function EditIcon({ color = '#2ECC71', width = 20, height = 25 }) {
@@ -401,7 +402,7 @@ export default function BudgetScreen() {
       <div className="flex items-center justify-between" style={{ marginLeft: 16, marginRight: 16, marginBottom: 12 }}>
         <h1 className="font-bold text-gray-900" style={{ fontSize: 20 }}>예산 설정</h1>
         <button className="active:scale-90 transition-transform">
-          <Settings size={22} color="#555555" strokeWidth={1.8} />
+          <img src={settingImg} alt="환경설정" width={40} height={40} draggable={false} />
         </button>
       </div>
 

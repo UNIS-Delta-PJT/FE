@@ -1,28 +1,35 @@
-import { Home, BarChart2, Swords, Wallet } from 'lucide-react';
+import navHomeOn       from '../assets/nav_home_activated.png';
+import navHomeOff      from '../assets/nav_home_deactivated.png';
+import navReportOn     from '../assets/nav_report_activated.png';
+import navReportOff    from '../assets/nav_report_deactivated.png';
+import navCharacterOn  from '../assets/nav_character_activated.png';
+import navCharacterOff from '../assets/nav_character_deactivated.png';
+import navBudgetOn     from '../assets/nav_budget_activated.png';
+import navBudgetOff    from '../assets/nav_budget_deactivated.png';
 
 const NAV_ITEMS = [
-  { icon: Home,     label: '홈',    key: 'home'      },
-  { icon: BarChart2,label: '리포트', key: 'report'   },
-  { icon: Swords,   label: '캐릭터', key: 'character' },
-  { icon: Wallet,   label: '예산',  key: 'budget'    },
+  { key: 'home',      on: navHomeOn,      off: navHomeOff      },
+  { key: 'report',    on: navReportOn,    off: navReportOff    },
+  { key: 'character', on: navCharacterOn, off: navCharacterOff },
+  { key: 'budget',    on: navBudgetOn,    off: navBudgetOff    },
 ];
 
 export default function BottomNav({ activeTab = 'home', onTabChange }) {
   return (
     <nav className="shrink-0 px-4 pb-4">
-      <div className="flex items-center justify-around bg-white/100 backdrop-md rounded-[20px] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" style={{ padding: 10 }}>
-        {NAV_ITEMS.map(({ icon: Icon, label, key }) => {
+      <div
+        className="flex items-center justify-around bg-white rounded-[20px]"
+        style={{ padding: 14, boxShadow: '0 -4px 12px rgba(0,0,0,0.06)' }}
+      >
+        {NAV_ITEMS.map(({ key, on, off }) => {
           const active = activeTab === key;
           return (
             <button
               key={key}
               onClick={() => onTabChange?.(key)}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl active:scale-95 transition-transform"
+              className="flex items-center justify-center px-5 py-1 rounded-xl active:scale-90 transition-transform"
             >
-              <Icon size={22} color={active ? '#2ECC71' : '#9CA3AF'} strokeWidth={active ? 2.5 : 1.8} />
-              <span className={`text-[10px] font-bold ${active ? 'text-[#2ECC71]' : 'text-gray-400'}`}>
-                {label}
-              </span>
+              <img src={active ? on : off} alt={key} width={36} height={36} draggable={false} />
             </button>
           );
         })}
