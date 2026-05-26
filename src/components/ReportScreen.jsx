@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
+import savingsIconImg from '../assets/icon_savings.png';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
@@ -629,16 +630,6 @@ function YearlySummaryCard({ expenses }) {
   );
 }
 
-/** 절약 금액 아이콘 — 코인 스택 (savings) */
-function SavingsCoinIcon({ color = '#2ECC71', size = 24 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <ellipse cx="12" cy="8" rx="7" ry="4" stroke={color} strokeWidth="1.6"/>
-      <path d="M5 8v4c0 2.2 3.1 4 7 4s7-1.8 7-4V8" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
-      <path d="M5 12v4c0 2.2 3.1 4 7 4s7-1.8 7-4v-4" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
-    </svg>
-  );
-}
 
 function YearlyMiniCards({ expenses }) {
   const today    = new Date();
@@ -711,13 +702,7 @@ function YearlyMiniCards({ expenses }) {
       <div style={cardBase}>
         <p style={headingStyle}>총 절약 금액</p>
         <div style={{ paddingTop: 12 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: '50%',
-            backgroundColor: '#BDECD1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <SavingsCoinIcon color="#2ECC71" size={24} />
-          </div>
+          <img src={savingsIconImg} alt="절약" width={48} height={48} draggable={false} style={{ objectFit: 'contain' }} />
         </div>
         <span style={{
           paddingTop: 12,
