@@ -1,6 +1,8 @@
-const COLOR = '#006D37';
+import vehicleImg from '../assets/icon_vehicle.png';
 
-function ShoppingIcon({ color = COLOR, width = 18, height = 16 }) {
+const W = '#FFFFFF'; // 벡터 아이콘 고정 컬러
+
+function ShoppingIcon({ color = W, width = 18, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 18 16" fill="none">
       <rect x="2" y="5" width="14" height="10" rx="1.5" stroke={color} strokeWidth="1.5"/>
@@ -14,7 +16,7 @@ function ShoppingIcon({ color = COLOR, width = 18, height = 16 }) {
   );
 }
 
-function FoodIcon({ color = COLOR, width = 18, height = 16 }) {
+function FoodIcon({ color = W, width = 18, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 18 16" fill="none">
       <rect x="2" y="2" width="10" height="10" rx="1" stroke={color} strokeWidth="1.5"/>
@@ -29,25 +31,7 @@ function FoodIcon({ color = COLOR, width = 18, height = 16 }) {
   );
 }
 
-function TransportIcon({ color = COLOR, width = 18, height = 16 }) {
-  return (
-    <svg width={width} height={height} viewBox="0 0 18 16" fill="none">
-      {/* 차체 정면 실루엣 */}
-      <path
-        d="M1 13V9L4.5 3H13.5L17 9V13C17 13.55 16.55 14 16 14H2C1.45 14 1 13.55 1 13Z"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      {/* 왼쪽 헤드라이트 */}
-      <circle cx="5" cy="11" r="1.5" stroke={color} strokeWidth="1.3"/>
-      {/* 오른쪽 헤드라이트 */}
-      <circle cx="13" cy="11" r="1.5" stroke={color} strokeWidth="1.3"/>
-    </svg>
-  );
-}
-
-function TicketIcon({ color = COLOR, width = 18, height = 16 }) {
+function TicketIcon({ color = W, width = 18, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 18 16" fill="none">
       <path
@@ -60,7 +44,7 @@ function TicketIcon({ color = COLOR, width = 18, height = 16 }) {
   );
 }
 
-function HomeIcon({ color = COLOR, width = 18, height = 16 }) {
+function HomeIcon({ color = W, width = 18, height = 16 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 18 16" fill="none">
       <path
@@ -80,15 +64,36 @@ function HomeIcon({ color = COLOR, width = 18, height = 16 }) {
   );
 }
 
-const CATEGORY_MAP = {
-  교통: TransportIcon,
-  카페: FoodIcon,
-  식비: FoodIcon,
-  문화비: TicketIcon,
-  생활비: HomeIcon,
+// ── 카테고리별 아이콘 + 배경색 설정 ────────────────────────────────
+const CATEGORY_CONFIG = {
+  교통:   { isPng: true,  pngSrc: vehicleImg, bg: '#FED023' },
+  카페:   { Icon: FoodIcon,    bg: '#0FA950' },
+  쇼핑:   { Icon: ShoppingIcon, bg: '#90BAFF' },
+  식비:   { Icon: FoodIcon,    bg: '#BCBCBC' },
+  문화비:  { Icon: TicketIcon,  bg: '#BCBCBC' },
+  문화:   { Icon: TicketIcon,  bg: '#BCBCBC' },
+  생활비:  { Icon: HomeIcon,   bg: '#BCBCBC' },
+  기타:   { Icon: ShoppingIcon, bg: '#90BAFF' },
 };
 
-export default function CategoryIcon({ name, width = 18, height = 16, color }) {
-  const Icon = CATEGORY_MAP[name] ?? ShoppingIcon;
+const DEFAULT_CONFIG = { Icon: ShoppingIcon, bg: '#90BAFF' };
+
+export function getCategoryBg(name) {
+  return (CATEGORY_CONFIG[name] ?? DEFAULT_CONFIG).bg;
+}
+
+export default function CategoryIcon({ name, width = 18, height = 16, color = W }) {
+  const config = CATEGORY_CONFIG[name] ?? DEFAULT_CONFIG;
+  if (config.isPng) {
+    return (
+      <img
+        src={config.pngSrc}
+        alt={name}
+        draggable={false}
+        style={{ width, height, objectFit: 'contain' }}
+      />
+    );
+  }
+  const { Icon } = config;
   return <Icon width={width} height={height} color={color} />;
 }

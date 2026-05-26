@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import CategoryIcon from './CategoryIcons';
+import CategoryIcon, { getCategoryBg } from './CategoryIcons';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(date) {
@@ -29,7 +29,10 @@ function ExpenseCard({ item }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-gray-100 border border-gray-100" style={{padding: 6}}>
       {/* 아이콘 */}
-      <div className="w-10 h-10 rounded-3xl bg-white flex items-center justify-center flex-shrink-0">
+      <div
+        className="w-10 h-10 rounded-3xl flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: getCategoryBg(item.name) }}
+      >
         <CategoryIcon name={item.name} />
       </div>
 

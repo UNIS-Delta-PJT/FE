@@ -295,7 +295,7 @@ export default function App() {
             <CalendarView calendarData={calendarData} />
             <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
             <TodayExpenses expenses={todayExpenses} />
-            <WeeklyGoal onAIGuide={() => setScreen('aiGuide')} />
+            <WeeklyGoal />
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
