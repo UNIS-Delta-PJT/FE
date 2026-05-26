@@ -799,8 +799,8 @@ function YearlyShareCard() {
         draggable={false}
         style={{
           position: 'absolute',
-          left: 242,
-          top: 25,
+          left: 232,
+          top: 15,
           width: 150,
           height: 150,
           objectFit: 'contain',
