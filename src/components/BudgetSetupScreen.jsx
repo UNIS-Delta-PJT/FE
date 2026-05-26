@@ -138,16 +138,19 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
           )}
         </div>
       </div>
-      {/* 슬라이더: pct(%)는 시각용, max는 실제 배분 가능 금액으로 제한 */}
+      {/* 슬라이더: 0–100 % 기준 → thumb 위치와 그라데이션 일치 */}
       <input
         type="range"
         min={0}
-        max={Math.max(1, sliderMax)}
+        max={100}
         step={1}
-        value={cat.amount}
+        value={pct}
         onChange={e => {
-          const val = Math.min(parseInt(e.target.value) || 0, sliderMax);
-          onAmountChange(cat.category_id, val);
+          const newPct = parseInt(e.target.value) || 0;
+          const newAmount = Math.round(newPct * totalBudget / 100);
+          // 남은 예산 초과 시 클램프
+          const clamped = Math.min(newAmount, sliderMax);
+          onAmountChange(cat.category_id, clamped);
         }}
         className="budget-slider"
         style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
@@ -183,9 +186,12 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
   }
 
   function handleSlider(e) {
-    const newAmount = Math.min(parseInt(e.target.value) || 0, sliderMax);
-    onUpdate({ ...cat, amount: newAmount });
-    setInputVal(String(newAmount));
+    const newPct = parseInt(e.target.value) || 0;
+    const newAmount = Math.round(newPct * totalBudget / 100);
+    // 남은 예산 초과 시 클램프
+    const clamped = Math.min(newAmount, sliderMax);
+    onUpdate({ ...cat, amount: clamped });
+    setInputVal(String(clamped));
   }
 
   return (
@@ -253,12 +259,13 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
       {showIconPicker && (
         <CustomIconPicker selected={cat.iconId} onSelect={id => { onUpdate({ ...cat, iconId: id }); setShowIconPicker(false); }} />
       )}
+      {/* 슬라이더: 0–100 % 기준 → thumb 위치와 그라데이션 일치 */}
       <input
         type="range"
         min={0}
-        max={Math.max(1, sliderMax)}
+        max={100}
         step={1}
-        value={cat.amount}
+        value={pct}
         onChange={handleSlider}
         className="budget-slider"
         style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
