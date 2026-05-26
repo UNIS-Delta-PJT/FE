@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import savingsIconImg from '../assets/icon_savings.png';
+import celebrationImg from '../assets/icon_celebration.png';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
@@ -726,6 +727,90 @@ function YearlyMiniCards({ expenses }) {
   );
 }
 
+function YearlyShareCard() {
+  function handleShare() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'DELTA 소비 리포트',
+        text: '나의 올해 소비 리포트를 확인해보세요!',
+        url: window.location.href,
+      }).catch(() => {});
+    }
+  }
+
+  return (
+    <div style={{
+      width: 350,
+      height: 125,
+      borderRadius: 24,
+      backgroundColor: '#2ECC71',
+      paddingTop: 20,
+      paddingLeft: 20,
+      paddingRight: 20,
+      paddingBottom: 24,
+      boxSizing: 'border-box',
+      position: 'relative',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+    }}>
+      {/* 텍스트 */}
+      <p style={{
+        fontFamily: 'Pretendard, sans-serif',
+        fontWeight: 600,
+        fontSize: 16,
+        color: '#FFFFFF',
+        margin: 0,
+        lineHeight: 1.4,
+        whiteSpace: 'pre-line',
+        textAlign: 'left',
+      }}>
+        {'리포트 공유하고\n보너스 젬 받기'}
+      </p>
+
+      {/* 지금 공유하기 버튼 */}
+      <button
+        onClick={handleShare}
+        style={{
+          alignSelf: 'flex-start',
+          paddingTop: 6,
+          paddingBottom: 6,
+          paddingLeft: 16,
+          paddingRight: 16,
+          borderRadius: 1000,
+          backgroundColor: '#FFFFFF',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'Pretendard, sans-serif',
+          fontWeight: 600,
+          fontSize: 12,
+          color: '#2ECC71',
+          textAlign: 'center',
+        }}
+      >
+        지금 공유하기
+      </button>
+
+      {/* 축하 아이콘 — 카드 내 절대 위치 */}
+      <img
+        src={celebrationImg}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          left: 252,
+          top: 35,
+          width: 100,
+          height: 100,
+          objectFit: 'contain',
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
+  );
+}
+
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0 }) {
   const [mainTab,   setMainTab]   = useState('stats');
@@ -800,6 +885,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
               <YearlyFlowCard expenses={expenses} />
               <YearlySummaryCard expenses={expenses} />
               <YearlyMiniCards expenses={expenses} />
+              <YearlyShareCard />
             </div>
           )}
         </>
