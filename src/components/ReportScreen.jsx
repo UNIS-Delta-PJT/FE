@@ -493,7 +493,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
       {mainTab === 'stats' && (
         <>
           {/* 주간/월간/연간 탭 */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20, marginLeft: -20, marginRight: -17 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
             <div style={{ width: 211, height: 26, display: 'flex', alignItems: 'flex-end' }}>
               {PERIOD_TABS.map(({ key, label }) => {
                 const active = periodTab === key;
