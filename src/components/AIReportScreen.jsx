@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import trendUpImg from '../assets/icon_trend_up.png';
-import peerIconImg from '../assets/icon_peer.png';
+import trendUpImg    from '../assets/icon_trend_up.png';
+import peerIconImg   from '../assets/icon_peer.png';
+import aiGuideIconImg from '../assets/icon_ai_guide.png';
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -285,8 +286,136 @@ function PeerCompareCard({ spent = 0 }) {
   );
 }
 
+// ── AI 가이드 라이브러리 카드 ─────────────────────────────────────────────────
+// 지난달 최다 지출 카테고리 기반으로 추천 가이드 결정 (백엔드 AI 분석으로 교체 예정)
+const GUIDE_MAP = {
+  '식비':      "지난달 식비 지출을 분석한 결과 '스마트 식비 절약 가이드'를 추천해요!",
+  '카페':      "지난달 카페 지출을 분석한 결과 '카페 지출 다이어트 가이드'를 추천해요!",
+  '교통':      "지난달 교통비를 분석한 결과 '교통비 최적화 가이드'를 추천해요!",
+  '쇼핑':      "지난달 쇼핑 지출을 분석한 결과 '충동구매 억제 가이드'를 추천해요!",
+  '문화/여가': "지난달 문화/여가 지출을 분석한 결과 '여가비 스마트 관리 가이드'를 추천해요!",
+};
+const DEFAULT_GUIDE_DESC = "지난달 지출 습관을 분석한 결과 '전략적 저축 가이드'를 추천해요!";
+
+function getGuideDesc(expenses) {
+  const today = new Date();
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const ym = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+  const catMap = {};
+  expenses.forEach(e => {
+    if (!e.expense_date?.startsWith(ym)) return;
+    catMap[e.name || '기타'] = (catMap[e.name || '기타'] || 0) + e.amount;
+  });
+  const entries = Object.entries(catMap);
+  if (!entries.length) return DEFAULT_GUIDE_DESC;
+  const topCat = entries.reduce((a, b) => a[1] > b[1] ? a : b)[0];
+  return GUIDE_MAP[topCat] || DEFAULT_GUIDE_DESC;
+}
+
+function AIGuideLibraryCard({ expenses, onGuidePress }) {
+  const guideDesc = useMemo(() => getGuideDesc(expenses), [expenses]);
+
+  return (
+    <div style={{ width: 353 }}>
+      {/* 섹션 헤딩 */}
+      <span style={{
+        fontFamily: 'Pretendard, sans-serif',
+        fontSize: 24,
+        fontWeight: 600,
+        color: '#1A1A1A',
+        display: 'block',
+        marginBottom: 16,
+      }}>
+        AI 가이드 라이브러리
+      </span>
+
+      {/* 카드 */}
+      <div style={{
+        width: 353,
+        height: 170,
+        borderRadius: 28,
+        backgroundColor: '#E8F8EF',
+        border: '1.5px solid rgba(47, 204, 113, 0.5)',
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* 아이콘 — x:17.5, y:17.5, 49×49 */}
+        <img
+          src={aiGuideIconImg}
+          alt="AI 가이드"
+          style={{
+            position: 'absolute',
+            left: 17.5,
+            top: 17.5,
+            width: 49,
+            height: 49,
+            objectFit: 'contain',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* 텍스트 컨테이너 — x:82.5, y:17.5 */}
+        <div style={{
+          position: 'absolute',
+          left: 82.5,
+          top: 17.5,
+          right: 17.5,
+        }}>
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 18,
+            fontWeight: 600,
+            color: '#2FCC71',
+            display: 'block',
+            marginBottom: 6,
+            lineHeight: 1.2,
+          }}>
+            AI 추천 가이드
+          </span>
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 12,
+            fontWeight: 400,
+            color: '#555555',
+            lineHeight: 1.5,
+            display: 'block',
+          }}>
+            {guideDesc}
+          </span>
+        </div>
+
+        {/* 버튼 — x:134, y:101, 119×34 */}
+        <button
+          onClick={onGuidePress}
+          style={{
+            position: 'absolute',
+            left: 134,
+            top: 101,
+            width: 119,
+            height: 34,
+            borderRadius: 10000,
+            backgroundColor: '#FFFFFF',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 14,
+            fontWeight: 500,
+            color: '#2FCC71',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          지금 확인하기
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 AI 리포트 스크린 ─────────────────────────────────────────────────────
-export default function AIReportScreen({ expenses = [], spent = 0 }) {
+export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress }) {
   return (
     <div
       style={{
@@ -319,6 +448,9 @@ export default function AIReportScreen({ expenses = [], spent = 0 }) {
 
       {/* 카드 2: 또래 소비 비교 */}
       <PeerCompareCard spent={spent} />
+
+      {/* 카드 3: AI 가이드 라이브러리 */}
+      <AIGuideLibraryCard expenses={expenses} onGuidePress={onGuidePress} />
     </div>
   );
 }

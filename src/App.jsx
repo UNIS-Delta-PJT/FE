@@ -309,7 +309,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} />
+          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onGuidePress={() => setScreen('aiGuide')} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />

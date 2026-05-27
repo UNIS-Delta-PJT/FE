@@ -813,7 +813,7 @@ function YearlyShareCard() {
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
-export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0 }) {
+export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0, onGuidePress }) {
   const [mainTab,   setMainTab]   = useState('stats');
   const [periodTab, setPeriodTab] = useState('weekly');
 
@@ -893,7 +893,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
       )}
 
       {mainTab === 'ai' && (
-        <AIReportScreen expenses={expenses} spent={spent} />
+        <AIReportScreen expenses={expenses} spent={spent} onGuidePress={onGuidePress} />
       )}
     </div>
   );
