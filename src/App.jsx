@@ -20,6 +20,7 @@ import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
 import AIReportScreen from './components/AIReportScreen';
+import ReportTabWrapper from './components/ReportTabWrapper';
 import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 
@@ -309,7 +310,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <AIReportScreen expenses={reportExpenses} />
+          <ReportTabWrapper expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
