@@ -210,7 +210,7 @@ const MOCK_PEER_RANK_PCT    = 15;     // 상위 n% mock
 
 function StatusBar({ pct, color }) {
   return (
-    <div style={{ width: '100%', height: 8, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: 12, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
       <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: color }} />
     </div>
   );
