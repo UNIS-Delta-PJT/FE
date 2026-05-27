@@ -46,26 +46,6 @@ export default function CharacterComingSoon() {
         {'절약 습관을 쌓으면 레온이가 성장해요.\n곧 멋진 모습으로 찾아올게요 👀'}
       </p>
 
-      {/* 귀여운 배지 */}
-      <div style={{
-        marginTop: 28,
-        paddingTop: 8,
-        paddingBottom: 8,
-        paddingLeft: 20,
-        paddingRight: 20,
-        borderRadius: 9999,
-        backgroundColor: '#E8F8EF',
-        border: '1px solid rgba(46,204,113,0.3)',
-      }}>
-        <span style={{
-          fontFamily: 'Pretendard, sans-serif',
-          fontSize: 13,
-          fontWeight: 600,
-          color: '#2ECC71',
-        }}>
-          구현 예정 ✨
-        </span>
-      </div>
     </div>
   );
 }
