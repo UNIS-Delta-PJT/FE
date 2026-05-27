@@ -1,6 +1,20 @@
 import vehicleImg from '../assets/icon_vehicle.png';
 
-const W = '#FFFFFF'; // 벡터 아이콘 고정 컬러
+const W = '#FFFFFF'; // 벡터 아이콘 기본 컬러
+
+// PNG 아이콘을 SVG color prop과 동일하게 색상 적용하기 위한 CSS filter 변환
+function hexToFilter(hex = '#FFFFFF') {
+  const h = (hex || '#FFFFFF').toUpperCase().trim();
+  if (h === '#FFFFFF' || h === '#FFF' || h === 'WHITE') return 'brightness(0) invert(1)';
+  if (h === '#000000' || h === '#000' || h === 'BLACK') return 'brightness(0)';
+  if (h === '#006D37') return 'brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(745%) hue-rotate(107deg) brightness(97%) contrast(101%)';
+  if (h === '#3D4A3E') return 'brightness(0) saturate(100%) invert(27%) sepia(6%) saturate(651%) hue-rotate(83deg) brightness(82%) contrast(89%)';
+  if (h === '#EF4444') return 'brightness(0) saturate(100%) invert(42%) sepia(73%) saturate(5000%) hue-rotate(335deg) brightness(101%) contrast(91%)';
+  if (h === '#27AE60') return 'brightness(0) saturate(100%) invert(44%) sepia(64%) saturate(556%) hue-rotate(104deg) brightness(97%) contrast(91%)';
+  if (h === '#2ECC71') return 'brightness(0) saturate(100%) invert(65%) sepia(49%) saturate(500%) hue-rotate(99deg) brightness(99%) contrast(91%)';
+  if (h === '#555555' || h === '#555') return 'brightness(0) saturate(0%) brightness(33%)';
+  return 'brightness(0) invert(1)'; // fallback: white
+}
 
 function ShoppingIcon({ color = W, width = 18, height = 16 }) {
   return (
@@ -90,7 +104,7 @@ export default function CategoryIcon({ name, width = 18, height = 16, color = W 
         src={config.pngSrc}
         alt={name}
         draggable={false}
-        style={{ width, height, objectFit: 'contain' }}
+        style={{ width, height, objectFit: 'contain', filter: hexToFilter(color) }}
       />
     );
   }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import trophyImg from '../assets/trophy.png';
 
 const CARD_W = 280;
@@ -15,24 +15,20 @@ const BODY = '벌써 4일째 예산을 잘 지키고 있어요!\n3일만 더 유
 
 export default function WeeklyGoal() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState(null);
+  const scrollRef = useRef(null);
 
-  const trackOffset = activeIndex * (CARD_W + GAP);
-
-  function handleTouchStart(e) {
-    setTouchStartX(e.touches[0].clientX);
-  }
-
-  function handleTouchEnd(e) {
-    if (touchStartX === null) return;
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (diff > 50 && activeIndex < CARDS.length - 1) setActiveIndex(i => i + 1);
-    else if (diff < -50 && activeIndex > 0) setActiveIndex(i => i - 1);
-    setTouchStartX(null);
+  function handleScroll() {
+    if (!scrollRef.current) return;
+    const { scrollLeft } = scrollRef.current;
+    const idx = Math.min(
+      Math.max(Math.round(scrollLeft / (CARD_W + GAP)), 0),
+      CARDS.length - 1
+    );
+    setActiveIndex(idx);
   }
 
   return (
-    <div style={{ width: '100%', marginBottom: '50px' }}>
+    <div style={{ width: '100%' }}>
       {/* 헤딩 */}
       <p style={{
         fontFamily: 'Pretendard, sans-serif',
@@ -44,117 +40,114 @@ export default function WeeklyGoal() {
         도전할 수 있는 미션
       </p>
 
-      {/* 슬라이더 — 화면 우측 끝에서 자연스럽게 잘림 */}
+      {/* 슬라이더 */}
       <div
-        style={{ width: '100%', overflow: 'hidden' }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        ref={scrollRef}
+        className="no-scrollbar"
+        style={{
+          display: 'flex',
+          gap: GAP,
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          paddingLeft: 18.5,
+          paddingRight: 18.5,
+        }}
+        onScroll={handleScroll}
       >
-        {/* 카드 트랙 — 18.5px 왼쪽 여백에서 시작, 스와이프 시 전체 이동 */}
-        <div
-          style={{
-            display: 'flex',
-            gap: GAP,
-            paddingLeft: 18.5,
-            transform: `translateX(-${trackOffset}px)`,
-            transition: 'transform 0.3s ease',
-          }}
-        >
-          {CARDS.map((card, idx) => (
-            <div
-              key={idx}
-              style={{
-                width: CARD_W,
-                height: 160,
-                flexShrink: 0,
-                backgroundColor: card.bg,
-                borderRadius: 20,
-                padding: 19,
-                position: 'relative',
-                overflow: 'hidden',
-                boxSizing: 'border-box',
-              }}
-            >
-              {/* 텍스트 블록 — 세로 중앙 정렬 */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                height: '100%',
-                gap: 0,
-                paddingBottom: 20,
+        {CARDS.map((card, idx) => (
+          <div
+            key={idx}
+            style={{
+              width: CARD_W,
+              height: 160,
+              flexShrink: 0,
+              scrollSnapAlign: 'start',
+              backgroundColor: card.bg,
+              borderRadius: 20,
+              padding: 19,
+              position: 'relative',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* 텍스트 블록 */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              height: '100%',
+              paddingBottom: 20,
+            }}>
+              <p style={{
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 10,
+                fontWeight: 500,
+                color: '#FFFFFF',
+                margin: 0,
+                lineHeight: 1.3,
               }}>
-                <p style={{
-                  fontFamily: 'Pretendard, sans-serif',
-                  fontSize: 10,
-                  fontWeight: 500,
-                  color: '#FFFFFF',
-                  margin: 0,
-                  lineHeight: 1.3,
-                }}>
-                  {LABEL}
-                </p>
-                <p style={{
-                  fontFamily: 'Pretendard, sans-serif',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  margin: '4px 0 0',
-                  lineHeight: 1.3,
-                }}>
-                  {TITLE}
-                </p>
-                <p style={{
-                  fontFamily: 'Pretendard, sans-serif',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: '#FFFFFF',
-                  margin: '6px 0 0',
-                  lineHeight: 1.6,
-                  whiteSpace: 'pre-line',
-                }}>
-                  {BODY}
-                </p>
-              </div>
-
-              {/* 도트 인디케이터 — 하단 패딩 끝에 가깝게 */}
-              <div style={{ display: 'flex', gap: 5, position: 'absolute', bottom: 19, left: 19 }}>
-                {CARDS.map((_, dotIdx) => (
-                  <div
-                    key={dotIdx}
-                    style={{
-                      width: 6.5,
-                      height: 6.5,
-                      borderRadius: '50%',
-                      backgroundColor: dotIdx <= activeIndex
-                        ? card.dotFilled
-                        : 'rgba(255,255,255,0.2)',
-                      transition: 'background-color 0.3s ease',
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* 트로피 이미지 */}
-              <img
-                src={trophyImg}
-                alt="trophy"
-                draggable={false}
-                style={{
-                  position: 'absolute',
-                  left: 210,
-                  top: 90,
-                  width: 75,
-                  height: 75,
-                  objectFit: 'contain',
-                  pointerEvents: 'none',
-                }}
-              />
+                {LABEL}
+              </p>
+              <p style={{
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 16,
+                fontWeight: 600,
+                color: '#FFFFFF',
+                margin: '4px 0 0',
+                lineHeight: 1.3,
+              }}>
+                {TITLE}
+              </p>
+              <p style={{
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 12,
+                fontWeight: 500,
+                color: '#FFFFFF',
+                margin: '6px 0 0',
+                lineHeight: 1.6,
+                whiteSpace: 'pre-line',
+              }}>
+                {BODY}
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
 
+            {/* 도트 인디케이터 */}
+            <div style={{ display: 'flex', gap: 5, position: 'absolute', bottom: 19, left: 19 }}>
+              {CARDS.map((_, dotIdx) => (
+                <div
+                  key={dotIdx}
+                  style={{
+                    width: 6.5,
+                    height: 6.5,
+                    borderRadius: '50%',
+                    backgroundColor: dotIdx <= activeIndex
+                      ? card.dotFilled
+                      : 'rgba(255,255,255,0.2)',
+                    transition: 'background-color 0.3s ease',
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* 트로피 이미지 */}
+            <img
+              src={trophyImg}
+              alt="trophy"
+              draggable={false}
+              style={{
+                position: 'absolute',
+                left: 210,
+                top: 90,
+                width: 75,
+                height: 75,
+                objectFit: 'contain',
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
