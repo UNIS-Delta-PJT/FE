@@ -4,6 +4,7 @@ import peerIconImg       from '../assets/icon_peer.png';
 import aiGuideIconImg    from '../assets/icon_ai_guide.png';
 import guideSavingsIcon  from '../assets/icon_guide_savings.png';
 import guideRocketIcon   from '../assets/icon_guide_rocket.png';
+import infoIconImg        from '../assets/icon_info.png';
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -540,6 +541,126 @@ function GuideCardSlider() {
   );
 }
 
+// ── 현재 진행 중인 가이드 카드 ────────────────────────────────────────────────
+const MOCK_ACTIVE_GUIDE = {
+  icon:          guideSavingsIcon,
+  name:          '차근차근 저축왕',
+  goal:          '목표: 30일 동안 매일 5,000원 아끼기',
+  daysCompleted: 12,
+  totalDays:     30,
+};
+
+function ActiveGuideCard() {
+  const { icon, name, goal, daysCompleted, totalDays } = MOCK_ACTIVE_GUIDE;
+  const pct = Math.round((daysCompleted / totalDays) * 100);
+
+  return (
+    <div style={{ width: 353 }}>
+      {/* 섹션 헤딩 */}
+      <span style={{
+        fontFamily: 'Pretendard, sans-serif',
+        fontSize: 24,
+        fontWeight: 600,
+        color: '#1A1A1A',
+        display: 'block',
+        marginBottom: 16,
+      }}>
+        현재 진행 중인 가이드
+      </span>
+
+      {/* 카드 */}
+      <div style={{
+        width: 353,
+        height: 190,
+        borderRadius: 28,
+        backgroundColor: '#FFFFFF',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.09)',
+        padding: 14,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+
+        {/* ── 첫 번째 컨테이너: 아이콘 + 가이드명 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 49,
+            height: 49,
+            borderRadius: '50%',
+            border: '4px solid #2ECC71',
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <img src={icon} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+          </div>
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 16,
+            fontWeight: 600,
+            color: '#1A1A1A',
+          }}>
+            {name}
+          </span>
+        </div>
+
+        {/* ── 목표 설명 */}
+        <span style={{
+          fontFamily: 'Pretendard, sans-serif',
+          fontSize: 12,
+          fontWeight: 500,
+          color: '#555555',
+          lineHeight: 1.4,
+        }}>
+          {goal}
+        </span>
+
+        {/* ── 진행도: 레이블 + 바 */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#1A1A1A' }}>
+              {daysCompleted}/{totalDays}일 완료
+            </span>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#555555' }}>
+              {pct}%
+            </span>
+          </div>
+          <div style={{ width: '100%', height: 15, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, backgroundColor: '#2ECC71' }} />
+          </div>
+        </div>
+
+        {/* ── 경고 섹션 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <img
+            src={infoIconImg}
+            alt="info"
+            style={{
+              width: 16,
+              height: 16,
+              objectFit: 'contain',
+              flexShrink: 0,
+              filter: 'brightness(0) saturate(100%) invert(14%) sepia(93%) saturate(2000%) hue-rotate(350deg) brightness(1.1)',
+            }}
+          />
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 12,
+            fontWeight: 400,
+            color: '#555555',
+            lineHeight: 1.4,
+          }}>
+            이 가이드는 AI 코칭 알림 및 페널티 화면을 활성화합니다.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 AI 리포트 스크린 ─────────────────────────────────────────────────────
 export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress }) {
   return (
@@ -580,6 +701,9 @@ export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress 
 
       {/* 가이드 미니카드 슬라이더 */}
       <GuideCardSlider />
+
+      {/* 카드 4: 현재 진행 중인 가이드 */}
+      <ActiveGuideCard />
     </div>
   );
 }
