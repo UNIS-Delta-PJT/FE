@@ -11,11 +11,15 @@ export default function ReportTabWrapper({ expenses, budgetTotal, spent }) {
       {/* ── 소비 통계 | AI 피드백 탭 스위처 ─────────────────────────── */}
       <div
         style={{
+          width: 353,
+          height: 48,
+          borderRadius: 9999,
+          backgroundColor: 'rgb(241, 245, 249)',
           display: 'flex',
-          backgroundColor: '#F0F0F0',
-          borderRadius: 999,
-          padding: 3,
-          marginBottom: 20,
+          alignItems: 'center',
+          padding: 6,
+          boxSizing: 'border-box',
+          marginBottom: 24,
         }}
       >
         {[
@@ -28,17 +32,18 @@ export default function ReportTabWrapper({ expenses, budgetTotal, spent }) {
               key={key}
               onClick={() => setActiveTab(key)}
               style={{
-                padding: '8px 22px',
-                borderRadius: 999,
+                width: 170,
+                height: 36,
+                borderRadius: 9999,
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: 'Pretendard, sans-serif',
                 fontSize: 14,
                 fontWeight: active ? 600 : 400,
-                color: active ? '#1A1A1A' : '#888888',
-                backgroundColor: active ? '#FFFFFF' : 'transparent',
-                boxShadow: active ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
-                transition: 'all 0.15s ease',
+                color: active ? 'rgb(0, 109, 55)' : 'rgb(0, 0, 0)',
+                backgroundColor: active ? 'rgb(255, 255, 255)' : 'transparent',
+                flexShrink: 0,
+                transition: 'background-color 0.18s, color 0.18s',
               }}
             >
               {label}
