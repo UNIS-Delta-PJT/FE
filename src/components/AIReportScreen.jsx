@@ -565,7 +565,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             borderRadius: 16,
             backgroundColor: '#E8F8EF',
             padding: '0 16px',
-            display: 'flex', alignItems: 'center', gap: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             marginBottom: 28,
             boxSizing: 'border-box',
           }}>
@@ -634,7 +634,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             <p style={{
               fontFamily: 'Pretendard, sans-serif',
               fontSize: 16, fontWeight: 400, color: '#3D4A3E',
-              lineHeight: 1.5, margin: 0,
+              lineHeight: 1.5, margin: 0, textAlign: 'center', width: '100%',
             }}>
               성공 시 한 달에 총{' '}
               <span style={{ fontWeight: 600, color: '#2ECC71' }}>
