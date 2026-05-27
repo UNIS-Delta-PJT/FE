@@ -22,6 +22,7 @@ import ReportScreen from './components/ReportScreen';
 import AIReportScreen from './components/AIReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
+import CharacterComingSoon from './components/CharacterComingSoon';
 
 import { tempLogin } from './api/auth';
 import {
@@ -228,7 +229,7 @@ export default function App() {
             : fullscreen
             ? '0px'
             : 'calc(env(safe-area-inset-top, 0px) + 20px)',
-          paddingBottom: screen === 'home' ? '90px' : '0px',
+          paddingBottom: screen === 'home' ? '72px' : '0px',
         }}
       >
         {screen === 'splash' && (
@@ -300,7 +301,7 @@ export default function App() {
           />
         )}
         {screen === 'home' && tab === 'home' && (
-          <div className="flex flex-col items-center gap-[25px] pb-4">
+          <div className="flex flex-col items-center gap-[25px]">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
             <CalendarView calendarData={calendarData} />
             <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
@@ -313,6 +314,9 @@ export default function App() {
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
+        )}
+        {screen === 'home' && tab === 'character' && (
+          <CharacterComingSoon />
         )}
       </div>
     </div>
