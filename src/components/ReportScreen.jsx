@@ -825,7 +825,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
   const grade = computeGrade(MOCK_PEER_RANK);
 
   return (
-    <div style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 100, boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 0, boxSizing: 'border-box' }}>
       {/* 제목 */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: '#111827', margin: 0 }}>리포트</h1>
