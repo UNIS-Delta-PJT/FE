@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import trendUpImg        from '../assets/icon_trend_up.png';
 import peerIconImg       from '../assets/icon_peer.png';
 import aiGuideIconImg    from '../assets/icon_ai_guide.png';
 import guideSavingsIcon  from '../assets/icon_guide_savings.png';
 import guideRocketIcon   from '../assets/icon_guide_rocket.png';
 import infoIconImg        from '../assets/icon_info.png';
+import targetIconImg      from '../assets/icon_target.png';
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -418,27 +419,217 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
 }
 
 // ── 가이드 미니카드 슬라이더 ──────────────────────────────────────────────────
-// 도전 중인 가이드는 항상 앞에 정렬 (active: true)
 const GUIDE_CARDS_DATA = [
   {
     id: 'savings',
     icon: guideSavingsIcon,
     title: '차근차근 저축왕',
     desc: '매일 조금씩 아끼는 습관을 길러요.',
-    active: true,
+    longDesc: '매일 조금씩 아끼는 습관 만들기',
+    goal: '목표: 30일 동안 매일 5,000원 아끼기',
+    practices: [
+      '하루 총지출을 평소보다 5,000원 줄여보세요.',
+      '목표를 달성하지 못한 날에는 엄격한 코칭 알림이 울립니다.',
+    ],
+    daysCompleted: 12,
+    totalDays: 30,
   },
   {
     id: 'rocket',
     icon: guideRocketIcon,
     title: '한 달 만에 부자되기',
     desc: '공격적인 예산 관리로 자산을 늘려요.',
-    active: false,
+    longDesc: '한 달 안에 자산을 빠르게 늘리는 전략',
+    goal: '목표: 30일 동안 지출을 20% 줄이기',
+    practices: [
+      '매일 예산 한도를 정하고 그 안에서 소비하세요.',
+      '충동구매 전 24시간 대기 규칙을 지켜보세요.',
+    ],
+    daysCompleted: 0,
+    totalDays: 30,
   },
 ];
 
-function GuideCard({ icon, title, desc, active }) {
+// ── 초록 체크 아이콘 ──────────────────────────────────────────────────────────
+function CheckCircleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+      <circle cx="10" cy="10" r="10" fill="#2ECC71" />
+      <path d="M5.5 10L8.5 13L14.5 7" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// ── 가이드 상세 바텀시트 ──────────────────────────────────────────────────────
+function GuideDetailSheet({ guide, onClose, onStart }) {
+  const [dragY, setDragY]       = useState(0);
+  const [animateIn, setAnimateIn] = useState(false);
+  const startYRef               = useRef(0);
+  const isDraggingRef           = useRef(false);
+
+  // 마운트 시 애니메이션
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setAnimateIn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  function handleClose() {
+    setAnimateIn(false);
+    setTimeout(onClose, 320);
+  }
+
+  function onTouchStart(e) {
+    startYRef.current = e.touches[0].clientY;
+    isDraggingRef.current = true;
+  }
+  function onTouchMove(e) {
+    if (!isDraggingRef.current) return;
+    const dy = Math.max(0, e.touches[0].clientY - startYRef.current);
+    setDragY(dy);
+  }
+  function onTouchEnd() {
+    isDraggingRef.current = false;
+    if (dragY > 100) {
+      handleClose();
+    } else {
+      setDragY(0);
+    }
+  }
+
+  const sheetTranslate = animateIn ? dragY : 800;
+  const transition = isDraggingRef.current ? 'none' : 'transform 0.32s cubic-bezier(0.32,0.72,0,1)';
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200 }}>
+      {/* 배경 딤 */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          backgroundColor: `rgba(0,0,0,${animateIn ? 0.4 : 0})`,
+          transition: 'background-color 0.32s ease',
+        }}
+        onClick={handleClose}
+      />
+
+      {/* 시트 */}
+      <div
+        style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          backgroundColor: '#FFFFFF',
+          borderRadius: '24px 24px 0 0',
+          transform: `translateY(${sheetTranslate}px)`,
+          transition,
+          maxHeight: '85dvh',
+          overflowY: 'auto',
+          boxShadow: '0 -4px 32px rgba(0,0,0,0.12)',
+        }}
+      >
+        {/* 드래그 핸들 */}
+        <div
+          style={{ padding: '12px 0 4px', display: 'flex', justifyContent: 'center', cursor: 'grab' }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E0E0E0' }} />
+        </div>
+
+        {/* 내용 */}
+        <div style={{ padding: 24, paddingTop: 16, boxSizing: 'border-box' }}>
+
+          {/* 제목 */}
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 24, fontWeight: 700, color: '#1A1A1A',
+            display: 'block', marginBottom: 8,
+          }}>
+            {guide.title}
+          </span>
+
+          {/* 한 줄 설명 */}
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 16, fontWeight: 500, color: '#555555',
+            display: 'block', marginBottom: 20,
+          }}>
+            {guide.longDesc}
+          </span>
+
+          {/* 목표 섹션 */}
+          <div style={{
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: '#E8F8EF',
+            padding: '0 16px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            marginBottom: 28,
+            boxSizing: 'border-box',
+          }}>
+            <img
+              src={targetIconImg}
+              alt="target"
+              style={{
+                width: 16, height: 16, objectFit: 'contain', flexShrink: 0,
+                filter: 'brightness(0) saturate(100%) invert(47%) sepia(90%) saturate(1200%) hue-rotate(320deg) brightness(107%) contrast(102%)',
+              }}
+            />
+            <span style={{
+              fontFamily: 'Pretendard, sans-serif',
+              fontSize: 16, fontWeight: 600, color: '#2ECC71',
+            }}>
+              {guide.goal}
+            </span>
+          </div>
+
+          {/* 실천 방법 */}
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 18, fontWeight: 700, color: '#1A1A1A',
+            display: 'block', marginBottom: 16,
+          }}>
+            실천 방법
+          </span>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
+            {guide.practices.map((text, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <CheckCircleIcon />
+                <span style={{
+                  fontFamily: 'Pretendard, sans-serif',
+                  fontSize: 16, fontWeight: 500, color: '#555555',
+                  lineHeight: 1.55,
+                }}>
+                  {text}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA 버튼 */}
+          <button
+            onClick={() => { onStart(guide.id); handleClose(); }}
+            style={{
+              width: '100%', height: 56,
+              borderRadius: 16,
+              backgroundColor: '#2ECC71',
+              border: 'none', cursor: 'pointer',
+              fontFamily: 'Pretendard, sans-serif',
+              fontSize: 16, fontWeight: 700, color: '#FFFFFF',
+              marginBottom: 8,
+            }}
+          >
+            이 가이드 도전하기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GuideCard({ icon, title, desc, active, onClick }) {
   return (
     <div
+      onClick={onClick}
       style={{
         width: 243,
         height: 133,
@@ -450,6 +641,7 @@ function GuideCard({ icon, title, desc, active }) {
         position: 'relative',
         scrollSnapAlign: 'start',
         overflow: 'hidden',
+        cursor: 'pointer',
       }}
     >
       {/* ── 도전 중 배지 — 우측 상단 패딩 끝 */}
@@ -515,43 +707,81 @@ function GuideCard({ icon, title, desc, active }) {
   );
 }
 
-function GuideCardSlider() {
+function GuideCardSlider({ activeGuideId, onStartGuide }) {
+  const [selectedGuide, setSelectedGuide] = useState(null);
+
   // 도전 중 카드가 항상 앞으로
-  const sorted = [...GUIDE_CARDS_DATA].sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0));
+  const sorted = [...GUIDE_CARDS_DATA].sort((a, b) =>
+    (b.id === activeGuideId ? 1 : 0) - (a.id === activeGuideId ? 1 : 0)
+  );
 
   return (
-    /* 음수 마진으로 부모 패딩(20px) 상쇄 → 화면 전체 너비 사용 */
-    <div style={{ alignSelf: 'stretch', marginLeft: -20, marginRight: -20 }}>
-      <div
-        className="no-scrollbar"
-        style={{
-          display: 'flex',
-          gap: 12,
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          paddingLeft: 20,
-          paddingRight: 20,
-          paddingBottom: 4,
-        }}
-      >
-        {sorted.map(card => <GuideCard key={card.id} {...card} />)}
+    <>
+      {/* 음수 마진으로 부모 패딩(20px) 상쇄 → 화면 전체 너비 사용 */}
+      <div style={{ alignSelf: 'stretch', marginLeft: -20, marginRight: -20 }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            gap: 12,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            paddingLeft: 20,
+            paddingRight: 20,
+            paddingBottom: 4,
+          }}
+        >
+          {sorted.map(card => (
+            <GuideCard
+              key={card.id}
+              {...card}
+              active={card.id === activeGuideId}
+              onClick={() => setSelectedGuide(card)}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {selectedGuide && (
+        <GuideDetailSheet
+          guide={selectedGuide}
+          onClose={() => setSelectedGuide(null)}
+          onStart={(id) => { onStartGuide(id); setSelectedGuide(null); }}
+        />
+      )}
+    </>
   );
 }
 
 // ── 현재 진행 중인 가이드 카드 ────────────────────────────────────────────────
-const MOCK_ACTIVE_GUIDE = {
-  icon:          guideSavingsIcon,
-  name:          '차근차근 저축왕',
-  goal:          '목표: 30일 동안 매일 5,000원 아끼기',
-  daysCompleted: 12,
-  totalDays:     30,
-};
+function ActiveGuideCard({ activeGuide }) {
+  if (!activeGuide) {
+    return (
+      <div style={{ width: 353 }}>
+        <span style={{
+          fontFamily: 'Pretendard, sans-serif', fontSize: 24, fontWeight: 600,
+          color: '#1A1A1A', display: 'block', marginBottom: 16,
+        }}>
+          현재 진행 중인 가이드
+        </span>
+        <div style={{
+          width: 353, height: 72, borderRadius: 28,
+          backgroundColor: '#F3F4F5',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif', fontSize: 14,
+            fontWeight: 400, color: '#9A9A9A',
+          }}>
+            진행 중인 가이드가 없어요
+          </span>
+        </div>
+      </div>
+    );
+  }
 
-function ActiveGuideCard() {
-  const { icon, name, goal, daysCompleted, totalDays } = MOCK_ACTIVE_GUIDE;
+  const { icon, title: name, goal, daysCompleted, totalDays } = activeGuide;
   const pct = Math.round((daysCompleted / totalDays) * 100);
 
   return (
@@ -595,7 +825,7 @@ function ActiveGuideCard() {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <img src={icon} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+            <img src={icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />
           </div>
           <span style={{
             fontFamily: 'Pretendard, sans-serif',
@@ -621,7 +851,7 @@ function ActiveGuideCard() {
         {/* ── 진행도: 레이블 + 바 */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#1A1A1A' }}>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#2ECC71' }}>
               {daysCompleted}/{totalDays}일 완료
             </span>
             <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#555555' }}>
@@ -663,6 +893,9 @@ function ActiveGuideCard() {
 
 // ── 메인 AI 리포트 스크린 ─────────────────────────────────────────────────────
 export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress }) {
+  const [activeGuideId, setActiveGuideId] = useState(null);
+  const activeGuide = GUIDE_CARDS_DATA.find(g => g.id === activeGuideId) ?? null;
+
   return (
     <div
       style={{
@@ -671,7 +904,7 @@ export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress 
         alignItems: 'center',
         paddingLeft: 20,
         paddingRight: 20,
-        paddingBottom: 40,
+        paddingBottom: 0,
         gap: 20,
       }}
     >
@@ -700,10 +933,13 @@ export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress 
       <AIGuideLibraryCard expenses={expenses} onGuidePress={onGuidePress} />
 
       {/* 가이드 미니카드 슬라이더 */}
-      <GuideCardSlider />
+      <GuideCardSlider
+        activeGuideId={activeGuideId}
+        onStartGuide={setActiveGuideId}
+      />
 
       {/* 카드 4: 현재 진행 중인 가이드 */}
-      <ActiveGuideCard />
+      <ActiveGuideCard activeGuide={activeGuide} />
     </div>
   );
 }
