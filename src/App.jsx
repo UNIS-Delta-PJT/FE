@@ -19,6 +19,7 @@ import MascotStatusScreen from './components/MascotStatusScreen';
 import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
+import AIReportScreen from './components/AIReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 
@@ -308,7 +309,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} />
+          <AIReportScreen expenses={reportExpenses} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen />
