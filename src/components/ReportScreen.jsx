@@ -893,7 +893,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
       )}
 
       {mainTab === 'ai' && (
-        <AIReportScreen expenses={expenses} />
+        <AIReportScreen expenses={expenses} spent={spent} />
       )}
     </div>
   );

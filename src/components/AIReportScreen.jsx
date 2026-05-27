@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import trendUpImg from '../assets/icon_trend_up.png';
+import peerIconImg from '../assets/icon_peer.png';
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -203,8 +204,89 @@ function SpikeInsightCard({ expenses }) {
   );
 }
 
+// ── 또래 소비 비교 카드 ───────────────────────────────────────────────────────
+const MOCK_PEER_AVG_MONTHLY = 350000; // 20대 평균 월 소비 mock
+const MOCK_PEER_RANK_PCT    = 15;     // 상위 n% mock
+
+function StatusBar({ pct, color }) {
+  return (
+    <div style={{ width: '100%', height: 8, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
+      <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: color }} />
+    </div>
+  );
+}
+
+function PeerCompareCard({ spent = 0 }) {
+  const peerAvg  = MOCK_PEER_AVG_MONTHLY;
+  const mySpent  = spent;
+  const maxVal   = Math.max(mySpent, peerAvg, 1);
+  const myPct    = Math.round((mySpent / maxVal) * 100);
+  const peerPct  = Math.round((peerAvg / maxVal) * 100);
+  const fmtMan   = v => v === 0 ? '0원' : `${Math.round(v / 10000)}만`;
+
+  return (
+    <div
+      style={{
+        width: 353,
+        height: 310,
+        borderRadius: 32,
+        padding: 32,
+        backgroundColor: '#FFFFFF',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.09)',
+        boxSizing: 'border-box',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* ── 컨테이너 1: 아이콘 + 제목 (x:32, y:32) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img src={peerIconImg} alt="peer" style={{ width: 32, height: 24, objectFit: 'contain' }} />
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 24, fontWeight: 600, color: '#1A1A1A' }}>
+          또래 소비 비교
+        </span>
+      </div>
+
+      {/* gap → 컨테이너 2 위치 y:84 맞춤 (헤더 ~32px + gap 20px) */}
+      <div style={{ height: 20 }} />
+
+      {/* ── 컨테이너 2: 나 (x:32, y:84) */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>나</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>{fmtMan(mySpent)}</span>
+        </div>
+        <StatusBar pct={myPct} color="#2ECC71" />
+      </div>
+
+      <div style={{ height: 14 }} />
+
+      {/* ── 컨테이너 3: 20대 평균 소비 */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>20대 평균 소비</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>{fmtMan(peerAvg)}</span>
+        </div>
+        <StatusBar pct={peerPct} color="#FED023" />
+      </div>
+
+      {/* 나머지 공간 채우기 */}
+      <div style={{ flex: 1 }} />
+
+      {/* ── Divider */}
+      <div style={{ height: 1, backgroundColor: '#F0F0F0', marginBottom: 16 }} />
+
+      {/* ── 하단 텍스트 */}
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#006D37', lineHeight: 1.55 }}>
+        이번 달 상위 {MOCK_PEER_RANK_PCT}% 안에 들었어요!<br />
+        정말 대단해요, 이대로만 가요!
+      </span>
+    </div>
+  );
+}
+
 // ── 메인 AI 리포트 스크린 ─────────────────────────────────────────────────────
-export default function AIReportScreen({ expenses = [] }) {
+export default function AIReportScreen({ expenses = [], spent = 0 }) {
   return (
     <div
       style={{
@@ -235,7 +317,8 @@ export default function AIReportScreen({ expenses = [] }) {
       {/* 카드 1: 급증 인사이트 */}
       <SpikeInsightCard expenses={expenses} />
 
-      {/* 카드 2: 준비 중 (다음 단계에서 추가) */}
+      {/* 카드 2: 또래 소비 비교 */}
+      <PeerCompareCard spent={spent} />
     </div>
   );
 }
