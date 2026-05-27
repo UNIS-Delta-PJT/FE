@@ -609,6 +609,15 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             ))}
           </div>
 
+          {/* 예상 보상 */}
+          <span style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: 18, fontWeight: 700, color: '#1A1A1A',
+            display: 'block', marginBottom: 16,
+          }}>
+            예상 보상
+          </span>
+
           {/* 예상 보상 섹션 */}
           <div style={{
             width: '100%',
