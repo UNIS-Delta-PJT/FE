@@ -433,6 +433,8 @@ const GUIDE_CARDS_DATA = [
     ],
     daysCompleted: 12,
     totalDays: 30,
+    // reward.titleName → 캐릭터 화면 연동 시 사용 (한정판 칭호)
+    reward: { savingsAmount: 150000, titleName: '절약왕' },
   },
   {
     id: 'rocket',
@@ -447,6 +449,8 @@ const GUIDE_CARDS_DATA = [
     ],
     daysCompleted: 0,
     totalDays: 30,
+    // reward.titleName → 캐릭터 화면 연동 시 사용 (한정판 칭호)
+    reward: { savingsAmount: 120000, titleName: '소비달인' },
   },
 ];
 
@@ -590,7 +594,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             실천 방법
           </span>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
             {guide.practices.map((text, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <CheckCircleIcon />
@@ -605,21 +609,55 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             ))}
           </div>
 
-          {/* CTA 버튼 */}
-          <button
-            onClick={() => { onStart(guide.id); handleClose(); }}
-            style={{
-              width: '100%', height: 56,
-              borderRadius: 16,
-              backgroundColor: '#2ECC71',
-              border: 'none', cursor: 'pointer',
+          {/* 예상 보상 섹션 */}
+          <div style={{
+            width: '100%',
+            minHeight: 83,
+            borderRadius: 48,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid rgba(187, 203, 187, 0.3)',
+            padding: 16,
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}>
+            <p style={{
               fontFamily: 'Pretendard, sans-serif',
-              fontSize: 16, fontWeight: 700, color: '#FFFFFF',
-              marginBottom: 8,
-            }}
-          >
-            이 가이드 도전하기
-          </button>
+              fontSize: 16, fontWeight: 400, color: '#3D4A3E',
+              lineHeight: 1.5, margin: 0,
+            }}>
+              성공 시 한 달에 총{' '}
+              <span style={{ fontWeight: 600, color: '#2ECC71' }}>
+                {guide.reward.savingsAmount.toLocaleString('ko-KR')}원 절약 가능
+              </span>
+              {' '}+{' '}
+              {/* titleName → 추후 캐릭터 화면에서 한정판 칭호로 사용 */}
+              <span style={{ fontWeight: 600, color: '#2ECC71' }}>
+                [{guide.reward.titleName}]
+              </span>
+              {' '}한정판 칭호 획득
+            </p>
+          </div>
+
+          {/* CTA 버튼 */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            <button
+              onClick={() => { onStart(guide.id); handleClose(); }}
+              style={{
+                width: '100%',
+                maxWidth: 353,
+                height: 56,
+                borderRadius: 9999,
+                backgroundColor: '#2ECC71',
+                border: 'none', cursor: 'pointer',
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 16, fontWeight: 700, color: '#FFFFFF',
+              }}
+            >
+              이 가이드 도전하기
+            </button>
+          </div>
         </div>
       </div>
     </div>
