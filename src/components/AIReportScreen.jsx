@@ -385,13 +385,13 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
           </span>
         </div>
 
-        {/* 버튼 — x:134, y:101, 119×34 */}
+        {/* 버튼 — 우측 하단 패딩(16) 끝 */}
         <button
           onClick={onGuidePress}
           style={{
             position: 'absolute',
-            left: 134,
-            top: 101,
+            right: 16,
+            bottom: 16,
             width: 119,
             height: 34,
             borderRadius: 10000,
