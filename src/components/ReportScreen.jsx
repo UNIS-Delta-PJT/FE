@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import savingsIconImg from '../assets/icon_savings.png';
 import celebrationImg from '../assets/icon_celebration.png';
+import AIReportScreen from './AIReportScreen';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
@@ -892,9 +893,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
       )}
 
       {mainTab === 'ai' && (
-        <div style={{ marginTop: 80, display: 'flex', justifyContent: 'center', fontFamily: 'Pretendard, sans-serif', fontSize: 14, color: '#94A3B8' }}>
-          AI 피드백 준비 중이에요
-        </div>
+        <AIReportScreen expenses={expenses} />
       )}
     </div>
   );
