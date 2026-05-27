@@ -523,7 +523,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
           borderRadius: '24px 24px 0 0',
           transform: `translateY(${sheetTranslate}px)`,
           transition,
-          maxHeight: '85dvh',
+          maxHeight: '95dvh',
           overflowY: 'auto',
           boxShadow: '0 -4px 32px rgba(0,0,0,0.12)',
         }}
@@ -640,7 +640,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
               <span style={{ fontWeight: 600, color: '#2ECC71' }}>
                 {guide.reward.savingsAmount.toLocaleString('ko-KR')}원 절약 가능
               </span>
-              {' '}+{' '}
+              {' '}+<br />
               {/* titleName → 추후 캐릭터 화면에서 한정판 칭호로 사용 */}
               <span style={{ fontWeight: 600, color: '#2ECC71' }}>
                 [{guide.reward.titleName}]
