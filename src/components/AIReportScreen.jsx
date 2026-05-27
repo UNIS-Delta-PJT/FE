@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
-import trendUpImg    from '../assets/icon_trend_up.png';
-import peerIconImg   from '../assets/icon_peer.png';
-import aiGuideIconImg from '../assets/icon_ai_guide.png';
+import trendUpImg        from '../assets/icon_trend_up.png';
+import peerIconImg       from '../assets/icon_peer.png';
+import aiGuideIconImg    from '../assets/icon_ai_guide.png';
+import guideSavingsIcon  from '../assets/icon_guide_savings.png';
+import guideRocketIcon   from '../assets/icon_guide_rocket.png';
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────────────
 function parseDate(str) {
@@ -414,6 +416,130 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
   );
 }
 
+// ── 가이드 미니카드 슬라이더 ──────────────────────────────────────────────────
+// 도전 중인 가이드는 항상 앞에 정렬 (active: true)
+const GUIDE_CARDS_DATA = [
+  {
+    id: 'savings',
+    icon: guideSavingsIcon,
+    title: '차근차근 저축왕',
+    desc: '매일 조금씩 아끼는 습관을 길러요.',
+    active: true,
+  },
+  {
+    id: 'rocket',
+    icon: guideRocketIcon,
+    title: '한 달 만에 부자되기',
+    desc: '공격적인 예산 관리로 자산을 늘려요.',
+    active: false,
+  },
+];
+
+function GuideCard({ icon, title, desc, active }) {
+  return (
+    <div
+      style={{
+        width: 243,
+        height: 133,
+        borderRadius: 20,
+        backgroundColor: '#F4F4F4',
+        flexShrink: 0,
+        padding: 16,
+        boxSizing: 'border-box',
+        position: 'relative',
+        scrollSnapAlign: 'start',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── 도전 중 배지 — 우측 상단 패딩 끝 */}
+      {active && (
+        <div style={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          width: 56,
+          height: 24,
+          borderRadius: 100000,
+          backgroundColor: '#FFFFFF',
+          border: '1.15px solid #4AE183',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#4AE183' }}>
+            도전 중
+          </span>
+        </div>
+      )}
+
+      {/* ── 아이콘 컨테이너 — 좌측 상단 패딩 끝 */}
+      <div style={{
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        backgroundColor: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        marginBottom: 8,
+      }}>
+        <img src={icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+      </div>
+
+      {/* ── 텍스트 */}
+      <span style={{
+        fontFamily: 'Pretendard, sans-serif',
+        fontSize: 16,
+        fontWeight: 600,
+        color: '#1A1A1A',
+        display: 'block',
+        lineHeight: 1.2,
+        marginBottom: 4,
+      }}>
+        {title}
+      </span>
+      <span style={{
+        fontFamily: 'Pretendard, sans-serif',
+        fontSize: 12,
+        fontWeight: 400,
+        color: '#555555',
+        display: 'block',
+        lineHeight: 1.4,
+      }}>
+        {desc}
+      </span>
+    </div>
+  );
+}
+
+function GuideCardSlider() {
+  // 도전 중 카드가 항상 앞으로
+  const sorted = [...GUIDE_CARDS_DATA].sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0));
+
+  return (
+    /* 음수 마진으로 부모 패딩(20px) 상쇄 → 화면 전체 너비 사용 */
+    <div style={{ alignSelf: 'stretch', marginLeft: -20, marginRight: -20 }}>
+      <div
+        className="no-scrollbar"
+        style={{
+          display: 'flex',
+          gap: 12,
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          paddingLeft: 20,
+          paddingRight: 20,
+          paddingBottom: 4,
+        }}
+      >
+        {sorted.map(card => <GuideCard key={card.id} {...card} />)}
+      </div>
+    </div>
+  );
+}
+
 // ── 메인 AI 리포트 스크린 ─────────────────────────────────────────────────────
 export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress }) {
   return (
@@ -451,6 +577,9 @@ export default function AIReportScreen({ expenses = [], spent = 0, onGuidePress 
 
       {/* 카드 3: AI 가이드 라이브러리 */}
       <AIGuideLibraryCard expenses={expenses} onGuidePress={onGuidePress} />
+
+      {/* 가이드 미니카드 슬라이더 */}
+      <GuideCardSlider />
     </div>
   );
 }
