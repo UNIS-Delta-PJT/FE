@@ -2,7 +2,7 @@ import { useState } from 'react';
 import appleIcon from '../assets/icon-apple.png';
 import kakaoIcon from '../assets/icon-kakao.png';
 import googleIcon from '../assets/icon-google.png';
-import deltaHappyImg from '../assets/delta_happy.png';
+import loginCharacterImg from '../assets/login_character.png';
 
 const TOAST_STYLE = {
   position: 'fixed',
@@ -57,28 +57,28 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
           </span>
         </div>
       )}
-      {/* delta_happy 마스코트 이미지 */}
+      {/* 로그인 캐릭터 이미지 */}
       <img
-        src={deltaHappyImg}
-        alt="delta happy"
+        src={loginCharacterImg}
+        alt="델타 캐릭터"
         style={{
           position: 'absolute',
-          left: '140px',
-          top: '240px',
-          width: '113px',
-          height: '141px',
+          left: '109px',
+          top: '89px',
+          width: '175px',
+          height: '77px',
           objectFit: 'contain',
           zIndex: 1,
         }}
       />
 
       {/* 헤딩 영역 (텍스트만) */}
-      <div style={{ position: 'absolute', top: '128px', left: '20px', right: '20px' }}>
+      <div style={{ position: 'absolute', top: '174px', left: '20px', right: '20px' }}>
         <p
           style={{
             fontFamily: 'Pretendard, sans-serif',
             fontSize: '28px',
-            fontWeight: 600,
+            fontWeight: 700,
             color: '#1A1A1A',
             lineHeight: '1.3',
             marginBottom: '12px',
@@ -98,7 +98,7 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
             textAlign: 'center',
           }}
         >
-          {`지루한 가계부 대신\n델타와 함께하는 매일의 미션을 즐겨보세요!`}
+          {`지루한 가계부 대신 델타와 함께하는 매일의\n미션을 즐겨보세요!`}
         </p>
       </div>
 
@@ -111,15 +111,15 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
           style={{
             width: '353px',
             height: '60px',
-            backgroundColor: '#2ECC71',
+            background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)',
             borderRadius: '100px',
-            padding: '16px',
+            padding: '0 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(46, 204, 113, 0.40)',
+            boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)',
           }}
         >
           <span
@@ -161,7 +161,7 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
               fontFamily: 'Pretendard, sans-serif',
               fontSize: '16px',
               fontWeight: 600,
-              color: '#2ECC71',
+              color: '#1CD1A1',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -181,7 +181,7 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
             marginTop: '28px',
           }}
         >
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E5E5' }} />
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#EAEAEA' }} />
           <span
             style={{
               fontFamily: 'Pretendard, sans-serif',
@@ -192,7 +192,7 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
           >
             or
           </span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#E5E5E5' }} />
+          <div style={{ flex: 1, height: '1px', backgroundColor: '#EAEAEA' }} />
         </div>
 
         {/* 소셜 로그인 버튼 */}
