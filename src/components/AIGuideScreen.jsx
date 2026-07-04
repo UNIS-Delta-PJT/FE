@@ -46,11 +46,11 @@ function UsageBar({ ratio, warn }) {
           className="h-full rounded-full transition-all"
           style={{
             width: `${pct}%`,
-            backgroundColor: warn ? '#F97316' : '#2ECC71',
+            backgroundColor: warn ? '#F97316' : '#1CD1A1',
           }}
         />
       </div>
-      <span className="text-xs font-bold w-8 text-right" style={{ color: warn ? '#F97316' : '#6B7280' }}>
+      <span className="text-xs font-bold w-8 text-right" style={{ color: warn ? '#F97316' : '#555555' }}>
         {pct}%
       </span>
     </div>
@@ -136,7 +136,7 @@ export default function AIGuideScreen({ onBack }) {
               key={id}
               onClick={() => setSelectedId(id)}
               className="w-full text-left bg-white rounded-3xl border shadow-sm px-5 py-4 flex gap-3 transition-all active:scale-[0.98]"
-              style={{ borderColor: selected ? '#2ECC71' : '#F3F4F6' }}
+              style={{ borderColor: selected ? '#1CD1A1' : '#F4F4F4' }}
             >
               <span style={{ fontSize: '28px', lineHeight: 1, flexShrink: 0 }}>{icon}</span>
               <div className="flex flex-col gap-1 flex-1">
@@ -148,7 +148,7 @@ export default function AIGuideScreen({ onBack }) {
               </div>
               <div className="flex-shrink-0 mt-0.5">
                 {selected
-                  ? <CheckCircle2 size={20} className="text-[#2ECC71]" />
+                  ? <CheckCircle2 size={20} className="text-[#1CD1A1]" />
                   : <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
                 }
               </div>
@@ -160,7 +160,7 @@ export default function AIGuideScreen({ onBack }) {
       {/* 챌린지 시작 버튼 */}
       <button
         disabled={!selectedId}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center transition-transform shadow-lg"
         style={{
           position: 'fixed',
           bottom: '32px',

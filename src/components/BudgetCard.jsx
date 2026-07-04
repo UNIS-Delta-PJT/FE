@@ -14,7 +14,7 @@ export default function BudgetCard({ totalAmount, spent = 0 }) {
       ? 'from-red-500 to-rose-400'
       : percent >= 60
       ? 'from-amber-400 to-orange-400'
-      : 'from-[#2ECC71] to-emerald-400';
+      : 'from-[#1CD1A1] to-emerald-400';
 
   return (
     <div className="rounded-2xl bg-gray-50 border border-gray-200 shadow-sm flex flex-col" style={{ width: 353, height: 136, padding: '16px', gap: 8, boxSizing: 'border-box' }}>
@@ -30,7 +30,7 @@ export default function BudgetCard({ totalAmount, spent = 0 }) {
             </span>
             <span className="text-sm text-gray-400 mb-1 font-medium">원</span>
           </div>
-          <span className={`text-xs font-bold mb-1 ${percent >= 80 ? 'text-rose-500' : percent >= 60 ? 'text-amber-500' : 'text-[#2ECC71]'}`}>
+          <span className={`text-xs font-bold mb-1 ${percent >= 80 ? 'text-rose-500' : percent >= 60 ? 'text-amber-500' : 'text-[#1CD1A1]'}`}>
             {percent}%
           </span>
         </div>
@@ -49,7 +49,7 @@ export default function BudgetCard({ totalAmount, spent = 0 }) {
       {/* 하단: 사용/예산 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2ECC71]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#1CD1A1]" />
           <span className="text-xs text-gray-400">사용</span>
           <span className="text-xs font-bold text-gray-600">
             {formatKRW(spent)}원

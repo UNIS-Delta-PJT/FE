@@ -97,7 +97,7 @@ function computeGrade(rank) {
 }
 
 // ── 공통 아이콘 ───────────────────────────────────────────────────────────────
-function ReceiptIcon({ color = '#2ECC71', size = 20 }) {
+function ReceiptIcon({ color = '#1CD1A1', size = 20 }) {
   return (
     <svg width={size} height={Math.round(size * 20 / 18)} viewBox="0 0 18 20" fill="none">
       <path d="M1 2C1 1.45 1.45 1 2 1H16C16.55 1 17 1.45 17 2V15L14.5 19L12 15L9.5 19L7 15L4.5 19L2 15L1 15V2Z"
@@ -111,12 +111,12 @@ function ReceiptIcon({ color = '#2ECC71', size = 20 }) {
 function PeopleIcon() {
   return (
     <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
-      <circle cx="8.5"  cy="7"   r="4" fill="#059669" opacity="0.55" />
-      <path d="M1,23 C1,18.9 4.4,15.5 8.5,15.5 C10.5,15.5 12.3,16.3 13.6,17.5" fill="#059669" opacity="0.55" />
-      <circle cx="23.5" cy="7"   r="4" fill="#059669" opacity="0.55" />
-      <path d="M32,23 C32,18.9 28.6,15.5 24.5,15.5 C22.5,15.5 20.6,16.3 19.3,17.5" fill="#059669" opacity="0.55" />
-      <circle cx="16"   cy="5.5" r="5" fill="#059669" />
-      <path d="M7,23 C7,18.4 11,14.5 16,14.5 C21,14.5 25,18.4 25,23" fill="#059669" />
+      <circle cx="8.5"  cy="7"   r="4" fill="#1CD1A1" opacity="0.55" />
+      <path d="M1,23 C1,18.9 4.4,15.5 8.5,15.5 C10.5,15.5 12.3,16.3 13.6,17.5" fill="#1CD1A1" opacity="0.55" />
+      <circle cx="23.5" cy="7"   r="4" fill="#1CD1A1" opacity="0.55" />
+      <path d="M32,23 C32,18.9 28.6,15.5 24.5,15.5 C22.5,15.5 20.6,16.3 19.3,17.5" fill="#1CD1A1" opacity="0.55" />
+      <circle cx="16"   cy="5.5" r="5" fill="#1CD1A1" />
+      <path d="M7,23 C7,18.4 11,14.5 16,14.5 C21,14.5 25,18.4 25,23" fill="#1CD1A1" />
     </svg>
   );
 }
@@ -132,11 +132,11 @@ function hexRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-function BarRow({ label, pct, amount, accent = '#2ECC71' }) {
+function BarRow({ label, pct, amount, accent = '#1CD1A1' }) {
   const rgb = hexRgb(accent);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 30, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, height: 30, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden', position: 'relative' }}>
         <div style={{
           position: 'absolute', left: 0, top: 0, bottom: 0,
           width: `${pct}%`,
@@ -150,7 +150,7 @@ function BarRow({ label, pct, amount, accent = '#2ECC71' }) {
           {label}
         </span>
       </div>
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 12, color: '#9A9A9A', width: 44, textAlign: 'right', flexShrink: 0 }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 12, color: '#999999', width: 44, textAlign: 'right', flexShrink: 0 }}>
         {amount}
       </span>
     </div>
@@ -180,11 +180,11 @@ function WeekCompareCard({ data }) {
       {/* 지난주: #FED023 그라데이션 */}
       <BarRow label="지난주" pct={lastPct} amount={fmt(lastWeek)} accent="#FED023" />
       <div style={{ height: 14 }} />
-      {/* 이번주: #2ECC71 그라데이션 */}
-      <BarRow label="이번주" pct={thisPct} amount={fmt(thisWeek)} accent="#2ECC71" />
+      {/* 이번주: #1CD1A1 그라데이션 */}
+      <BarRow label="이번주" pct={thisPct} amount={fmt(thisWeek)} accent="#1CD1A1" />
 
       <div style={{ flex: 1 }} />
-      <div style={{ height: 1, backgroundColor: '#F3F4F5', margin: '16px 0' }} />
+      <div style={{ height: 1, backgroundColor: '#F4F4F4', margin: '16px 0' }} />
 
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -208,7 +208,7 @@ function InfoCards({ topCategory, peerRank }) {
   const fillWidth = Math.round(((100 - peerRank) / 100) * 126);
   return (
     <div style={{ display: 'flex', gap: 19, width: 353 }}>
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F3F4F5', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <CategoryIcon name={topCategory.name} width={18} height={16} color="#EF4444" />
         </div>
@@ -217,13 +217,13 @@ function InfoCards({ topCategory, peerRank }) {
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 18, color: '#EF4444', margin: 0 }}>{topCategory.name}</p>
         </div>
       </div>
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F3F4F5', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <PeopleIcon />
         <div>
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 12, color: '#000000', margin: 0 }}>또래 소비 순위</p>
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 18, color: '#000000', margin: '0 0 6px 0' }}>상위 {peerRank}%</p>
-          <div style={{ width: 126, height: 6, borderRadius: 9999, backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
-            <div style={{ width: fillWidth, height: 6, borderRadius: 9999, backgroundColor: '#059669' }} />
+          <div style={{ width: 126, height: 6, borderRadius: 9999, backgroundColor: '#EAEAEA', overflow: 'hidden' }}>
+            <div style={{ width: fillWidth, height: 6, borderRadius: 9999, backgroundColor: '#1CD1A1' }} />
           </div>
         </div>
       </div>
@@ -248,14 +248,14 @@ function DayChart({ weeklyData }) {
       <div style={{ height: 6 }} />
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 24, color: '#000000', display: 'block' }}>{todayKr}요일</span>
       <div style={{ height: 4 }} />
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 10, color: '#9F9FA3', display: 'block' }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 10, color: '#999999', display: 'block' }}>
         {hasData ? `이번 주 최대 소비: ${maxDay}요일` : '이번 주 소비 내역이 없어요'}
       </span>
       <div style={{ height: 18 }} />
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
         <div style={{ width: Y_AXIS_W, height: BAR_H, position: 'relative', flexShrink: 0 }}>
           {Y_LABELS.map((label, i) => (
-            <span key={label} style={{ position: 'absolute', top: i === 0 ? 0 : `${i * 25}%`, right: 4, transform: i === 0 ? 'none' : 'translateY(-50%)', fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#828282', lineHeight: 1, whiteSpace: 'nowrap' }}>
+            <span key={label} style={{ position: 'absolute', top: i === 0 ? 0 : `${i * 25}%`, right: 4, transform: i === 0 ? 'none' : 'translateY(-50%)', fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#999999', lineHeight: 1, whiteSpace: 'nowrap' }}>
               {label}
             </span>
           ))}
@@ -266,15 +266,15 @@ function DayChart({ weeklyData }) {
               const amount    = weeklyData[day] || 0;
               const barHeight = Math.round((Math.min(amount, MAX_CHART) / MAX_CHART) * BAR_H);
               return (
-                <div key={day} style={{ width: BAR_W, height: BAR_H, backgroundColor: 'rgba(46,204,113,0.2)', borderRadius: 5, flexShrink: 0, display: 'flex', alignItems: 'flex-end' }}>
-                  {barHeight > 0 && <div style={{ width: BAR_W, height: barHeight, backgroundColor: '#2ECC71', borderRadius: 5 }} />}
+                <div key={day} style={{ width: BAR_W, height: BAR_H, backgroundColor: 'rgba(28,209,161,0.2)', borderRadius: 5, flexShrink: 0, display: 'flex', alignItems: 'flex-end' }}>
+                  {barHeight > 0 && <div style={{ width: BAR_W, height: barHeight, backgroundColor: '#1CD1A1', borderRadius: 5 }} />}
                 </div>
               );
             })}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
             {DAYS_KR.map(day => (
-              <span key={day} style={{ width: BAR_W, textAlign: 'center', fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#828282', flexShrink: 0, display: 'block' }}>
+              <span key={day} style={{ width: BAR_W, textAlign: 'center', fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#999999', flexShrink: 0, display: 'block' }}>
                 {day}
               </span>
             ))}
@@ -282,7 +282,7 @@ function DayChart({ weeklyData }) {
         </div>
       </div>
       <div style={{ height: 14 }} />
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#9F9FA3', display: 'block' }}>소비내역 기반 데이터</span>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 10, color: '#999999', display: 'block' }}>소비내역 기반 데이터</span>
     </div>
   );
 }
@@ -291,7 +291,7 @@ function DayChart({ weeklyData }) {
 
 /**
  * 원형 예산 소진율 링 (SVG stroke + strokeLinecap="round")
- * - linearGradient: 12시(#D6F4E3 연) → 6시(#2ECC71 진) 방향으로 자연스러운 그라데이션
+ * - linearGradient: 12시(#D6F4E3 연) → 6시(#1CD1A1 진) 방향으로 자연스러운 그라데이션
  * - strokeLinecap="round": 양 끝 자연스럽게 둥글게
  * - 중앙: "남은 금액" 라벨 + 남은 금액
  */
@@ -321,7 +321,7 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
           {/* 12시(상단, 연) → 6시(하단, 진) 방향 그라데이션 */}
           <linearGradient id="ringGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="#D6F4E3" />
-            <stop offset="100%" stopColor="#2ECC71" />
+            <stop offset="100%" stopColor="#1CD1A1" />
           </linearGradient>
         </defs>
 
@@ -329,7 +329,7 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
         <circle
           cx={cx} cy={cy} r={r}
           fill="none"
-          stroke="#EBEBEB"
+          stroke="#EAEAEA"
           strokeWidth={stroke}
         />
 
@@ -356,7 +356,7 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
       }}>
         <span style={{
           fontFamily: 'Pretendard, sans-serif', fontWeight: 400,
-          fontSize: labelSize, color: '#9A9A9A', lineHeight: 1,
+          fontSize: labelSize, color: '#999999', lineHeight: 1,
         }}>
           남은 금액
         </span>
@@ -401,26 +401,26 @@ function TopCategoriesCard({ categories }) {
       </span>
 
       {top3.length === 0 ? (
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, color: '#94A3B8', textAlign: 'center', paddingBottom: 8 }}>이번 달 소비 내역이 없어요</span>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, color: '#999999', textAlign: 'center', paddingBottom: 8 }}>이번 달 소비 내역이 없어요</span>
       ) : top3.map(({ name, amount }, i) => {
         const pct = total > 0 ? (amount / total) * 100 : 0;
         return (
           <div key={name} style={{ marginBottom: i < top3.length - 1 ? 16 : 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 11, color: '#BBBBBB', minWidth: 12 }}>{i + 1}</span>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: '#F3F4F5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 11, color: '#999999', minWidth: 12 }}>{i + 1}</span>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <CategoryIcon name={name} width={13} height={13} />
                 </div>
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 13, color: '#1A1A1A' }}>{name}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 11, color: '#9A9A9A' }}>{fmt(amount)}</span>
-                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 12, color: '#2ECC71' }}>{pct.toFixed(1)}%</span>
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 11, color: '#999999' }}>{fmt(amount)}</span>
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 12, color: '#1CD1A1' }}>{pct.toFixed(1)}%</span>
               </div>
             </div>
-            <div style={{ height: 7, borderRadius: 9999, background: '#F3F4F5', overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, background: '#2ECC71', transition: 'width 0.4s ease' }} />
+            <div style={{ height: 7, borderRadius: 9999, background: '#F4F4F4', overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, background: '#1CD1A1', transition: 'width 0.4s ease' }} />
             </div>
           </div>
         );
@@ -433,10 +433,10 @@ function MonthlyInfoCards({ fixedExpense, grade, peerRank }) {
   return (
     <div style={{ display: 'flex', gap: 19, width: 353 }}>
       {/* 이번 달 고정비 */}
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F3F4F5', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         {/* 초록 영수증 아이콘 */}
-        <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(46,204,113,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ReceiptIcon color="#2ECC71" size={18} />
+        <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(28,209,161,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ReceiptIcon color="#1CD1A1" size={18} />
         </div>
         <div>
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 12, color: '#000000', margin: '0 0 4px 0' }}>이번 달 고정비</p>
@@ -447,14 +447,14 @@ function MonthlyInfoCards({ fixedExpense, grade, peerRank }) {
       </div>
 
       {/* 레온이의 성적표 */}
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F3F4F5', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         {/* 텍스트 위로 */}
         <div>
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 12, color: '#000000', margin: '0 0 2px 0' }}>레온이의 성적표</p>
-          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 11, color: '#9A9A9A', margin: 0 }}>또래 상위 {peerRank}%</p>
+          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 11, color: '#999999', margin: 0 }}>또래 상위 {peerRank}%</p>
         </div>
         {/* 등급 알파벳 아래로 — 왼쪽 정렬 */}
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#2ECC71', lineHeight: 1, display: 'block' }}>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#1CD1A1', lineHeight: 1, display: 'block' }}>
           {grade}
         </span>
       </div>
@@ -465,7 +465,7 @@ function MonthlyInfoCards({ fixedExpense, grade, peerRank }) {
 // ── 연간 컴포넌트 ─────────────────────────────────────────────────────────────
 
 /** 전년 대비 추세 아이콘 (13×8) */
-function YearTrendIcon({ color = '#2ECC71', isUp = false }) {
+function YearTrendIcon({ color = '#1CD1A1', isUp = false }) {
   return (
     <svg width="13" height="8" viewBox="0 0 13 8" fill="none">
       {isUp ? (
@@ -515,7 +515,7 @@ function YearlyFlowCard({ expenses }) {
     : 0;
   const isUp       = rawChange > 0;
   const changeAbs  = Math.abs(rawChange).toFixed(1);
-  const changeColor = isUp ? '#EF4444' : '#2ECC71';
+  const changeColor = isUp ? '#EF4444' : '#1CD1A1';
 
   const BAR_H  = 145;
   const MIN_BAR = 8;
@@ -555,7 +555,7 @@ function YearlyFlowCard({ expenses }) {
               <div style={{
                 width: 16,
                 height: barH,
-                backgroundColor: isCurrent ? '#2ECC71' : '#E8F8EF',
+                backgroundColor: isCurrent ? '#1CD1A1' : '#E8F8EF',
                 borderRadius: '4px 4px 0 0',
               }} />
             </div>
@@ -627,7 +627,7 @@ function YearlySummaryCard({ expenses }) {
       </p>
       <Row dotColor="#BA1A1A" label="가장 많이 쓴 달:" value={mostSpendingMonth} />
       <div style={{ height: 14 }} />
-      <Row dotColor="#2ECC71" label="가장 절약한 달:" value={mostSavingMonth} />
+      <Row dotColor="#1CD1A1" label="가장 절약한 달:" value={mostSavingMonth} />
     </div>
   );
 }
@@ -655,7 +655,7 @@ function YearlyMiniCards({ expenses }) {
 
   const cardBase = {
     width: 167,
-    backgroundColor: '#F3F4F5',
+    backgroundColor: '#F4F4F4',
     borderRadius: 32,
     padding: 20,
     boxSizing: 'border-box',
@@ -717,7 +717,7 @@ function YearlyMiniCards({ expenses }) {
           fontFamily: 'Pretendard, sans-serif',
           fontWeight: 600,
           fontSize: 16,
-          color: '#2ECC71',
+          color: '#1CD1A1',
           textAlign: 'center',
         }}>
           {fmtSavings}
@@ -744,7 +744,7 @@ function YearlyShareCard() {
       width: 350,
       height: 125,
       borderRadius: 24,
-      backgroundColor: '#2ECC71',
+      backgroundColor: '#1CD1A1',
       paddingTop: 20,
       paddingLeft: 20,
       paddingRight: 20,
@@ -786,7 +786,7 @@ function YearlyShareCard() {
           fontFamily: 'Pretendard, sans-serif',
           fontWeight: 600,
           fontSize: 12,
-          color: '#2ECC71',
+          color: '#1CD1A1',
           textAlign: 'center',
         }}
       >
@@ -828,11 +828,11 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
     <div style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 0, boxSizing: 'border-box' }}>
       {/* 제목 */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: '#111827', margin: 0 }}>리포트</h1>
+        <h1 style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: '#1A1A1A', margin: 0 }}>리포트</h1>
       </div>
 
       {/* 소비 통계 / AI 피드백 토글 */}
-      <div style={{ width: 353, height: 48, borderRadius: 9999, backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', padding: '6px', boxSizing: 'border-box', marginBottom: 24 }}>
+      <div style={{ width: 353, height: 48, borderRadius: 9999, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', padding: '6px', boxSizing: 'border-box', marginBottom: 24 }}>
         {[{ key: 'stats', label: '소비 통계' }, { key: 'ai', label: 'AI 피드백' }].map(({ key, label }) => {
           const active = mainTab === key;
           return (
@@ -851,7 +851,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
                 const active = periodTab === key;
                 return (
                   <button key={key} onClick={() => setPeriodTab(key)} style={{ width: 70, height: 26, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: '0 0 4px 0', boxSizing: 'border-box' }}>
-                    <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 700 : 400, fontSize: 14, color: active ? '#006D37' : '#94A3B8', lineHeight: 1 }}>{label}</span>
+                    <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 700 : 400, fontSize: 14, color: active ? '#006D37' : '#999999', lineHeight: 1 }}>{label}</span>
                     {active && <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, backgroundColor: '#006D37', borderRadius: 1 }} />}
                   </button>
                 );

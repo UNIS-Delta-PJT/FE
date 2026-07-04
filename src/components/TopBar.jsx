@@ -24,7 +24,7 @@ export default function TopBar() {
           >
             <img src={stampImg} alt="출석체크" width={40} height={40} draggable={false} />
             {/* 출석 뱃지 */}
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#2ECC71] rounded-full text-[9px] font-bold text-white flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#1CD1A1] rounded-full text-[9px] font-bold text-white flex items-center justify-center">
               4
             </span>
           </button>

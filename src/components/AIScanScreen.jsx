@@ -68,7 +68,7 @@ export default function AIScanScreen({ onBack, onUpload }) {
         style={{
           backgroundImage: preview
             ? 'none'
-            : "url(\"data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='40' ry='40' stroke='%232ECC71' stroke-width='8' stroke-dasharray='10%2c 12' stroke-linecap='auto'/%3e%3c/svg%3e\")",
+            : "url(\"data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='40' ry='40' stroke='%231CD1A1' stroke-width='8' stroke-dasharray='10%2c 12' stroke-linecap='auto'/%3e%3c/svg%3e\")",
         }}
       >
         {preview ? (
@@ -83,8 +83,8 @@ export default function AIScanScreen({ onBack, onUpload }) {
           </>
         ) : (
           <>
-            <ImagePlus size={64} className="text-[#2ECC71]" strokeWidth={1.5} />
-            <p style={{ fontSize: '18px' }} className="font-semibold text-[#27AE60]">
+            <ImagePlus size={64} className="text-[#1CD1A1]" strokeWidth={1.5} />
+            <p style={{ fontSize: '18px' }} className="font-semibold text-[#1CD1A1]">
               여기를 눌러 이미지 선택
             </p>
             <p style={{ fontSize: '12px' }} className="text-gray-400">
@@ -116,7 +116,7 @@ export default function AIScanScreen({ onBack, onUpload }) {
       {/* 업로드 버튼 */}
       <button
         onClick={onUpload}
-        className="bg-[#2ECC71] rounded-4xl py-4 w-[85%] h-12 self-center active:scale-95 transition-transform"
+        className="bg-[#1CD1A1] rounded-4xl py-4 w-[85%] h-12 self-center active:scale-95 transition-transform"
         style={{ fontSize: '15px', marginBottom: '20px' }}
       >
         <span className="text-[#FFFFFF] font-bold">업로드 하기</span>

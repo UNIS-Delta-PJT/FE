@@ -37,7 +37,7 @@ export default function CharacterComingSoon() {
         fontFamily: 'Pretendard, sans-serif',
         fontSize: 14,
         fontWeight: 400,
-        color: '#9A9A9A',
+        color: '#999999',
         margin: 0,
         textAlign: 'center',
         lineHeight: 1.6,

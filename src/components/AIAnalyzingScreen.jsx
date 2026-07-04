@@ -129,7 +129,7 @@ export default function AIAnalyzingScreen({ onComplete, progress: externalProgre
           left: 52,
           right: 52,
           height: 8,
-          background: '#EBEBEB',
+          background: '#EAEAEA',
           borderRadius: 100,
           overflow: 'hidden',
         }}
@@ -139,7 +139,7 @@ export default function AIAnalyzingScreen({ onComplete, progress: externalProgre
           style={{
             height: '100%',
             width: `${progress}%`,
-            background: '#2ECC71',
+            background: '#1CD1A1',
             borderRadius: 100,
             transition: 'width 0.25s ease',
           }}

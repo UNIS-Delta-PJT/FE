@@ -4,13 +4,13 @@ import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, X, PiggyBank, Briefcase, 
 const ICON_CONFIG = [
   { id: 'piggy',      Icon: PiggyBank,      bg: '#FED02333', color: '#735C00' },
   { id: 'briefcase',  Icon: Briefcase,      bg: '#5FBAFF33', color: '#006397' },
-  { id: 'book',       Icon: BookOpen,       bg: '#2ECC7133', color: '#2ECC71' },
+  { id: 'book',       Icon: BookOpen,       bg: '#1CD1A133', color: '#1CD1A1' },
   { id: 'gift',       Icon: Gift,           bg: '#FF69B433', color: '#BE185D' },
   { id: 'building',   Icon: Building2,      bg: '#FCA52233', color: '#B45309' },
   { id: 'star',       Icon: Star,           bg: '#FDE68A33', color: '#92400E' },
   { id: 'coins',      Icon: Coins,          bg: '#6EE7B733', color: '#065F46' },
   { id: 'graduation', Icon: GraduationCap,  bg: '#A78BFA33', color: '#6D28D9' },
-  { id: 'wallet',     Icon: Wallet,         bg: '#E5E7EB',   color: '#6B7280' },
+  { id: 'wallet',     Icon: Wallet,         bg: '#EAEAEA',   color: '#555555' },
   { id: 'coffee',     Icon: Coffee,         bg: '#D9770633', color: '#92400E' },
 ];
 
@@ -66,7 +66,7 @@ function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelec
             value={name}
             onChange={e => onNameChange(e.target.value)}
             className="text-sm outline-none bg-transparent"
-            style={{ color: '#6B7280', fontWeight: 'normal', width: 200, height: 24 }}
+            style={{ color: '#555555', fontWeight: 'normal', width: 200, height: 24 }}
           />
           <input
             type="number"
@@ -80,11 +80,11 @@ function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelec
               borderRadius: 50,
               borderWidth: 1,
               borderStyle: 'solid',
-              borderColor: '#E5E7EB',
+              borderColor: '#EAEAEA',
               paddingTop: 8,
               paddingBottom: 8,
               paddingLeft: 16,
-              color: '#6B7280',
+              color: '#555555',
               fontWeight: 'normal',
               marginTop: 4,
             }}
@@ -99,7 +99,7 @@ function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelec
           </button>
           <button
             onClick={onConfirm}
-            className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center active:scale-90 transition-transform"
+            className="w-8 h-8 rounded-full bg-[#1CD1A1] flex items-center justify-center active:scale-90 transition-transform"
           >
             <Check size={15} className="text-white" strokeWidth={2.5} />
           </button>
@@ -210,7 +210,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       {/* 총합 박스 */}
       <div style={{ width: 353, marginBottom: 15 }}>
         <div
-          className="border-[#2ECC71] bg-gray-50 flex flex-col items-center justify-center"
+          className="border-[#1CD1A1] bg-gray-50 flex flex-col items-center justify-center"
           style={{
             height: 104,
             borderRadius: 20,
@@ -223,7 +223,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
           }}
         >
           <p className="font-bold text-gray-500" style={{ fontSize: '12px' }}>총합</p>
-          <p className="font-black text-[#2ECC71]" style={{ fontSize: '24px' }}>
+          <p className="font-black text-[#1CD1A1]" style={{ fontSize: '24px' }}>
             {totalIncome.toLocaleString('ko-KR')}원
           </p>
         </div>
@@ -261,7 +261,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                         value={formName}
                         onChange={e => setFormName(e.target.value)}
                         className="text-sm outline-none bg-transparent"
-                        style={{ color: '#6B7280', fontWeight: 'normal', width: 200, height: 24 }}
+                        style={{ color: '#555555', fontWeight: 'normal', width: 200, height: 24 }}
                       />
                       <input
                         type="number"
@@ -275,11 +275,11 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                           borderRadius: 50,
                           borderWidth: 1,
                           borderStyle: 'solid',
-                          borderColor: '#E5E7EB',
+                          borderColor: '#EAEAEA',
                           paddingTop: 8,
                           paddingBottom: 8,
                           paddingLeft: 16,
-                          color: '#6B7280',
+                          color: '#555555',
                           fontWeight: 'normal',
                           marginTop: 4,
                         }}
@@ -287,10 +287,10 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                     </>
                   ) : (
                     <>
-                      <p className="text-sm truncate" style={{ color: '#6B7280', fontWeight: 'normal' }}>
+                      <p className="text-sm truncate" style={{ color: '#555555', fontWeight: 'normal' }}>
                         {income.name}
                       </p>
-                      <p className="text-sm" style={{ color: '#6B7280', fontWeight: 'normal' }}>
+                      <p className="text-sm" style={{ color: '#555555', fontWeight: 'normal' }}>
                         {income.amount.toLocaleString('ko-KR')}원
                       </p>
                     </>
@@ -307,7 +307,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="w-8 h-8 rounded-full bg-[#2ECC71] flex items-center justify-center active:scale-90 transition-transform"
+                      className="w-8 h-8 rounded-full bg-[#1CD1A1] flex items-center justify-center active:scale-90 transition-transform"
                     >
                       <Check size={15} className="text-white" strokeWidth={2.5} />
                     </button>
@@ -350,10 +350,10 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
         <div className="flex justify-center" style={{ width: 353 }}>
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 text-[#2ECC71] font-semibold active:opacity-60"
+            className="flex items-center gap-2 text-[#1CD1A1] font-semibold active:opacity-60"
             style={{ fontSize: '15px', padding: '8px' }}
           >
-            <PlusCircle size={20} color="#2ECC71" />
+            <PlusCircle size={20} color="#1CD1A1" />
             카테고리 추가하기
           </button>
         </div>
@@ -362,7 +362,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       {/* 다음 버튼 */}
       <button
         onClick={onNext}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{
           position: 'fixed',
           bottom: '32px',

@@ -28,7 +28,7 @@ export default function AttendanceScreen({ onNext }) {
               height: 0,
               borderTop: '8px solid transparent',
               borderBottom: '8px solid transparent',
-              borderLeft: '10px solid #F3F4F6',
+              borderLeft: '10px solid #F4F4F4',
             }}
           />
         </div>
@@ -47,7 +47,7 @@ export default function AttendanceScreen({ onNext }) {
           className="rounded-full bg-gray-100 flex items-center justify-center"
           style={{ width: '120px', height: '120px' }}
         >
-          <span className="text-[#2ECC71] font-black" style={{ fontSize: '70px', lineHeight: 1 }}>
+          <span className="text-[#1CD1A1] font-black" style={{ fontSize: '70px', lineHeight: 1 }}>
             {mockStreak}
           </span>
         </div>
@@ -64,7 +64,7 @@ export default function AttendanceScreen({ onNext }) {
               <p className="text-gray-500 text-xs font-medium">{day}</p>
               <div
                 className="w-7 h-7 rounded-full"
-                style={{ backgroundColor: mockAttendance[i] ? '#2ECC71' : '#E5E7EB' }}
+                style={{ backgroundColor: mockAttendance[i] ? '#1CD1A1' : '#EAEAEA' }}
               />
             </div>
           ))}
@@ -77,7 +77,7 @@ export default function AttendanceScreen({ onNext }) {
       {/* 계속하기 버튼 */}
       <button
         onClick={onNext}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{
           position: 'fixed',
           bottom: '32px',

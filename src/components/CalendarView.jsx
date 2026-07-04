@@ -66,9 +66,9 @@ export default function CalendarView({ calendarData = {} }) {
       : 'text-gray-700';
 
     const circleBg = isToday
-      ? 'bg-[#2ECC71]/20 border border-[#2ECC71]/20'
+      ? 'bg-[#1CD1A1]/20 border border-[#1CD1A1]/20'
       : amount > 0
-      ? 'bg-[#F3F4F5]'
+      ? 'bg-[#F4F4F4]'
       : '';
 
     const dateStyle = isToday || amount > 0 ? { color: '#006D37' } : {};
@@ -84,7 +84,7 @@ export default function CalendarView({ calendarData = {} }) {
           style={{ ...dateStyle, width: 42, height: 42, borderRadius: 50 }}
         >
           <span className="text-xs leading-none">{date.getDate()}</span>
-          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#006D37' : '#C4C4C4' }}>
+          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#006D37' : '#EAEAEA' }}>
             {formatAmount(amount)}
           </span>
         </span>

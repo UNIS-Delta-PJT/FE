@@ -10,9 +10,12 @@ function hexToFilter(hex = '#FFFFFF') {
   if (h === '#006D37') return 'brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(745%) hue-rotate(107deg) brightness(97%) contrast(101%)';
   if (h === '#3D4A3E') return 'brightness(0) saturate(100%) invert(27%) sepia(6%) saturate(651%) hue-rotate(83deg) brightness(82%) contrast(89%)';
   if (h === '#EF4444') return 'brightness(0) saturate(100%) invert(42%) sepia(73%) saturate(5000%) hue-rotate(335deg) brightness(101%) contrast(91%)';
-  if (h === '#27AE60') return 'brightness(0) saturate(100%) invert(44%) sepia(64%) saturate(556%) hue-rotate(104deg) brightness(97%) contrast(91%)';
-  if (h === '#2ECC71') return 'brightness(0) saturate(100%) invert(65%) sepia(49%) saturate(500%) hue-rotate(99deg) brightness(99%) contrast(91%)';
+  if (h === '#1CD1A1') return 'brightness(0) saturate(100%) invert(74%) sepia(82%) saturate(2803%) hue-rotate(113deg) brightness(100%) contrast(78%)';
   if (h === '#555555' || h === '#555') return 'brightness(0) saturate(0%) brightness(33%)';
+  if (h === '#1A1A1A') return 'brightness(0) invert(10%)';
+  if (h === '#999999') return 'brightness(0) invert(60%)';
+  if (h === '#EAEAEA') return 'brightness(0) invert(92%)';
+  if (h === '#F4F4F4') return 'brightness(0) invert(96%)';
   return 'brightness(0) invert(1)'; // fallback: white
 }
 
@@ -83,10 +86,10 @@ const CATEGORY_CONFIG = {
   교통:   { isPng: true,  pngSrc: vehicleImg, bg: '#FED023' },
   카페:   { Icon: FoodIcon,    bg: '#0FA950' },
   쇼핑:   { Icon: ShoppingIcon, bg: '#90BAFF' },
-  식비:   { Icon: FoodIcon,    bg: '#BCBCBC' },
-  문화비:  { Icon: TicketIcon,  bg: '#BCBCBC' },
-  문화:   { Icon: TicketIcon,  bg: '#BCBCBC' },
-  생활비:  { Icon: HomeIcon,   bg: '#BCBCBC' },
+  식비:   { Icon: FoodIcon,    bg: '#999999' },
+  문화비:  { Icon: TicketIcon,  bg: '#999999' },
+  문화:   { Icon: TicketIcon,  bg: '#999999' },
+  생활비:  { Icon: HomeIcon,   bg: '#999999' },
   기타:   { Icon: ShoppingIcon, bg: '#90BAFF' },
 };
 

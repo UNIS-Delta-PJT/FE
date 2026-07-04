@@ -50,7 +50,7 @@ export default function OnboardingScreen({ onNext }) {
       {/* 시작하기 버튼 */}
       <button
         onClick={onNext}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{
           position: 'fixed',
           bottom: '32px',

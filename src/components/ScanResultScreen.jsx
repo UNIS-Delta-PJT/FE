@@ -13,7 +13,7 @@ const mockResults = [
 ];
 
 // ── 영수증 아이콘 ─────────────────────────────────────────────────────────
-function ReceiptIcon({ color = '#2ECC71', size = 20 }) {
+function ReceiptIcon({ color = '#1CD1A1', size = 20 }) {
   return (
     <svg width={size} height={size * (20 / 18)} viewBox="0 0 18 20" fill="none">
       <path
@@ -86,12 +86,12 @@ function EditableCard({ item, onChange }) {
             flexShrink: 0,
           }}
         >
-          <ReceiptIcon size={20} color="#2ECC71" />
+          <ReceiptIcon size={20} color="#1CD1A1" />
         </div>
 
         {/* 가맹점명 */}
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 2px 0', fontFamily: 'Pretendard, sans-serif' }}>
+          <p style={{ fontSize: 11, color: '#999999', margin: '0 0 2px 0', fontFamily: 'Pretendard, sans-serif' }}>
             가맹점
           </p>
           {editingField === 'merchant' ? (
@@ -105,7 +105,7 @@ function EditableCard({ item, onChange }) {
                 width: '100%',
                 fontSize: 15, fontWeight: 700, color: '#1A1A1A',
                 fontFamily: 'Pretendard, sans-serif',
-                border: 'none', borderBottom: '1.5px solid #2ECC71',
+                border: 'none', borderBottom: '1.5px solid #1CD1A1',
                 outline: 'none', background: 'transparent',
                 padding: '2px 0',
               }}
@@ -121,21 +121,21 @@ function EditableCard({ item, onChange }) {
               <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A', fontFamily: 'Pretendard, sans-serif' }}>
                 {item.merchant}
               </span>
-              <Pencil size={12} color="#BBBBBB" />
+              <Pencil size={12} color="#999999" />
             </button>
           )}
         </div>
       </div>
 
       {/* 구분선 */}
-      <div style={{ height: 1, background: '#F3F4F6', margin: '12px 0' }} />
+      <div style={{ height: 1, background: '#F4F4F4', margin: '12px 0' }} />
 
       {/* 금액 + 카테고리 행 */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
 
         {/* 금액 */}
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
+          <p style={{ fontSize: 11, color: '#999999', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
             금액
           </p>
           {editingField === 'amount' ? (
@@ -150,7 +150,7 @@ function EditableCard({ item, onChange }) {
                 width: '100%',
                 fontSize: 17, fontWeight: 700, color: '#1A1A1A',
                 fontFamily: 'Pretendard, sans-serif',
-                border: 'none', borderBottom: '1.5px solid #2ECC71',
+                border: 'none', borderBottom: '1.5px solid #1CD1A1',
                 outline: 'none', background: 'transparent',
                 padding: '2px 0',
               }}
@@ -166,14 +166,14 @@ function EditableCard({ item, onChange }) {
               <span style={{ fontSize: 17, fontWeight: 700, color: '#1A1A1A', fontFamily: 'Pretendard, sans-serif' }}>
                 ₩{item.amount.toLocaleString('ko-KR')}
               </span>
-              <Pencil size={12} color="#BBBBBB" />
+              <Pencil size={12} color="#999999" />
             </button>
           )}
         </div>
 
         {/* 카테고리 */}
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 11, color: '#9CA3AF', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
+          <p style={{ fontSize: 11, color: '#999999', margin: '0 0 4px 0', fontFamily: 'Pretendard, sans-serif' }}>
             카테고리
           </p>
           <button
@@ -185,13 +185,13 @@ function EditableCard({ item, onChange }) {
               border: 'none', cursor: 'pointer',
             }}
           >
-            <CategoryIcon name={item.category} width={13} height={13} color="#27AE60" />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#27AE60', fontFamily: 'Pretendard, sans-serif' }}>
+            <CategoryIcon name={item.category} width={13} height={13} color="#1CD1A1" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#1CD1A1', fontFamily: 'Pretendard, sans-serif' }}>
               {item.category}
             </span>
             <ChevronDown
               size={13}
-              color="#27AE60"
+              color="#1CD1A1"
               style={{
                 transform: editingField === 'category' ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s',
@@ -207,7 +207,7 @@ function EditableCard({ item, onChange }) {
           style={{
             display: 'flex', flexWrap: 'wrap', gap: 8,
             marginTop: 12, paddingTop: 12,
-            borderTop: '1px solid #F3F4F6',
+            borderTop: '1px solid #F4F4F4',
           }}
         >
           {CATEGORIES.map(cat => {
@@ -219,7 +219,7 @@ function EditableCard({ item, onChange }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '5px 12px', borderRadius: 100, border: 'none',
-                  background: active ? '#2ECC71' : '#F3F4F6',
+                  background: active ? '#1CD1A1' : '#F4F4F4',
                   cursor: 'pointer',
                   transition: 'background 0.15s',
                 }}
@@ -302,12 +302,12 @@ export default function ScanResultScreen({ onBack, onHome }) {
             margin: 0,
           }}
         >
-          <CheckCircle size={22} color="#2ECC71" />
+          <CheckCircle size={22} color="#1CD1A1" />
           스캔 완료!
         </h1>
         <p
           style={{
-            fontSize: 13, color: '#9CA3AF',
+            fontSize: 13, color: '#999999',
             fontFamily: 'Pretendard, sans-serif',
             margin: '4px 0 0 0',
           }}
@@ -331,13 +331,13 @@ export default function ScanResultScreen({ onBack, onHome }) {
           transform: 'translateX(-50%)',
           width: `${390 * 0.85}px`,
           height: 48,
-          background: '#2ECC71',
+          background: '#1CD1A1',
           borderRadius: 100,
           border: 'none',
           cursor: 'pointer',
           fontSize: 15, fontWeight: 700, color: '#FFFFFF',
           fontFamily: 'Pretendard, sans-serif',
-          boxShadow: '0px 4px 16px rgba(46, 204, 113, 0.35)',
+          boxShadow: '0px 4px 16px rgba(28, 209, 161, 0.35)',
           transition: 'transform 0.15s, box-shadow 0.15s',
         }}
         onMouseDown={e => e.currentTarget.style.transform = 'translateX(-50%) scale(0.97)'}

@@ -3,7 +3,7 @@ import { X, Trash2, PlusCircle, Check, Pencil } from 'lucide-react';
 import settingImg from '../assets/setting.png';
 import CategoryIcon from './CategoryIcons';
 
-function EditIcon({ color = '#2ECC71', width = 20, height = 25 }) {
+function EditIcon({ color = '#1CD1A1', width = 20, height = 25 }) {
   return (
     <svg width={width} height={height} viewBox="0 0 20 25" fill="none">
       <path d="M14 3L17 6L8 15H5V12L14 3Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -14,7 +14,7 @@ function EditIcon({ color = '#2ECC71', width = 20, height = 25 }) {
 
 function AmountBox({ amount }) {
   return (
-    <div className="flex items-center justify-center" style={{ width: 289, height: 64, borderRadius: 48, backgroundColor: '#F3F4F5' }}>
+    <div className="flex items-center justify-center" style={{ width: 289, height: 64, borderRadius: 48, backgroundColor: '#F4F4F4' }}>
       <span className="font-bold text-gray-800" style={{ fontSize: 18 }}>
         {amount.toLocaleString('ko-KR')}원
       </span>
@@ -26,7 +26,7 @@ function Toggle({ active, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      style={{ width: 48, height: 24, borderRadius: 12, backgroundColor: active ? '#2ECC71' : '#E2E8F0', position: 'relative', cursor: 'pointer', transition: 'background-color 0.2s', flexShrink: 0 }}
+      style={{ width: 48, height: 24, borderRadius: 12, backgroundColor: active ? '#1CD1A1' : '#EAEAEA', position: 'relative', cursor: 'pointer', transition: 'background-color 0.2s', flexShrink: 0 }}
     >
       <div
         style={{ position: 'absolute', top: 4, left: active ? 28 : 4, width: 16, height: 16, borderRadius: 8, backgroundColor: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
@@ -113,7 +113,7 @@ function IncomeEditPopup({ onClose, onSaved }) {
                     className="text-sm outline-none bg-transparent text-gray-800"
                     style={{ fontWeight: 600 }}
                   />
-                  <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+                  <div style={{ height: 1, backgroundColor: '#EAEAEA' }} />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center" style={{ gap: 4 }}>
                       <input
@@ -121,7 +121,7 @@ function IncomeEditPopup({ onClose, onSaved }) {
                         value={editAmount}
                         onChange={e => setEditAmount(e.target.value.replace(/[^0-9]/g, ''))}
                         className="text-sm outline-none bg-transparent"
-                        style={{ color: '#2ECC71', fontWeight: 600, width: 120 }}
+                        style={{ color: '#1CD1A1', fontWeight: 600, width: 120 }}
                       />
                       <span className="text-sm text-gray-400">원</span>
                     </div>
@@ -129,14 +129,14 @@ function IncomeEditPopup({ onClose, onSaved }) {
                       <button
                         onClick={handleCancelEdit}
                         className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                        style={{ backgroundColor: '#F3F4F5' }}
+                        style={{ backgroundColor: '#F4F4F4' }}
                       >
                         <X size={13} className="text-gray-500" />
                       </button>
                       <button
                         onClick={() => handleSaveEdit(item.income_id)}
                         className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                        style={{ backgroundColor: '#2ECC71' }}
+                        style={{ backgroundColor: '#1CD1A1' }}
                       >
                         <Check size={13} className="text-white" strokeWidth={2.5} />
                       </button>
@@ -176,7 +176,7 @@ function IncomeEditPopup({ onClose, onSaved }) {
               className="text-sm outline-none bg-transparent text-gray-800 placeholder-gray-300"
               style={{ width: '100%' }}
             />
-            <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+            <div style={{ height: 1, backgroundColor: '#EAEAEA' }} />
             <div className="flex items-center justify-between">
               <input
                 type="number"
@@ -184,7 +184,7 @@ function IncomeEditPopup({ onClose, onSaved }) {
                 value={newAmount}
                 onChange={e => setNewAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 className="text-sm outline-none bg-transparent placeholder-gray-300"
-                style={{ color: '#2ECC71', fontWeight: 600, width: '80%' }}
+                style={{ color: '#1CD1A1', fontWeight: 600, width: '80%' }}
               />
               <span className="text-sm text-gray-400">원</span>
             </div>
@@ -192,7 +192,7 @@ function IncomeEditPopup({ onClose, onSaved }) {
           <button
             onClick={handleAdd}
             className="active:scale-95 transition-transform"
-            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 14, fontWeight: 600, color: '#2ECC71', border: 'none' }}
+            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 14, fontWeight: 600, color: '#1CD1A1', border: 'none' }}
           >
             + 추가
           </button>
@@ -202,14 +202,14 @@ function IncomeEditPopup({ onClose, onSaved }) {
           <button
             onClick={onClose}
             className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 15, fontWeight: 600, color: '#6B7280' }}
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 15, fontWeight: 600, color: '#555555' }}
           >
             취소
           </button>
           <button
             onClick={handleSave}
             className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#2ECC71', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#1CD1A1', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
           >
             저장
           </button>
@@ -286,7 +286,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
                     value={cat.amount}
                     onChange={e => handleChange(cat.category_id, e.target.value.replace(/[^0-9]/g, ''))}
                     className="text-sm outline-none text-right bg-transparent"
-                    style={{ width: 120, color: '#2ECC71', fontWeight: 600 }}
+                    style={{ width: 120, color: '#1CD1A1', fontWeight: 600 }}
                   />
                   <span className="text-sm text-gray-400">원</span>
                 </div>
@@ -307,7 +307,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
               className="text-sm outline-none bg-transparent text-gray-800 placeholder-gray-300"
               style={{ width: '100%' }}
             />
-            <div style={{ height: 1, backgroundColor: '#E5E7EB' }} />
+            <div style={{ height: 1, backgroundColor: '#EAEAEA' }} />
             <div className="flex items-center justify-between">
               <input
                 type="number"
@@ -315,7 +315,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
                 value={newCatAmount}
                 onChange={e => setNewCatAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 className="text-sm outline-none bg-transparent placeholder-gray-300"
-                style={{ color: '#2ECC71', fontWeight: 600, width: '80%' }}
+                style={{ color: '#1CD1A1', fontWeight: 600, width: '80%' }}
               />
               <span className="text-sm text-gray-400">원</span>
             </div>
@@ -323,7 +323,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
           <button
             onClick={handleAdd}
             className="active:scale-95 transition-transform"
-            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 14, fontWeight: 600, color: '#2ECC71', border: 'none' }}
+            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 14, fontWeight: 600, color: '#1CD1A1', border: 'none' }}
           >
             + 추가
           </button>
@@ -333,14 +333,14 @@ function BudgetEditPopup({ onClose, onSaved }) {
           <button
             onClick={onClose}
             className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F3F4F5', fontSize: 15, fontWeight: 600, color: '#6B7280' }}
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 15, fontWeight: 600, color: '#555555' }}
           >
             취소
           </button>
           <button
             onClick={handleSave}
             className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#2ECC71', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
+            style={{ height: 48, borderRadius: 9999, backgroundColor: '#1CD1A1', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
           >
             저장
           </button>
@@ -422,7 +422,7 @@ export default function BudgetScreen() {
           <AmountBox amount={totalIncome} />
         </div>
 
-        <div style={{ height: 1, backgroundColor: '#F3F4F5' }} />
+        <div style={{ height: 1, backgroundColor: '#F4F4F4' }} />
 
         {/* 저축 목표 금액 */}
         <div className="flex flex-col gap-3">
@@ -430,7 +430,7 @@ export default function BudgetScreen() {
           <AmountBox amount={savings} />
         </div>
 
-        <div style={{ height: 1, backgroundColor: '#F3F4F5' }} />
+        <div style={{ height: 1, backgroundColor: '#F4F4F4' }} />
 
         {/* 저축 유형 */}
         <div className="flex flex-col gap-3">
@@ -440,8 +440,8 @@ export default function BudgetScreen() {
               현재 저축액: {savings.toLocaleString('ko-KR')}원
             </span>
           </div>
-          <div className="relative" style={{ height: 12, backgroundColor: '#F3F4F5', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${savingsPct}%`, backgroundColor: '#2ECC71', borderRadius: 6, transition: 'width 0.4s ease' }} />
+          <div className="relative" style={{ height: 12, backgroundColor: '#F4F4F4', borderRadius: 6, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${savingsPct}%`, backgroundColor: '#1CD1A1', borderRadius: 6, transition: 'width 0.4s ease' }} />
           </div>
           <div className="flex justify-between px-1">
             {['절약형', '표준형', '도전형'].map(label => (
@@ -459,7 +459,7 @@ export default function BudgetScreen() {
           <button
             onClick={() => setShowBudgetEditPopup(true)}
             className="active:opacity-60 transition-opacity"
-            style={{ fontSize: 13, color: '#2ECC71', fontWeight: 500 }}
+            style={{ fontSize: 13, color: '#1CD1A1', fontWeight: 500 }}
           >
             수정하기
           </button>
@@ -478,7 +478,7 @@ export default function BudgetScreen() {
               <div
                 key={cat.category_id}
                 className="flex items-center"
-                style={{ width: 353, height: 72, borderRadius: 48, backgroundColor: '#F3F4F5', paddingLeft: 20, paddingRight: 20, boxSizing: 'border-box', gap: 12 }}
+                style={{ width: 353, height: 72, borderRadius: 48, backgroundColor: '#F4F4F4', paddingLeft: 20, paddingRight: 20, boxSizing: 'border-box', gap: 12 }}
               >
                 {/* 아이콘 */}
                 <div className="flex items-center justify-center flex-shrink-0 rounded-full bg-white" style={{ width: 36, height: 36 }}>
@@ -506,7 +506,7 @@ export default function BudgetScreen() {
           <button
             onClick={() => setShowBudgetEditPopup(true)}
             className="flex items-center justify-center gap-2 active:scale-95 transition-transform"
-            style={{ width: 353, height: 36, borderRadius: 48, backgroundColor: '#2ECC71', boxSizing: 'border-box' }}
+            style={{ width: 353, height: 36, borderRadius: 48, backgroundColor: '#1CD1A1', boxSizing: 'border-box' }}
           >
             <PlusCircle size={16} color="white" />
             <span style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>카테고리 추가하기</span>

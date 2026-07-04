@@ -87,7 +87,7 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
         width: 353,
         borderWidth: 1,
         borderStyle: 'solid',
-        borderColor: '#E5E7EB',
+        borderColor: '#EAEAEA',
         borderRadius: 16,
         paddingLeft: 17,
         paddingRight: 17,
@@ -103,7 +103,7 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
       <div className="flex items-center justify-between" style={{ width: '100%' }}>
         <div className="flex items-center gap-3">
           <div className="rounded-full flex items-center justify-center flex-shrink-0 bg-white" style={{ width: 40, height: 40 }}>
-            <Icon size={18} color="#2ECC71" strokeWidth={1.8} />
+            <Icon size={18} color="#1CD1A1" strokeWidth={1.8} />
           </div>
           <span className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{cat.name}</span>
         </div>
@@ -117,9 +117,9 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
                 onChange={e => setInputVal(e.target.value.replace(/[^0-9]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleConfirm()}
                 className="text-sm outline-none text-center"
-                style={{ width: 123, height: 34, borderRadius: 9999, borderWidth: 1, borderStyle: 'solid', borderColor: '#2ECC71', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, color: '#374151' }}
+                style={{ width: 123, height: 34, borderRadius: 9999, borderWidth: 1, borderStyle: 'solid', borderColor: '#1CD1A1', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, color: '#555555' }}
               />
-              <button onClick={handleConfirm} className="w-7 h-7 rounded-full bg-[#2ECC71] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">
+              <button onClick={handleConfirm} className="w-7 h-7 rounded-full bg-[#1CD1A1] flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">
                 <Check size={13} className="text-white" strokeWidth={2.5} />
               </button>
             </>
@@ -127,12 +127,12 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
             <>
               <button
                 onClick={() => { setInputVal(String(cat.amount)); setEditing(true); }}
-                style={{ width: 123, height: 34, borderRadius: 9999, borderWidth: 1, borderStyle: 'solid', borderColor: '#E5E7EB', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12 }}
+                style={{ width: 123, height: 34, borderRadius: 9999, borderWidth: 1, borderStyle: 'solid', borderColor: '#EAEAEA', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12 }}
               >
                 <span className="text-sm text-gray-700">{cat.amount.toLocaleString('ko-KR')}원</span>
               </button>
               <button onClick={() => { setInputVal(String(cat.amount)); setEditing(true); }}>
-                <SquarePen size={16} color="#8A8A8A" />
+                <SquarePen size={16} color="#999999" />
               </button>
             </>
           )}
@@ -153,7 +153,7 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
           onAmountChange(cat.category_id, clamped);
         }}
         className="budget-slider"
-        style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
+        style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #1CD1A1 ${pct}%, #EAEAEA ${pct}%)` }}
       />
     </div>
   );
@@ -197,7 +197,7 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
   return (
     <div
       style={{
-        width: 353, borderWidth: 1, borderStyle: 'solid', borderColor: '#E5E7EB',
+        width: 353, borderWidth: 1, borderStyle: 'solid', borderColor: '#EAEAEA',
         borderRadius: 16, paddingLeft: 17, paddingRight: 17, paddingTop: 16, paddingBottom: 16,
         display: 'flex', flexDirection: 'column', gap: 10,
         boxShadow: '0 4px 14px rgba(0, 0, 0, 0.07)',
@@ -219,12 +219,12 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
               onBlur={confirmName}
               onKeyDown={e => e.key === 'Enter' && confirmName()}
               placeholder="카테고리명"
-              style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#374151', outline: 'none', background: 'transparent', border: 'none', borderBottom: '1.5px solid #2ECC71', width: '100%', paddingBottom: 2 }}
+              style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#555555', outline: 'none', background: 'transparent', border: 'none', borderBottom: '1.5px solid #1CD1A1', width: '100%', paddingBottom: 2 }}
             />
           ) : (
             <button onClick={() => { setNameVal(cat.name); setEditingName(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-              <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#374151' }}>{cat.name || '카테고리명'}</span>
-              <SquarePen size={12} color="#C0C0C0" />
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#555555' }}>{cat.name || '카테고리명'}</span>
+              <SquarePen size={12} color="#999999" />
             </button>
           )}
         </div>
@@ -235,25 +235,25 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
                 autoFocus type="number" value={inputVal}
                 onChange={e => setInputVal(e.target.value.replace(/[^0-9]/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && confirmAmount()}
-                style={{ width: 100, height: 34, borderRadius: 9999, border: '1px solid #2ECC71', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, fontSize: 13, color: '#374151', outline: 'none', textAlign: 'center' }}
+                style={{ width: 100, height: 34, borderRadius: 9999, border: '1px solid #1CD1A1', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, fontSize: 13, color: '#555555', outline: 'none', textAlign: 'center' }}
               />
-              <button onClick={confirmAmount} style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#2ECC71', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}>
+              <button onClick={confirmAmount} style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#1CD1A1', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}>
                 <Check size={13} color="white" strokeWidth={2.5} />
               </button>
             </>
           ) : (
             <>
-              <button onClick={() => { setInputVal(String(cat.amount)); setEditingAmount(true); }} style={{ width: 100, height: 34, borderRadius: 9999, border: '1px solid #E5E7EB', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, cursor: 'pointer' }}>
-                <span style={{ fontSize: 13, color: '#374151' }}>{cat.amount.toLocaleString('ko-KR')}원</span>
+              <button onClick={() => { setInputVal(String(cat.amount)); setEditingAmount(true); }} style={{ width: 100, height: 34, borderRadius: 9999, border: '1px solid #EAEAEA', backgroundColor: '#EDF4FF', paddingLeft: 12, paddingRight: 12, cursor: 'pointer' }}>
+                <span style={{ fontSize: 13, color: '#555555' }}>{cat.amount.toLocaleString('ko-KR')}원</span>
               </button>
               <button onClick={() => { setInputVal(String(cat.amount)); setEditingAmount(true); }}>
-                <SquarePen size={15} color="#8A8A8A" />
+                <SquarePen size={15} color="#999999" />
               </button>
             </>
           )}
         </div>
         <button onClick={onDelete} className="active:scale-90 transition-transform" style={{ marginLeft: 6, flexShrink: 0 }}>
-          <X size={16} color="#C0C0C0" />
+          <X size={16} color="#999999" />
         </button>
       </div>
       {showIconPicker && (
@@ -268,7 +268,7 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
         value={pct}
         onChange={handleSlider}
         className="budget-slider"
-        style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #2ECC71 ${pct}%, #E5E7EB ${pct}%)` }}
+        style={{ width: 319, height: 12, borderRadius: 6, background: `linear-gradient(to right, #1CD1A1 ${pct}%, #EAEAEA ${pct}%)` }}
       />
     </div>
   );
@@ -402,13 +402,13 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         >
           {/* 말풍선 */}
           <div style={{ position: 'relative', marginBottom: 8 }}>
-            <div style={{ backgroundColor: '#F2F2F2', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap' }}>
-              <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#5B5B5B' }}>
+            <div style={{ backgroundColor: '#F4F4F4', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555' }}>
                 이번 달도 잘 지켜보자!
               </span>
             </div>
             {/* 꼬리 — 오른쪽 하단 (마스코트 방향) */}
-            <div style={{ position: 'absolute', bottom: '-9px', right: '32px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #F2F2F2' }} />
+            <div style={{ position: 'absolute', bottom: '-9px', right: '32px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #F4F4F4' }} />
           </div>
           {/* 마스코트 */}
           <img src={deltaClappingImg} alt="delta clapping" style={{ width: 120, height: 149, objectFit: 'contain' }} />
@@ -434,7 +434,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       </div>
 
       {/* ── 서브타이틀 ───────────────────────────────────────────────── */}
-      <p style={{ fontSize: '13px', color: '#8C8C8C', marginBottom: '24px', paddingLeft: '4px' }}>
+      <p style={{ fontSize: '13px', color: '#999999', marginBottom: '24px', paddingLeft: '4px' }}>
         멋진 계획은 부자가 되는 첫걸음이에요!
       </p>
 
@@ -442,10 +442,10 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       <button
         onClick={handleCopyLastMonth}
         className="flex items-center active:scale-[0.98] transition-transform"
-        style={{ width: 353, height: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#E5E7EB', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 32 }}
+        style={{ width: 353, height: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#EAEAEA', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 32 }}
       >
-        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#2ECC7133' }}>
-          <Sparkles size={18} color="#2ECC71" />
+        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1CD1A133' }}>
+          <Sparkles size={18} color="#1CD1A1" />
         </div>
         <div className="flex flex-col items-start gap-1">
           <span className="text-gray-800 font-semibold text-sm">지난달 계획 복사하기</span>
@@ -454,17 +454,17 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       </button>
 
       {/* ── 예산 항목별 설정 헤더 ────────────────────────────────────── */}
-      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: '18px', lineHeight: '20px', letterSpacing: '0.28px', color: '#1F2937', marginBottom: '20px' }}>
+      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: '18px', lineHeight: '20px', letterSpacing: '0.28px', color: '#1A1A1A', marginBottom: '20px' }}>
         예산 항목별 설정
       </p>
 
       {/* ── 총 예산 입력 ─────────────────────────────────────────────── */}
       <div
         className="flex items-center"
-        style={{ width: 353, minHeight: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#2ECC7166', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 12 }}
+        style={{ width: 353, minHeight: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#1CD1A166', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 12 }}
       >
-        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#2ECC7133' }}>
-          <Wallet size={18} color="#2ECC71" />
+        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1CD1A133' }}>
+          <Wallet size={18} color="#1CD1A1" />
         </div>
         <div className="flex flex-col items-start gap-1.5 flex-1">
           <span className="text-gray-800 font-semibold text-sm">이번 달 총 예산</span>
@@ -472,10 +472,10 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
             <input
               type="number" placeholder="금액 입력" value={budgetInput}
               onChange={e => setBudgetInput(e.target.value.replace(/[^0-9]/g, ''))}
-              className="text-sm outline-none bg-transparent placeholder-[#2ECC71]"
-              style={{ color: '#2ECC71', fontWeight: 400, width: 150 }}
+              className="text-sm outline-none bg-transparent placeholder-[#1CD1A1]"
+              style={{ color: '#1CD1A1', fontWeight: 400, width: 150 }}
             />
-            <span className="text-sm font-semibold" style={{ color: '#2ECC71' }}>원</span>
+            <span className="text-sm font-semibold" style={{ color: '#1CD1A1' }}>원</span>
           </div>
           <span className="text-xs text-gray-400">수입 총액: {totalIncome.toLocaleString('ko-KR')}원</span>
         </div>
@@ -487,11 +487,11 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
           className="flex items-center justify-between"
           style={{ width: 353, marginBottom: 12, paddingLeft: 6, paddingRight: 6 }}
         >
-          <span style={{ fontSize: 12, color: '#8C8C8C' }}>배분 가능 남은 예산</span>
+          <span style={{ fontSize: 12, color: '#999999' }}>배분 가능 남은 예산</span>
           <span style={{
             fontSize: 13,
             fontWeight: 600,
-            color: unallocated < 0 ? '#EF4444' : unallocated === 0 ? '#2ECC71' : '#1F2937',
+            color: unallocated < 0 ? '#EF4444' : unallocated === 0 ? '#1CD1A1' : '#1A1A1A',
           }}>
             {unallocated.toLocaleString('ko-KR')}원
           </span>
@@ -536,8 +536,8 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         className="flex items-center justify-center gap-[10px] active:scale-[0.98] transition-transform"
         style={{ width: 353, height: 64, backgroundColor: '#F4F4F4', borderRadius: 15, border: 'none', cursor: 'pointer', marginTop: 12 }}
       >
-        <PlusCircle size={22} color="#2ECC71" strokeWidth={2} />
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 600, color: '#2ECC71' }}>
+        <PlusCircle size={22} color="#1CD1A1" strokeWidth={2} />
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 600, color: '#1CD1A1' }}>
           카테고리 추가하기
         </span>
       </button>
@@ -545,7 +545,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       {/* ── 설정 완료 버튼 (고정) ────────────────────────────────────── */}
       <button
         onClick={handleComplete}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{ position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)', width: `${390 * 0.85}px`, height: '48px', fontSize: '15px' }}
       >
         <span className="text-white font-bold">설정 완료</span>

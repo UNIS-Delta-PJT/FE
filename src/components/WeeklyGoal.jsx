@@ -5,7 +5,7 @@ const CARD_W = 280;
 const GAP = 12;
 
 const CARDS = [
-  { bg: '#2ECC71', dotFilled: '#0FA950' },
+  { bg: '#1CD1A1', dotFilled: '#0FA950' },
   { bg: '#FED023', dotFilled: 'rgba(115,92,0,0.5)' },
 ];
 

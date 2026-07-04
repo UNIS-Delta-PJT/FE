@@ -44,7 +44,7 @@ html, body {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #2ECC71;
+  background: #1CD1A1;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
@@ -53,12 +53,12 @@ html, body {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #2ECC71;
+  background: #1CD1A1;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
 }
 
 textarea::placeholder {
-  color: #6B7280;
+  color: #555555;
 }

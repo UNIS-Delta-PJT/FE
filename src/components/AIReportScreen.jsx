@@ -103,7 +103,7 @@ function SpikeBarChart({ bars }) {
   const BAR_W = 24;
   const GAP = 5;
 
-  // 가장 오른쪽(이번 주) = #2ECC71
+  // 가장 오른쪽(이번 주) = #1CD1A1
   // 이번 주 제외한 나머지 중 가장 높은 값 = #FED023
   const maxPrevIdx = bars
     .slice(0, bars.length - 1)
@@ -115,7 +115,7 @@ function SpikeBarChart({ bars }) {
         const h = Math.max(4, Math.round((val / maxVal) * MAX_H));
         const isLast = i === bars.length - 1;
         const isHighlightPrev = i === maxPrevIdx;
-        const color = isLast ? '#2ECC71' : isHighlightPrev ? '#FED023' : '#E5E7EB';
+        const color = isLast ? '#1CD1A1' : isHighlightPrev ? '#FED023' : '#EAEAEA';
         return (
           <div
             key={i}
@@ -184,7 +184,7 @@ function SpikeInsightCard({ expenses }) {
       {/* ── 컨테이너 2: n% 증가 + 바 차트 ── y:70 (container1 47 + gap 23) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 23 }}>
         {/* n% */}
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 32, fontWeight: 600, color: '#2ECC71', lineHeight: 1, flexShrink: 0 }}>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 32, fontWeight: 600, color: '#1CD1A1', lineHeight: 1, flexShrink: 0 }}>
           {pct}%
         </span>
         {/* 증가 */}
@@ -215,7 +215,7 @@ const MOCK_PEER_RANK_PCT    = 15;     // 상위 n% mock
 
 function StatusBar({ pct, color }) {
   return (
-    <div style={{ width: '100%', height: 15, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: 15, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden' }}>
       <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', borderRadius: 9999, backgroundColor: color }} />
     </div>
   );
@@ -261,7 +261,7 @@ function PeerCompareCard({ spent = 0 }) {
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>나</span>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 600, color: '#555555' }}>{fmtMan(mySpent)}</span>
         </div>
-        <StatusBar pct={myPct} color="#2ECC71" />
+        <StatusBar pct={myPct} color="#1CD1A1" />
       </div>
 
       <div style={{ height: 14 }} />
@@ -279,7 +279,7 @@ function PeerCompareCard({ spent = 0 }) {
       <div style={{ flex: 1 }} />
 
       {/* ── Divider */}
-      <div style={{ height: 1, backgroundColor: '#F0F0F0', marginBottom: 16 }} />
+      <div style={{ height: 1, backgroundColor: '#F4F4F4', marginBottom: 16 }} />
 
       {/* ── 하단 텍스트 */}
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#006D37', lineHeight: 1.55 }}>
@@ -370,7 +370,7 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
             fontFamily: 'Pretendard, sans-serif',
             fontSize: 18,
             fontWeight: 600,
-            color: '#2FCC71',
+            color: '#1CD1A1',
             display: 'block',
             marginBottom: 6,
             lineHeight: 1.2,
@@ -405,7 +405,7 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
             fontFamily: 'Pretendard, sans-serif',
             fontSize: 14,
             fontWeight: 500,
-            color: '#2FCC71',
+            color: '#1CD1A1',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -458,7 +458,7 @@ const GUIDE_CARDS_DATA = [
 function CheckCircleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-      <circle cx="10" cy="10" r="10" fill="#2ECC71" />
+      <circle cx="10" cy="10" r="10" fill="#1CD1A1" />
       <path d="M5.5 10L8.5 13L14.5 7" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -535,7 +535,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E0E0E0' }} />
+          <div style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#EAEAEA' }} />
         </div>
 
         {/* 내용 */}
@@ -579,7 +579,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
             />
             <span style={{
               fontFamily: 'Pretendard, sans-serif',
-              fontSize: 16, fontWeight: 600, color: '#2ECC71',
+              fontSize: 16, fontWeight: 600, color: '#1CD1A1',
             }}>
               {guide.goal}
             </span>
@@ -637,12 +637,12 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
               lineHeight: 1.5, margin: 0, textAlign: 'center', width: '100%',
             }}>
               성공 시 한 달에 총{' '}
-              <span style={{ fontWeight: 600, color: '#2ECC71' }}>
+              <span style={{ fontWeight: 600, color: '#1CD1A1' }}>
                 {guide.reward.savingsAmount.toLocaleString('ko-KR')}원 절약 가능
               </span>
               {' '}+<br />
               {/* titleName → 추후 캐릭터 화면에서 한정판 칭호로 사용 */}
-              <span style={{ fontWeight: 600, color: '#2ECC71' }}>
+              <span style={{ fontWeight: 600, color: '#1CD1A1' }}>
                 [{guide.reward.titleName}]
               </span>
               {' '}한정판 칭호 획득
@@ -658,7 +658,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
                 maxWidth: 353,
                 height: 56,
                 borderRadius: 9999,
-                backgroundColor: '#2ECC71',
+                backgroundColor: '#1CD1A1',
                 border: 'none', cursor: 'pointer',
                 fontFamily: 'Pretendard, sans-serif',
                 fontSize: 16, fontWeight: 700, color: '#FFFFFF',
@@ -701,13 +701,13 @@ function GuideCard({ icon, title, desc, active, onClick }) {
           height: 24,
           borderRadius: 100000,
           backgroundColor: '#FFFFFF',
-          border: '1.15px solid #4AE183',
+          border: '1.15px solid #1CD1A1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#4AE183' }}>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#1CD1A1' }}>
             도전 중
           </span>
         </div>
@@ -814,12 +814,12 @@ function ActiveGuideCard({ activeGuide }) {
         </span>
         <div style={{
           width: 353, height: 72, borderRadius: 28,
-          backgroundColor: '#F3F4F5',
+          backgroundColor: '#F4F4F4',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{
             fontFamily: 'Pretendard, sans-serif', fontSize: 14,
-            fontWeight: 400, color: '#9A9A9A',
+            fontWeight: 400, color: '#999999',
           }}>
             진행 중인 가이드가 없어요
           </span>
@@ -865,7 +865,7 @@ function ActiveGuideCard({ activeGuide }) {
             width: 49,
             height: 49,
             borderRadius: '50%',
-            border: '4px solid #2ECC71',
+            border: '4px solid #1CD1A1',
             boxSizing: 'border-box',
             display: 'flex',
             alignItems: 'center',
@@ -898,15 +898,15 @@ function ActiveGuideCard({ activeGuide }) {
         {/* ── 진행도: 레이블 + 바 */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#2ECC71' }}>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#1CD1A1' }}>
               {daysCompleted}/{totalDays}일 완료
             </span>
             <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#555555' }}>
               {pct}%
             </span>
           </div>
-          <div style={{ width: '100%', height: 15, borderRadius: 9999, backgroundColor: '#F3F4F5', overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, backgroundColor: '#2ECC71' }} />
+          <div style={{ width: '100%', height: 15, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, backgroundColor: '#1CD1A1' }} />
           </div>
         </div>
 

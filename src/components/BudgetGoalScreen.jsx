@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import WarningToast from './WarningToast';
 
 // 연필 아이콘 (이미지 #1 기반 인라인 SVG)
-function EditIcon({ size = 20, color = '#2ECC71' }) {
+function EditIcon({ size = 20, color = '#1CD1A1' }) {
   return (
     <svg
       width={size}
@@ -96,7 +96,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
           fontFamily: 'Pretendard, sans-serif',
           fontSize: '14px',
           fontWeight: 500,
-          color: '#8C8C8C',
+          color: '#999999',
           marginBottom: '32px',
           paddingLeft: '4px',
         }}
@@ -174,7 +174,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
             원
           </span>
         )}
-        <EditIcon size={18} color="#2ECC71" />
+        <EditIcon size={18} color="#1CD1A1" />
       </div>
 
       {/* 다음 버튼 */}
@@ -187,7 +187,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
           transform: 'translateX(-50%)',
           width: '353px',
           height: '56px',
-          backgroundColor: '#2ECC71',
+          backgroundColor: '#1CD1A1',
           borderRadius: '100px',
           paddingLeft: '10px',
           paddingRight: '10px',
@@ -196,7 +196,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
           justifyContent: 'center',
           border: 'none',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(46, 204, 113, 0.40)',
+          boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)',
         }}
       >
         <span

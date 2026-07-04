@@ -41,7 +41,7 @@ function FlameIcon() {
 function CheckIcon() {
   return (
     <svg width="62" height="62" viewBox="0 0 62 62" fill="none">
-      <circle cx="31" cy="31" r="31" fill="#2ECC71"/>
+      <circle cx="31" cy="31" r="31" fill="#1CD1A1"/>
       <path d="M19 32L27 41L44 21" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
@@ -59,15 +59,15 @@ function MiniCalendar({ selected, onSelect }) {
   const next = () => { if (viewMonth===11){setViewMonth(0);setViewYear(y=>y+1);}else setViewMonth(m=>m+1); };
 
   return (
-    <div style={{ width: 353, backgroundColor: '#FFFFFF', borderRadius: 20, border: '2px solid #F1F5F9', padding: '16px 12px', boxSizing: 'border-box' }}>
+    <div style={{ width: 353, backgroundColor: '#FFFFFF', borderRadius: 20, border: '2px solid #F4F4F4', padding: '16px 12px', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <button onClick={prev} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 20 }}>‹</button>
+        <button onClick={prev} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999999', fontSize: 20 }}>‹</button>
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14 }}>{viewYear}년 {MONTH_NAMES[viewMonth]}월</span>
-        <button onClick={next} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', fontSize: 20 }}>›</button>
+        <button onClick={next} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999999', fontSize: 20 }}>›</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
         {['일','월','화','수','목','금','토'].map(d => (
-          <div key={d} style={{ textAlign: 'center', fontFamily: 'Pretendard, sans-serif', fontSize: 11, fontWeight: 600, color: '#94A3B8', paddingBottom: 4 }}>{d}</div>
+          <div key={d} style={{ textAlign: 'center', fontFamily: 'Pretendard, sans-serif', fontSize: 11, fontWeight: 600, color: '#999999', paddingBottom: 4 }}>{d}</div>
         ))}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px 0' }}>
@@ -78,8 +78,8 @@ function MiniCalendar({ selected, onSelect }) {
           return (
             <button key={i} onClick={() => onSelect(new Date(viewYear, viewMonth, day))} style={{
               height: 32, borderRadius: 9999, border: 'none', cursor: 'pointer',
-              backgroundColor: isSel ? '#2ECC71' : 'transparent',
-              color: isSel ? '#FFFFFF' : isTod ? '#2ECC71' : '#000000',
+              backgroundColor: isSel ? '#1CD1A1' : 'transparent',
+              color: isSel ? '#FFFFFF' : isTod ? '#1CD1A1' : '#000000',
               fontFamily: 'Pretendard, sans-serif', fontSize: 13,
               fontWeight: (isSel || isTod) ? 700 : 400,
             }}>{day}</button>
@@ -101,7 +101,7 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#000000' }}>지출 금액</span>
           <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#EF4444', marginBottom: 8 }} />
         </div>
-        <div style={{ width: 353, height: 64, borderRadius: 48, backgroundColor: '#F3F4F5', display: 'flex', alignItems: 'center', paddingLeft: 24, paddingRight: 24, boxSizing: 'border-box', gap: 4 }}>
+        <div style={{ width: 353, height: 64, borderRadius: 48, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 24, paddingRight: 24, boxSizing: 'border-box', gap: 4 }}>
           <input
             type="number" inputMode="numeric" placeholder="-"
             value={entry.amount}
@@ -124,8 +124,8 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
             return (
               <button key={cat} onClick={() => onUpdate('category', cat)} style={{
                 height: 44, borderRadius: 32,
-                backgroundColor: active ? '#2ECC71' : '#FFFFFF',
-                border: `2px solid ${active ? 'transparent' : '#E2E8F0'}`,
+                backgroundColor: active ? '#1CD1A1' : '#FFFFFF',
+                border: `2px solid ${active ? 'transparent' : '#EAEAEA'}`,
                 fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14,
                 color: active ? '#FFFFFF' : '#000000', cursor: 'pointer', transition: 'all 0.15s',
               }}>{cat}</button>
@@ -136,11 +136,11 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
 
       {/* 날짜 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ width: 353, height: 60, borderRadius: 32, backgroundColor: '#FFFFFF', border: '2px solid #F1F5F9', display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 16, boxSizing: 'border-box', gap: 10 }}>
-          <Calendar size={18} color="#94A3B8" strokeWidth={1.8} style={{ flexShrink: 0 }} />
+        <div style={{ width: 353, height: 60, borderRadius: 32, backgroundColor: '#FFFFFF', border: '2px solid #F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 16, boxSizing: 'border-box', gap: 10 }}>
+          <Calendar size={18} color="#999999" strokeWidth={1.8} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#000000' }}>{formatDate(entry.date)}</span>
           <button onClick={onToggleCal} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
-            {calOpen ? <ChevronUp size={18} color="#94A3B8" /> : <ChevronDown size={18} color="#94A3B8" />}
+            {calOpen ? <ChevronUp size={18} color="#999999" /> : <ChevronDown size={18} color="#999999" />}
           </button>
         </div>
         {calOpen && <MiniCalendar selected={entry.date} onSelect={d => { onUpdate('date', d); onToggleCal(); }} />}
@@ -148,12 +148,12 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
 
       {/* 메모 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#64748B' }}>메모(선택)</span>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#555555' }}>메모(선택)</span>
         <textarea
           placeholder="메모 추가..."
           value={entry.memo}
           onChange={e => onUpdate('memo', e.target.value)}
-          style={{ width: 353, height: 96, borderRadius: 20, backgroundColor: '#F3F4F5', border: '2px solid #F1F5F9', paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16, boxSizing: 'border-box', resize: 'none', outline: 'none', fontFamily: 'Pretendard, sans-serif', fontSize: 14, color: '#000000' }}
+          style={{ width: 353, height: 96, borderRadius: 20, backgroundColor: '#F4F4F4', border: '2px solid #F4F4F4', paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 16, boxSizing: 'border-box', resize: 'none', outline: 'none', fontFamily: 'Pretendard, sans-serif', fontSize: 14, color: '#000000' }}
         />
       </div>
     </div>
@@ -173,8 +173,8 @@ function CategoryBar({ name, budget, spent }) {
         </div>
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#006D37' }}>{pct}%</span>
       </div>
-      <div style={{ height: 8, borderRadius: 9999, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
-        <div style={{ height: 8, width: `${pct}%`, borderRadius: 9999, backgroundColor: '#2ECC71' }} />
+      <div style={{ height: 8, borderRadius: 9999, backgroundColor: '#EAEAEA', overflow: 'hidden' }}>
+        <div style={{ height: 8, width: `${pct}%`, borderRadius: 9999, backgroundColor: '#1CD1A1' }} />
       </div>
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#3D4A3E' }}>
         목표 지출까지 {remaining.toLocaleString('ko-KR')}원 남았습니다
@@ -214,7 +214,7 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
       <div style={{ width: 353, minHeight: 245, borderRadius: 32, backgroundColor: '#FFFFFF', border: '1px solid #BBCBBB', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#000000' }}>오늘의 총 지출</span>
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#2ECC71' }}>{sessionTotal.toLocaleString('ko-KR')}원</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#1CD1A1' }}>{sessionTotal.toLocaleString('ko-KR')}원</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#000000' }}>남은 예산</span>
@@ -223,7 +223,7 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
 
         {usedCats.length > 0 && (
           <>
-            <div style={{ height: 1, backgroundColor: '#F3F4F5' }} />
+            <div style={{ height: 1, backgroundColor: '#F4F4F4' }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {usedCats.map(cat => (
                 <CategoryBar key={cat} name={cat} budget={getCatBudget(cat)} spent={catSpending[cat]} />
@@ -238,7 +238,7 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
         <button
           onClick={onHome}
           className="active:scale-95 transition-transform"
-          style={{ width: 168, height: 56, borderRadius: 100, backgroundColor: '#2ECC71', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF' }}
+          style={{ width: 168, height: 56, borderRadius: 100, backgroundColor: '#1CD1A1', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF' }}
         >
           홈으로
         </button>
@@ -366,13 +366,13 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
 
       {/* 스크롤 콘텐츠 */}
       <div style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 140 }}>
-        <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#8D8D8D', textAlign: 'center', margin: 0, marginBottom: 24 }}>
+        <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#999999', textAlign: 'center', margin: 0, marginBottom: 24 }}>
           오늘 얼마를 지출하셨나요?
         </p>
 
         {entries.map((entry, idx) => (
           <div key={entry.id}>
-            {idx > 0 && <div style={{ height: 1, backgroundColor: '#E5E7EB', margin: '32px 0' }} />}
+            {idx > 0 && <div style={{ height: 1, backgroundColor: '#EAEAEA', margin: '32px 0' }} />}
             <EntryForm
               entry={entry}
               onUpdate={(field, val) => updateEntry(entry.id, field, val)}
@@ -388,7 +388,7 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
         <button
           onClick={addEntry}
           className="active:scale-95 transition-transform"
-          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: '#F3F4F5', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#2ECC71' }}
+          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: '#F4F4F4', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#1CD1A1' }}
         >
           지출 추가하기
         </button>
@@ -396,7 +396,7 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
           onClick={handleSave}
           disabled={saving}
           className="active:scale-95 transition-transform disabled:opacity-60"
-          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid && !saving ? '#2ECC71' : '#A7F3C8', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
+          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid && !saving ? '#1CD1A1' : '#A7F3C8', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
         >
           {saving ? '저장 중...' : '저장하기'}
         </button>

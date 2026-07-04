@@ -69,7 +69,7 @@ export default function TodayExpenses({ expenses = [] }) {
           <h3 className="text-base font-bold text-[#000000]">오늘의 소비 내역</h3>
           <p className="text-[10px] text-gray-400 mt-0.5">
             총 {items.length}건 ·{' '}
-            <span className="text-[#2ECC71] font-semibold">
+            <span className="text-[#1CD1A1] font-semibold">
               {totalToday.toLocaleString('ko-KR')}원
             </span>
           </p>
@@ -96,7 +96,7 @@ export default function TodayExpenses({ expenses = [] }) {
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
-              className="w-full flex items-center justify-center gap-1 text-xs text-[#2ECC71] font-semibold rounded-xl bg-[#2ECC71]/10 active:scale-95 transition-transform"
+              className="w-full flex items-center justify-center gap-1 text-xs text-[#1CD1A1] font-semibold rounded-xl bg-[#1CD1A1]/10 active:scale-95 transition-transform"
               style={{ paddingTop: '8px', paddingBottom: '8px' }}
             >
               {showAll ? (

@@ -70,9 +70,9 @@ export default function AttendancePopup({ onClose }) {
                 className={`
                   aspect-square rounded-lg flex flex-col items-center justify-center font-bold
                   ${isChecked
-                    ? 'bg-[#2ECC71] text-white shadow-sm shadow-[#2ECC71]/30'
+                    ? 'bg-[#1CD1A1] text-white shadow-sm shadow-[#1CD1A1]/30'
                     : isToday
-                    ? 'bg-gray-50 text-gray-700 border border-[#2ECC71]/50'
+                    ? 'bg-gray-50 text-gray-700 border border-[#1CD1A1]/50'
                     : 'bg-gray-50 text-gray-300'
                   }
                 `}
@@ -93,7 +93,7 @@ export default function AttendancePopup({ onClose }) {
             w-full font-bold text-sm transition-all active:scale-95
             ${alreadyChecked
               ? 'bg-gray-100 text-gray-400 cursor-default'
-              : 'bg-[#2ECC71] text-white shadow-md shadow-[#2ECC71]/30'
+              : 'bg-[#1CD1A1] text-white shadow-md shadow-[#1CD1A1]/30'
             }
           `}
         >

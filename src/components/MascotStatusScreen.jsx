@@ -17,7 +17,7 @@ export default function MascotStatusScreen({ onNext }) {
             height: 0,
             borderLeft: '10px solid transparent',
             borderRight: '10px solid transparent',
-            borderTop: '10px solid #F3F4F6',
+            borderTop: '10px solid #F4F4F4',
           }}
         />
       </div>
@@ -35,7 +35,7 @@ export default function MascotStatusScreen({ onNext }) {
       {/* 출석체크 버튼 */}
       <button
         onClick={onNext}
-        className="bg-[#2ECC71] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
+        className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{
           position: 'fixed',
           bottom: '32px',
