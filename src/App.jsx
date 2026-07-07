@@ -15,6 +15,7 @@ import LoginScreen from './components/LoginScreen';
 import CharacterSetupScreen from './components/CharacterSetupScreen';
 import AttendanceCheckScreen from './components/AttendanceCheckScreen';
 import TodayMissionScreen from './components/TodayMissionScreen';
+import AdScreen from './components/AdScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
@@ -300,10 +301,13 @@ export default function App() {
         )}
         {screen === 'budgetSetup' && (
           <BudgetSetupScreen
-            onComplete={(total) => { setBudgetTotal(total); setScreen('home'); }}
+            onComplete={(total) => { setBudgetTotal(total); setScreen('ad'); }}
             onBack={() => setScreen('budgetGoal')}
             initialBudget={budgetGoal}
           />
+        )}
+        {screen === 'ad' && (
+          <AdScreen onDone={() => setScreen('home')} />
         )}
         {screen === 'mascotStatus' && (
           <MascotStatusScreen onNext={() => setScreen('attendance')} />
