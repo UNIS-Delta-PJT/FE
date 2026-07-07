@@ -81,7 +81,7 @@ function EditableCard({ item, onChange }) {
           style={{
             width: 44, height: 44,
             borderRadius: 14,
-            background: '#F0FAF4',
+            background: '#F4FDFA',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}
@@ -180,7 +180,7 @@ function EditableCard({ item, onChange }) {
             onClick={() => setEditingField(f => f === 'category' ? null : 'category')}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              background: '#E8F8EF', borderRadius: 100,
+              background: '#E8FAF6', borderRadius: 100,
               padding: '4px 10px',
               border: 'none', cursor: 'pointer',
             }}

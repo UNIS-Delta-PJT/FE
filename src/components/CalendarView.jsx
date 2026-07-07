@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const DARK_GREEN = '#006D37';
+const DARK_GREEN = '#1CD1A1';
 
 function formatAmount(amount) {
   if (amount === 0) return '0원';
@@ -71,7 +71,7 @@ export default function CalendarView({ calendarData = {} }) {
       ? 'bg-[#F4F4F4]'
       : '';
 
-    const dateStyle = isToday || amount > 0 ? { color: '#006D37' } : {};
+    const dateStyle = isToday || amount > 0 ? { color: '#1CD1A1' } : {};
 
     return (
       <button
@@ -84,7 +84,7 @@ export default function CalendarView({ calendarData = {} }) {
           style={{ ...dateStyle, width: 42, height: 42, borderRadius: 50 }}
         >
           <span className="text-xs leading-none">{date.getDate()}</span>
-          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#006D37' : '#EAEAEA' }}>
+          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#1CD1A1' : '#EAEAEA' }}>
             {formatAmount(amount)}
           </span>
         </span>

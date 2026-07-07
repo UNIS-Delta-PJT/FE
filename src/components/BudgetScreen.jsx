@@ -358,21 +358,22 @@ function readFromStorage() {
     const incomes = JSON.parse(localStorage.getItem('delta_incomes') || '[]');
     const totalIncome = incomes.reduce((sum, i) => sum + (parseInt(i.amount) || 0), 0);
     const budgetTotal = JSON.parse(localStorage.getItem('delta_budget_total') || '0') || 0;
+    const budgetGoal = JSON.parse(localStorage.getItem('delta_budget_goal') || '0') || 0;
     const budgetCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
-    return { totalIncome, budgetTotal, budgetCats };
+    return { totalIncome, budgetTotal, budgetGoal, budgetCats };
   } catch {
-    return { totalIncome: 0, budgetTotal: 0, budgetCats: [] };
+    return { totalIncome: 0, budgetTotal: 0, budgetGoal: 0, budgetCats: [] };
   }
 }
 
 /* ─────────────────────────────────────────────────────────
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
-export default function BudgetScreen() {
+export default function BudgetScreen({ onEditIncome }) {
   const [showIncomePopup, setShowIncomePopup] = useState(false);
   const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
-  const [{ totalIncome, budgetTotal, budgetCats }, setData] = useState(readFromStorage);
+  const [{ totalIncome, budgetTotal, budgetGoal, budgetCats }, setData] = useState(readFromStorage);
 
   // 토글 상태 — category_id 를 키로 사용 (기본값 true)
   const [toggles, setToggles] = useState({});
@@ -392,7 +393,8 @@ export default function BudgetScreen() {
     setData(readFromStorage());
   }
 
-  const savings = Math.max(0, totalIncome - budgetTotal);
+  // 저축 목표 금액 = 수입 총합 − 목표 예산 (한 달 소비 계획 입력값, 없으면 확정 예산 총액으로 fallback)
+  const savings = Math.max(0, totalIncome - (budgetGoal || budgetTotal));
   const savingsPct = totalIncome > 0 ? Math.min(100, (savings / totalIncome) * 100) : 0;
 
   return (
@@ -415,7 +417,8 @@ export default function BudgetScreen() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>한 달 총 수입</span>
-            <button onClick={() => setShowIncomePopup(true)} className="active:scale-90 transition-transform">
+            {/* 수정: 수입 리스트 화면(IncomeSetupScreen)으로 전환. prop 미전달 시 기존 팝업 fallback */}
+            <button onClick={() => (onEditIncome ? onEditIncome() : setShowIncomePopup(true))} className="active:scale-90 transition-transform">
               <EditIcon />
             </button>
           </div>
@@ -436,7 +439,7 @@ export default function BudgetScreen() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>저축 유형</span>
-            <span style={{ fontSize: 12, color: '#006D37', fontWeight: 600 }}>
+            <span style={{ fontSize: 12, color: '#1CD1A1', fontWeight: 600 }}>
               현재 저축액: {savings.toLocaleString('ko-KR')}원
             </span>
           </div>
@@ -473,7 +476,7 @@ export default function BudgetScreen() {
             </p>
           ) : budgetCats.map(cat => {
             const active = toggles[cat.category_id] !== false;
-            const iconColor = active ? '#006D37' : '#3D4A3E';
+            const iconColor = active ? '#1CD1A1' : '#3D4A3E';
             return (
               <div
                 key={cat.category_id}
@@ -521,7 +524,7 @@ export default function BudgetScreen() {
         {/* 예산 로드맵 버튼 */}
         <button
           className="flex items-center active:scale-[0.98] transition-transform"
-          style={{ width: 353, height: 88, borderRadius: 48, backgroundColor: '#006D37', padding: '0 20px', gap: 16, boxSizing: 'border-box' }}
+          style={{ width: 353, height: 88, borderRadius: 48, backgroundColor: '#1CD1A1', padding: '0 20px', gap: 16, boxSizing: 'border-box' }}
         >
           {/* 아이콘 배경 */}
           <div

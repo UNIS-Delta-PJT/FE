@@ -23,7 +23,7 @@ export default function MascotStatusScreen({ onNext }) {
       </div>
 
       {/* 마스코트 — 추후 이미지/gif로 교체 */}
-      <div className="w-52 h-52 rounded-full bg-[#f0faf4] flex items-center justify-center">
+      <div className="w-52 h-52 rounded-full bg-[#F4FDFA] flex items-center justify-center">
         <span style={{ fontSize: '90px', lineHeight: 1 }}>🐪</span>
       </div>
 

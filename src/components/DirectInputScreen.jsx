@@ -171,7 +171,7 @@ function CategoryBar({ name, budget, spent }) {
           <CategoryIcon name={name} width={16} height={14} color="#000000" />
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#000000' }}>{name} 지출 비율</span>
         </div>
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#006D37' }}>{pct}%</span>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#1CD1A1' }}>{pct}%</span>
       </div>
       <div style={{ height: 8, borderRadius: 9999, backgroundColor: '#EAEAEA', overflow: 'hidden' }}>
         <div style={{ height: 8, width: `${pct}%`, borderRadius: 9999, backgroundColor: '#1CD1A1' }} />
@@ -396,7 +396,7 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
           onClick={handleSave}
           disabled={saving}
           className="active:scale-95 transition-transform disabled:opacity-60"
-          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid && !saving ? '#1CD1A1' : '#A7F3C8', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
+          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: isValid && !saving ? '#1CD1A1' : '#A7EDDA', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#FFFFFF' }}
         >
           {saving ? '저장 중...' : '저장하기'}
         </button>

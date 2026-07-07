@@ -12,7 +12,7 @@ import navBudgetOff    from '../assets/nav_budget_deactivated.png';
 const NAV_ITEMS = [
   { key: 'home',      on: navHomeOn,      off: navHomeOff,      size: 36 },
   { key: 'report',    on: navReportOn,    off: navReportOff,    size: 36 },
-  { key: 'character', on: navCharacterOn, off: navCharacterOff, size: 24 },
+  { key: 'character', on: navCharacterOn, off: navCharacterOff, size: 20 },
   { key: 'budget',    on: navBudgetOn,    off: navBudgetOff,    size: 36 },
 ];
 

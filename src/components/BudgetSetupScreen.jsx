@@ -4,7 +4,7 @@ import {
   Sparkles, Wallet, ShoppingBag, Home, Dumbbell,
   Heart, Coffee, BookOpen, X, PlusCircle,
 } from 'lucide-react';
-import deltaClappingImg from '../assets/delta_clapping.png';
+import budgetCompleteImg from '../assets/budget_complete_character.png';
 import WarningToast from './WarningToast';
 
 // ─── 고정 카테고리 아이콘 맵 ──────────────────────────────────────────
@@ -20,7 +20,7 @@ const CUSTOM_ICON_CONFIG = [
   { id: 'bus',     Icon: Bus,         bg: '#4ECDC422', color: '#4ECDC4' },
   { id: 'film',    Icon: Film,        bg: '#45B7D122', color: '#45B7D1' },
   { id: 'shop',    Icon: ShoppingBag, bg: '#F9A82522', color: '#F9A825' },
-  { id: 'home',    Icon: Home,        bg: '#66BB6A22', color: '#66BB6A' },
+  { id: 'home',    Icon: Home,        bg: '#1CD1A122', color: '#1CD1A1' },
   { id: 'fitness', Icon: Dumbbell,    bg: '#FF752222', color: '#FF7522' },
   { id: 'health',  Icon: Heart,       bg: '#EC407A22', color: '#EC407A' },
   { id: 'coffee',  Icon: Coffee,      bg: '#A1887F22', color: '#A1887F' },
@@ -40,9 +40,17 @@ const DEFAULT_CATEGORIES = [
 // ─── 커스텀 아이콘 픽커 ───────────────────────────────────────────────
 function CustomIconPicker({ selected, onSelect }) {
   return (
+    // 5개 + 4개 2줄 grid: 아이콘 5개(36px) + gap 4개(8px) + 좌우 패딩 16px = 228px
     <div
-      className="flex flex-wrap gap-2 p-3 bg-white rounded-2xl border border-gray-100 shadow-md"
-      style={{ marginTop: 8 }}
+      className="bg-white rounded-2xl border border-gray-100 shadow-md"
+      style={{
+        marginTop: 8,
+        padding: 8,
+        width: 228,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, 36px)',
+        gap: 8,
+      }}
     >
       {CUSTOM_ICON_CONFIG.map(({ id, Icon, bg, color }) => (
         <button
@@ -85,9 +93,7 @@ function CategoryItem({ cat, totalBudget, maxAllowed, onAmountChange }) {
     <div
       style={{
         width: 353,
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: '#EAEAEA',
+        border: 'none',
         borderRadius: 16,
         paddingLeft: 17,
         paddingRight: 17,
@@ -176,7 +182,8 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
     // 남은 예산을 초과하지 않도록 강제 클램프
     const clamped = Math.min(raw, sliderMax);
     setInputVal(String(clamped));
-    onUpdate({ ...cat, amount: clamped });
+    // 체크 확정 시 아이콘을 기본 카테고리와 동일한 스타일(흰 배경 + 브랜드 그린)로 전환
+    onUpdate({ ...cat, amount: clamped, confirmed: true });
     setEditingAmount(false);
   }
 
@@ -197,7 +204,7 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
   return (
     <div
       style={{
-        width: 353, borderWidth: 1, borderStyle: 'solid', borderColor: '#EAEAEA',
+        width: 353, border: 'none',
         borderRadius: 16, paddingLeft: 17, paddingRight: 17, paddingTop: 16, paddingBottom: 16,
         display: 'flex', flexDirection: 'column', gap: 10,
         boxShadow: '0 4px 14px rgba(0, 0, 0, 0.07)',
@@ -207,9 +214,9 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
         <button
           onClick={() => setShowIconPicker(p => !p)}
           className="active:scale-90 transition-transform flex-shrink-0"
-          style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: cat.confirmed ? '#FFFFFF' : bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <Icon size={18} style={{ color }} strokeWidth={1.8} />
+          <Icon size={18} style={{ color: cat.confirmed ? '#1CD1A1' : color }} strokeWidth={1.8} />
         </button>
         <div style={{ flex: 1, marginLeft: 12 }}>
           {editingName ? (
@@ -285,8 +292,6 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   const [budgetToast, setBudgetToast] = useState(null);
   const [budgetToastFading, setBudgetToastFading] = useState(false);
 
-  const [completionToast, setCompletionToast] = useState(false);
-  const [completionToastFading, setCompletionToastFading] = useState(false);
 
   const totalIncome = (() => {
     try {
@@ -307,23 +312,22 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
     localStorage.setItem('delta_budget_categories', JSON.stringify([...categories, ...customCategories]));
   }, [categories, customCategories]);
 
-  // ── 배분 완료 감지 → 말풍선 토스트 ──────────────────────────────
-  const prevAllocatedRef = useRef(0);
+  // 모든 예산 배분 완료 여부
+  const isComplete = totalBudget > 0 && totalAllocated === totalBudget;
+
+  // 배분 완료 순간 감지 → 캐릭터 fade in(1.5s) → 1s 유지 → fade out(0.5s)
+  const [showComplete, setShowComplete] = useState(false);
+  const prevCompleteRef = useRef(false);
   useEffect(() => {
-    if (
-      totalBudget > 0 &&
-      totalAllocated === totalBudget &&
-      prevAllocatedRef.current !== totalBudget
-    ) {
-      setCompletionToast(true);
-      setCompletionToastFading(false);
-      setTimeout(() => {
-        setCompletionToastFading(true);
-        setTimeout(() => setCompletionToast(false), 300);
-      }, 2000);
+    const was = prevCompleteRef.current;
+    prevCompleteRef.current = isComplete;
+    if (isComplete && !was) {
+      setShowComplete(true);
+      const t = setTimeout(() => setShowComplete(false), 3000); // 애니메이션 총 길이와 동일
+      return () => clearTimeout(t);
     }
-    prevAllocatedRef.current = totalAllocated;
-  }, [totalAllocated, totalBudget]);
+    if (!isComplete) setShowComplete(false);
+  }, [isComplete]);
 
   function handleAmountChange(category_id, amount) {
     setCategories(prev => prev.map(cat =>
@@ -385,14 +389,14 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   return (
     <div className="flex flex-col overflow-y-auto bg-white" style={{ minHeight: '100%', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '17px' }}>
 
-      {/* ── 말풍선 + 마스코트 토스트 ────────────────────────────────── */}
-      {completionToast && (
+      {/* ── 배분 완료: 캐릭터 + 말풍선 (설정 완료 버튼 우측 상단) ────── */}
+      {showComplete && (
         <div
-          className={completionToastFading ? 'toast-exit' : 'toast-enter'}
+          className="fade-in-hold-out"
           style={{
             position: 'fixed',
             right: '20px',
-            bottom: '92px',
+            bottom: '88px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
@@ -401,17 +405,17 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
           }}
         >
           {/* 말풍선 */}
-          <div style={{ position: 'relative', marginBottom: 8 }}>
-            <div style={{ backgroundColor: '#F4F4F4', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap' }}>
+          <div style={{ position: 'relative', marginBottom: 6, marginRight: 8 }}>
+            <div style={{ backgroundColor: '#F4F4F4', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)' }}>
               <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555' }}>
                 이번 달도 잘 지켜보자!
               </span>
             </div>
-            {/* 꼬리 — 오른쪽 하단 (마스코트 방향) */}
+            {/* 꼬리 — 오른쪽 하단 (캐릭터 방향) */}
             <div style={{ position: 'absolute', bottom: '-9px', right: '32px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #F4F4F4' }} />
           </div>
-          {/* 마스코트 */}
-          <img src={deltaClappingImg} alt="delta clapping" style={{ width: 120, height: 149, objectFit: 'contain' }} />
+          {/* 완료 캐릭터 */}
+          <img src={budgetCompleteImg} alt="예산 설정 완료" style={{ width: 155, height: 155, objectFit: 'contain' }} />
         </div>
       )}
 
@@ -442,7 +446,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       <button
         onClick={handleCopyLastMonth}
         className="flex items-center active:scale-[0.98] transition-transform"
-        style={{ width: 353, height: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#EAEAEA', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 32 }}
+        style={{ width: 353, height: 97.5, borderRadius: 32, border: 'none', backgroundColor: '#FFFFFF', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 32 }}
       >
         <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1CD1A133' }}>
           <Sparkles size={18} color="#1CD1A1" />
@@ -461,9 +465,9 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       {/* ── 총 예산 입력 ─────────────────────────────────────────────── */}
       <div
         className="flex items-center"
-        style={{ width: 353, minHeight: 97.5, borderRadius: 32, borderWidth: 1.5, borderStyle: 'solid', borderColor: '#1CD1A166', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 12 }}
+        style={{ width: 353, minHeight: 97.5, borderRadius: 32, border: 'none', backgroundColor: 'rgba(28, 209, 161, 0.1)', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, gap: 20, marginBottom: 12 }}
       >
-        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#1CD1A133' }}>
+        <div className="rounded-full flex items-center justify-center flex-shrink-0" style={{ width: 40, height: 40, backgroundColor: '#FFFFFF' }}>
           <Wallet size={18} color="#1CD1A1" />
         </div>
         <div className="flex flex-col items-start gap-1.5 flex-1">
@@ -534,7 +538,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       <button
         onClick={addCustomCategory}
         className="flex items-center justify-center gap-[10px] active:scale-[0.98] transition-transform"
-        style={{ width: 353, height: 64, backgroundColor: '#F4F4F4', borderRadius: 15, border: 'none', cursor: 'pointer', marginTop: 12 }}
+        style={{ width: 353, height: 48, backgroundColor: '#F4F4F4', borderRadius: 100, border: 'none', cursor: 'pointer', marginTop: 12 }}
       >
         <PlusCircle size={22} color="#1CD1A1" strokeWidth={2} />
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 600, color: '#1CD1A1' }}>

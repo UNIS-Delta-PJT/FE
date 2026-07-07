@@ -32,7 +32,17 @@ function IconCircle({ iconId, size = 40 }) {
 
 function IconPicker({ selected, onSelect }) {
   return (
-    <div className="flex flex-wrap gap-2 p-3 bg-white rounded-2xl border border-gray-100 shadow-md">
+    // 5개 x 2줄 고정: 아이콘 5개(36px) + gap 4개(8px) + 좌우 패딩 16px = 228px
+    <div
+      className="bg-white rounded-2xl border border-gray-100 shadow-md"
+      style={{
+        padding: 8,
+        width: 228,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, 36px)',
+        gap: 8,
+      }}
+    >
       {ICON_CONFIG.map(({ id, Icon, bg, color }) => (
         <button
           key={id}
@@ -66,21 +76,21 @@ function IncomeForm({ iconId, name, amount, showPicker, onIconClick, onIconSelec
             value={name}
             onChange={e => onNameChange(e.target.value)}
             className="text-sm outline-none bg-transparent"
-            style={{ color: '#555555', fontWeight: 'normal', width: 200, height: 24 }}
+            style={{ color: '#555555', fontWeight: 600, width: 200, height: 24 }}
           />
           <input
             type="number"
             placeholder="금액 입력"
             value={amount}
             onChange={e => onAmountChange(e.target.value.replace(/[^0-9]/g, ''))}
-            className="text-sm outline-none bg-gray-50"
+            className="text-sm outline-none"
             style={{
               width: 200,
               height: 37,
               borderRadius: 50,
-              borderWidth: 1,
-              borderStyle: 'solid',
-              borderColor: '#EAEAEA',
+              border: 'none',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.10)',
               paddingTop: 8,
               paddingBottom: 8,
               paddingLeft: 16,
@@ -210,19 +220,18 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       {/* 총합 박스 */}
       <div style={{ width: 353, marginBottom: 15 }}>
         <div
-          className="border-[#1CD1A1] bg-gray-50 flex flex-col items-center justify-center"
+          className="flex flex-col items-center justify-center"
           style={{
             height: 104,
             borderRadius: 20,
-            borderWidth: 1.5,
-            borderStyle: 'solid',
+            backgroundColor: '#E6F8F3',
             paddingTop: 20,
             paddingRight: 24,
             paddingBottom: 20,
             paddingLeft: 24,
           }}
         >
-          <p className="font-bold text-gray-500" style={{ fontSize: '12px' }}>총합</p>
+          <p className="font-bold" style={{ fontSize: '12px', color: '#1A1A1A' }}>총합</p>
           <p className="font-black text-[#1CD1A1]" style={{ fontSize: '24px' }}>
             {totalIncome.toLocaleString('ko-KR')}원
           </p>
@@ -261,21 +270,21 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                         value={formName}
                         onChange={e => setFormName(e.target.value)}
                         className="text-sm outline-none bg-transparent"
-                        style={{ color: '#555555', fontWeight: 'normal', width: 200, height: 24 }}
+                        style={{ color: '#555555', fontWeight: 600, width: 200, height: 24 }}
                       />
                       <input
                         type="number"
                         value={formAmount}
                         onChange={e => setFormAmount(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="금액"
-                        className="text-sm outline-none bg-gray-50"
+                        className="text-sm outline-none"
                         style={{
                           width: 200,
                           height: 37,
                           borderRadius: 50,
-                          borderWidth: 1,
-                          borderStyle: 'solid',
-                          borderColor: '#EAEAEA',
+                          border: 'none',
+                          backgroundColor: '#FFFFFF',
+                          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.10)',
                           paddingTop: 8,
                           paddingBottom: 8,
                           paddingLeft: 16,
@@ -287,7 +296,7 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
                     </>
                   ) : (
                     <>
-                      <p className="text-sm truncate" style={{ color: '#555555', fontWeight: 'normal' }}>
+                      <p className="text-sm truncate" style={{ color: '#555555', fontWeight: 600 }}>
                         {income.name}
                       </p>
                       <p className="text-sm" style={{ color: '#555555', fontWeight: 'normal' }}>

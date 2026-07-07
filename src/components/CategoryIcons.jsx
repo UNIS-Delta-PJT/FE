@@ -7,7 +7,6 @@ function hexToFilter(hex = '#FFFFFF') {
   const h = (hex || '#FFFFFF').toUpperCase().trim();
   if (h === '#FFFFFF' || h === '#FFF' || h === 'WHITE') return 'brightness(0) invert(1)';
   if (h === '#000000' || h === '#000' || h === 'BLACK') return 'brightness(0)';
-  if (h === '#006D37') return 'brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(745%) hue-rotate(107deg) brightness(97%) contrast(101%)';
   if (h === '#3D4A3E') return 'brightness(0) saturate(100%) invert(27%) sepia(6%) saturate(651%) hue-rotate(83deg) brightness(82%) contrast(89%)';
   if (h === '#EF4444') return 'brightness(0) saturate(100%) invert(42%) sepia(73%) saturate(5000%) hue-rotate(335deg) brightness(101%) contrast(91%)';
   if (h === '#1CD1A1') return 'brightness(0) saturate(100%) invert(74%) sepia(82%) saturate(2803%) hue-rotate(113deg) brightness(100%) contrast(78%)';
@@ -84,7 +83,7 @@ function HomeIcon({ color = W, width = 18, height = 16 }) {
 // ── 카테고리별 아이콘 + 배경색 설정 ────────────────────────────────
 const CATEGORY_CONFIG = {
   교통:   { isPng: true,  pngSrc: vehicleImg, bg: '#FED023' },
-  카페:   { Icon: FoodIcon,    bg: '#0FA950' },
+  카페:   { Icon: FoodIcon,    bg: '#1CD1A1' },
   쇼핑:   { Icon: ShoppingIcon, bg: '#90BAFF' },
   식비:   { Icon: FoodIcon,    bg: '#999999' },
   문화비:  { Icon: TicketIcon,  bg: '#999999' },

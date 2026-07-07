@@ -282,7 +282,7 @@ function PeerCompareCard({ spent = 0 }) {
       <div style={{ height: 1, backgroundColor: '#F4F4F4', marginBottom: 16 }} />
 
       {/* ── 하단 텍스트 */}
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#006D37', lineHeight: 1.55 }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#1CD1A1', lineHeight: 1.55 }}>
         이번 달 상위 {MOCK_PEER_RANK_PCT}% 안에 들었어요!<br />
         정말 대단해요, 이대로만 가요!
       </span>
@@ -338,7 +338,7 @@ function AIGuideLibraryCard({ expenses, onGuidePress }) {
         width: 353,
         height: 170,
         borderRadius: 28,
-        backgroundColor: '#E8F8EF',
+        backgroundColor: '#E8FAF6',
         border: '1.5px solid rgba(47, 204, 113, 0.5)',
         boxSizing: 'border-box',
         position: 'relative',
@@ -563,7 +563,7 @@ function GuideDetailSheet({ guide, onClose, onStart }) {
           <div style={{
             height: 56,
             borderRadius: 16,
-            backgroundColor: '#E8F8EF',
+            backgroundColor: '#E8FAF6',
             padding: '0 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             marginBottom: 28,

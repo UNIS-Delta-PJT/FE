@@ -41,7 +41,19 @@ export default function App() {
   const [screen, setScreen] = useState('splash');
   const [tab, setTab] = useState('home');
 
-  const [budgetGoal, setBudgetGoal] = useState(0);
+  // 수입 리스트 화면 진입 출처 — 'budget'이면 예산 탭에서 수정하러 온 것 (완료/뒤로 시 예산 탭 복귀)
+  const [incomeFrom, setIncomeFrom] = useState(null);
+
+  // 목표 예산 (한 달 소비 계획 화면 입력값) — 예산 탭 저축 목표 계산에 사용
+  const [budgetGoal, setBudgetGoal] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('delta_budget_goal')) || 0;
+    } catch { return 0; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('delta_budget_goal', JSON.stringify(budgetGoal));
+  }, [budgetGoal]);
 
   const [budgetTotal, setBudgetTotal] = useState(() => {
     try {
@@ -161,7 +173,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
   const fullscreen = screen === 'aiAnalyzing'; // 패딩 없이 꽉 채우는 화면
   const scrollRef = useRef(null);
 
@@ -255,15 +267,34 @@ export default function App() {
           <AttendanceCheckScreen onNext={() => setScreen('todayMission')} />
         )}
         {screen === 'todayMission' && (
-          <TodayMissionScreen onNext={() => setScreen('budgetGoal')} />
+          <TodayMissionScreen onNext={() => setScreen('incomeSetup')} />
         )}
         {screen === 'incomeSetup' && (
-          <IncomeSetupScreen onNext={() => setScreen('budgetGoal')} onBack={() => setScreen('login')} />
+          <IncomeSetupScreen
+            onNext={() => {
+              if (incomeFrom === 'budget') {
+                setIncomeFrom(null);
+                setTab('budget');
+                setScreen('home');
+              } else {
+                setScreen('budgetGoal'); // 온보딩 플로우
+              }
+            }}
+            onBack={() => {
+              if (incomeFrom === 'budget') {
+                setIncomeFrom(null);
+                setTab('budget');
+                setScreen('home');
+              } else {
+                setScreen('todayMission');
+              }
+            }}
+          />
         )}
         {screen === 'budgetGoal' && (
           <BudgetGoalScreen
             onNext={(amount) => { setBudgetGoal(amount); setScreen('budgetSetup'); }}
-            onBack={() => setScreen('login')} // MVP: incomeSetup 스킵으로 login으로 복귀
+            onBack={() => setScreen('incomeSetup')}
             initialBudget={budgetGoal}
           />
         )}
@@ -326,7 +357,7 @@ export default function App() {
           <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onGuidePress={() => setScreen('aiGuide')} />
         )}
         {screen === 'home' && tab === 'budget' && (
-          <BudgetScreen />
+          <BudgetScreen onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }} />
         )}
         {screen === 'home' && tab === 'character' && (
           <CharacterComingSoon />

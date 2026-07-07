@@ -33,6 +33,15 @@ html, body {
 .toast-enter { animation: toastIn  0.3s ease forwards; }
 .toast-exit  { animation: toastOut 0.3s ease forwards; }
 
+/* 예산 배분 완료 캐릭터 — fade in(1.5s) → 유지(1s) → fade out(0.5s), 총 3s */
+@keyframes fadeInHoldOut {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  83%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.fade-in-hold-out { animation: fadeInHoldOut 3s ease forwards; }
+
 .budget-slider {
   -webkit-appearance: none;
   appearance: none;

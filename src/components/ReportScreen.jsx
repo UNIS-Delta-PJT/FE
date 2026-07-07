@@ -190,15 +190,15 @@ function WeekCompareCard({ data }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 12, color: '#000000' }}>소비 변화</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 14, color: '#006D37' }}>지난주 대비</span>
-            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: isUp ? '#EF4444' : '#006D37' }}>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 14, color: '#1CD1A1' }}>지난주 대비</span>
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: isUp ? '#EF4444' : '#1CD1A1' }}>
               {lastWeek === 0 && thisWeek === 0 ? '-' : changeStr}
             </span>
           </div>
         </div>
         {isUp
           ? <TrendingUp  size={24} color="#EF4444" strokeWidth={2} />
-          : <TrendingDown size={24} color="#006D37" strokeWidth={2} />}
+          : <TrendingDown size={24} color="#1CD1A1" strokeWidth={2} />}
       </div>
     </div>
   );
@@ -291,7 +291,7 @@ function DayChart({ weeklyData }) {
 
 /**
  * 원형 예산 소진율 링 (SVG stroke + strokeLinecap="round")
- * - linearGradient: 12시(#D6F4E3 연) → 6시(#1CD1A1 진) 방향으로 자연스러운 그라데이션
+ * - linearGradient: 12시(#D6F7EE 연) → 6시(#1CD1A1 진) 방향으로 자연스러운 그라데이션
  * - strokeLinecap="round": 양 끝 자연스럽게 둥글게
  * - 중앙: "남은 금액" 라벨 + 남은 금액
  */
@@ -320,7 +320,7 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
         <defs>
           {/* 12시(상단, 연) → 6시(하단, 진) 방향 그라데이션 */}
           <linearGradient id="ringGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#D6F4E3" />
+            <stop offset="0%"   stopColor="#D6F7EE" />
             <stop offset="100%" stopColor="#1CD1A1" />
           </linearGradient>
         </defs>
@@ -555,7 +555,7 @@ function YearlyFlowCard({ expenses }) {
               <div style={{
                 width: 16,
                 height: barH,
-                backgroundColor: isCurrent ? '#1CD1A1' : '#E8F8EF',
+                backgroundColor: isCurrent ? '#1CD1A1' : '#E8FAF6',
                 borderRadius: '4px 4px 0 0',
               }} />
             </div>
@@ -706,7 +706,7 @@ function YearlyMiniCards({ expenses }) {
         <div style={{ paddingTop: 12 }}>
           <div style={{
             width: 48, height: 48, borderRadius: '50%',
-            backgroundColor: '#BDECD1',
+            backgroundColor: '#BDF2E4',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <img src={savingsIconImg} alt="절약" width={24} height={24} draggable={false} style={{ objectFit: 'contain' }} />
@@ -836,7 +836,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
         {[{ key: 'stats', label: '소비 통계' }, { key: 'ai', label: 'AI 피드백' }].map(({ key, label }) => {
           const active = mainTab === key;
           return (
-            <button key={key} onClick={() => setMainTab(key)} style={{ width: 170, height: 36, borderRadius: 9999, backgroundColor: active ? '#FFFFFF' : 'transparent', color: active ? '#006D37' : '#000000', fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 600 : 400, fontSize: 14, border: 'none', cursor: 'pointer', transition: 'background-color 0.18s, color 0.18s', flexShrink: 0 }}>
+            <button key={key} onClick={() => setMainTab(key)} style={{ width: 170, height: 36, borderRadius: 9999, backgroundColor: active ? '#FFFFFF' : 'transparent', color: active ? '#1CD1A1' : '#000000', fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 600 : 400, fontSize: 14, border: 'none', cursor: 'pointer', transition: 'background-color 0.18s, color 0.18s', flexShrink: 0 }}>
               {label}
             </button>
           );
@@ -851,8 +851,8 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
                 const active = periodTab === key;
                 return (
                   <button key={key} onClick={() => setPeriodTab(key)} style={{ width: 70, height: 26, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: '0 0 4px 0', boxSizing: 'border-box' }}>
-                    <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 700 : 400, fontSize: 14, color: active ? '#006D37' : '#999999', lineHeight: 1 }}>{label}</span>
-                    {active && <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, backgroundColor: '#006D37', borderRadius: 1 }} />}
+                    <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 700 : 400, fontSize: 14, color: active ? '#1CD1A1' : '#999999', lineHeight: 1 }}>{label}</span>
+                    {active && <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, backgroundColor: '#1CD1A1', borderRadius: 1 }} />}
                   </button>
                 );
               })}
