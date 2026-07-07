@@ -12,6 +12,9 @@ import AIGuideScreen from './components/AIGuideScreen';
 import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import LoginScreen from './components/LoginScreen';
+import CharacterSetupScreen from './components/CharacterSetupScreen';
+import AttendanceCheckScreen from './components/AttendanceCheckScreen';
+import TodayMissionScreen from './components/TodayMissionScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
@@ -118,15 +121,16 @@ export default function App() {
   }, [screen, loadExpenses]);
 
   // ─── API: 임시 로그인 ───────────────────────────────────────────
+  // TODO: 백엔드 연동 시 로컬 fallback 제거 (현재 서버 미가동으로 임시 처리)
   async function handleTempLogin() {
     try {
       const data = await tempLogin();
       localStorage.setItem('delta_uuid', data.uuid);
-      setScreen('budgetGoal'); // MVP: incomeSetup 화면 임시 스킵
     } catch (err) {
-      console.error('[tempLogin]', err);
-      alert('로그인에 실패했어요. 다시 시도해주세요.');
+      console.warn('[tempLogin] API 실패 — 로컬 임시 UUID로 진행:', err.message);
+      localStorage.setItem('delta_uuid', `local-${crypto.randomUUID()}`);
     }
+    setScreen('characterSetup'); // 첫 로그인: 캐릭터 꾸미기부터
   }
 
   // 스플래시 완료: UUID 있으면 home, 없으면 login
@@ -157,7 +161,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'login', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
   const fullscreen = screen === 'aiAnalyzing'; // 패딩 없이 꽉 채우는 화면
   const scrollRef = useRef(null);
 
@@ -243,6 +247,15 @@ export default function App() {
             onLogin={handleTempLogin}
             onTempLogin={handleTempLogin}
           />
+        )}
+        {screen === 'characterSetup' && (
+          <CharacterSetupScreen onNext={() => setScreen('attendanceCheck')} />
+        )}
+        {screen === 'attendanceCheck' && (
+          <AttendanceCheckScreen onNext={() => setScreen('todayMission')} />
+        )}
+        {screen === 'todayMission' && (
+          <TodayMissionScreen onNext={() => setScreen('budgetGoal')} />
         )}
         {screen === 'incomeSetup' && (
           <IncomeSetupScreen onNext={() => setScreen('budgetGoal')} onBack={() => setScreen('login')} />

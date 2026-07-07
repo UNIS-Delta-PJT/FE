@@ -102,8 +102,8 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
         </p>
       </div>
 
-      {/* 버튼 영역 — y:410부터 시작 */}
-      <div style={{ position: 'absolute', top: '410px', left: '20px', right: '20px' }}>
+      {/* 버튼 영역 */}
+      <div style={{ position: 'absolute', top: '340px', left: '20px', right: '20px' }}>
 
         {/* 계정 생성하기 버튼 */}
         <button
