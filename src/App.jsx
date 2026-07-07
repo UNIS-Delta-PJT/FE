@@ -157,7 +157,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const scrollable = ['home', 'login', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
   const fullscreen = screen === 'aiAnalyzing'; // 패딩 없이 꽉 채우는 화면
   const scrollRef = useRef(null);
 
