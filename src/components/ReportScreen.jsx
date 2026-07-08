@@ -3,7 +3,6 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import savingsIconImg from '../assets/icon_savings.png';
 import celebrationImg from '../assets/icon_celebration.png';
-import AIReportScreen from './AIReportScreen';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
@@ -123,24 +122,14 @@ function PeopleIcon() {
 
 // ── 주간 컴포넌트 ─────────────────────────────────────────────────────────────
 
-/** hex → "r,g,b" */
-function hexRgb(hex) {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.slice(0, 2), 16);
-  const g = parseInt(c.slice(2, 4), 16);
-  const b = parseInt(c.slice(4, 6), 16);
-  return `${r},${g},${b}`;
-}
-
-function BarRow({ label, pct, amount, accent = '#1CD1A1' }) {
-  const rgb = hexRgb(accent);
+function BarRow({ label, pct, amount, gradient }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{ flex: 1, height: 30, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden', position: 'relative' }}>
         <div style={{
           position: 'absolute', left: 0, top: 0, bottom: 0,
           width: `${pct}%`,
-          background: `linear-gradient(to right, rgba(${rgb},0.1), rgba(${rgb},1))`,
+          background: gradient,
           borderRadius: 9999,
         }} />
         <span style={{
@@ -177,11 +166,11 @@ function WeekCompareCard({ data }) {
         지난주 대비 지출 비교
       </span>
 
-      {/* 지난주: #FED023 그라데이션 */}
-      <BarRow label="지난주" pct={lastPct} amount={fmt(lastWeek)} accent="#FED023" />
+      {/* 지난주: 옐로 그라데이션 (80% 지점까지) */}
+      <BarRow label="지난주" pct={lastPct} amount={fmt(lastWeek)} gradient="linear-gradient(90deg, #FCED44 0%, #FCD644 80%)" />
       <div style={{ height: 14 }} />
-      {/* 이번주: #1CD1A1 그라데이션 */}
-      <BarRow label="이번주" pct={thisPct} amount={fmt(thisWeek)} accent="#1CD1A1" />
+      {/* 이번주: 그린 그라데이션 */}
+      <BarRow label="이번주" pct={thisPct} amount={fmt(thisWeek)} gradient="linear-gradient(90deg, #CDF8E6 0%, #34E8B6 100%)" />
 
       <div style={{ flex: 1 }} />
       <div style={{ height: 1, backgroundColor: '#F4F4F4', margin: '16px 0' }} />
@@ -246,9 +235,9 @@ function DayChart({ weeklyData }) {
     <div style={{ width: 353, backgroundColor: '#FFFFFF', borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 19, boxSizing: 'border-box' }}>
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 16, color: '#000000', display: 'block' }}>요일별 지출 그래프</span>
       <div style={{ height: 6 }} />
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 24, color: '#000000', display: 'block' }}>{todayKr}요일</span>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 24, color: '#000000', display: 'block' }}>{todayKr}요일</span>
       <div style={{ height: 4 }} />
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 10, color: '#999999', display: 'block' }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#1CD1A1', display: 'block' }}>
         {hasData ? `이번 주 최대 소비: ${maxDay}요일` : '이번 주 소비 내역이 없어요'}
       </span>
       <div style={{ height: 18 }} />
@@ -813,8 +802,7 @@ function YearlyShareCard() {
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
-export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0, onGuidePress }) {
-  const [mainTab,   setMainTab]   = useState('stats');
+export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0, onCategoryDetail }) {
   const [periodTab, setPeriodTab] = useState('weekly');
 
   const weeklyData        = useMemo(() => computeWeeklyData(expenses),        [expenses]);
@@ -831,21 +819,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
         <h1 style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: '#1A1A1A', margin: 0 }}>리포트</h1>
       </div>
 
-      {/* 소비 통계 / AI 피드백 토글 */}
-      <div style={{ width: 353, height: 48, borderRadius: 9999, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', padding: '6px', boxSizing: 'border-box', marginBottom: 24 }}>
-        {[{ key: 'stats', label: '소비 통계' }, { key: 'ai', label: 'AI 피드백' }].map(({ key, label }) => {
-          const active = mainTab === key;
-          return (
-            <button key={key} onClick={() => setMainTab(key)} style={{ width: 170, height: 36, borderRadius: 9999, backgroundColor: active ? '#FFFFFF' : 'transparent', color: active ? '#1CD1A1' : '#000000', fontFamily: 'Pretendard, sans-serif', fontWeight: active ? 600 : 400, fontSize: 14, border: 'none', cursor: 'pointer', transition: 'background-color 0.18s, color 0.18s', flexShrink: 0 }}>
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
-      {mainTab === 'stats' && (
-        <>
-          {/* 주간/월간/연간 탭 */}
+      {/* 주간/월간/연간 탭 */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', marginBottom: 20 }}>
               {PERIOD_TABS.map(({ key, label }) => {
                 const active = periodTab === key;
@@ -864,6 +838,25 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
               <DayChart weeklyData={weeklyData} />
               <WeekCompareCard data={compareData} />
               <InfoCards topCategory={topCategory} peerRank={MOCK_PEER_RANK} />
+              {/* 카테고리별 지출 전체보기 */}
+              <button
+                onClick={onCategoryDetail}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  marginBottom: 32,
+                  fontFamily: 'Pretendard, sans-serif',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: '#828282',
+                  textAlign: 'left',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                카테고리별 지출 전체보기 &gt;
+              </button>
             </div>
           )}
 
@@ -880,20 +873,14 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
             </div>
           )}
 
-          {/* 연간 */}
-          {periodTab === 'yearly' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <YearlyFlowCard expenses={expenses} />
-              <YearlySummaryCard expenses={expenses} />
-              <YearlyMiniCards expenses={expenses} />
-              <YearlyShareCard />
-            </div>
-          )}
-        </>
-      )}
-
-      {mainTab === 'ai' && (
-        <AIReportScreen expenses={expenses} spent={spent} onGuidePress={onGuidePress} />
+      {/* 연간 */}
+      {periodTab === 'yearly' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <YearlyFlowCard expenses={expenses} />
+          <YearlySummaryCard expenses={expenses} />
+          <YearlyMiniCards expenses={expenses} />
+          <YearlyShareCard />
+        </div>
       )}
     </div>
   );

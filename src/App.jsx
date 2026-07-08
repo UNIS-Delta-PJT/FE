@@ -16,6 +16,7 @@ import CharacterSetupScreen from './components/CharacterSetupScreen';
 import AttendanceCheckScreen from './components/AttendanceCheckScreen';
 import TodayMissionScreen from './components/TodayMissionScreen';
 import AdScreen from './components/AdScreen';
+import CategoryExpenseScreen from './components/CategoryExpenseScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
@@ -175,7 +176,9 @@ export default function App() {
   }
 
   const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
-  const fullscreen = screen === 'aiAnalyzing'; // 패딩 없이 꽉 채우는 화면
+  // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
+  const showNav = screen === 'home' || screen === 'categoryExpense';
+  const fullscreen = ['aiAnalyzing', 'categoryExpense'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -225,14 +228,17 @@ export default function App() {
       )}
 
       {/* 네비바 뒤 흰 배경 */}
-      {screen === 'home' && (
+      {showNav && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 36, backgroundColor: 'white', zIndex: 10 }} />
       )}
 
       {/* 하단 네비게이션 */}
-      {screen === 'home' && (
+      {showNav && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20 }}>
-          <BottomNav activeTab={tab} onTabChange={setTab} />
+          <BottomNav
+            activeTab={screen === 'categoryExpense' ? 'report' : tab}
+            onTabChange={(t) => { setTab(t); setScreen('home'); }}
+          />
         </div>
       )}
 
@@ -309,6 +315,12 @@ export default function App() {
         {screen === 'ad' && (
           <AdScreen onDone={() => setScreen('home')} />
         )}
+        {screen === 'categoryExpense' && (
+          <CategoryExpenseScreen
+            expenses={reportExpenses}
+            onBack={() => { setTab('report'); setScreen('home'); }}
+          />
+        )}
         {screen === 'mascotStatus' && (
           <MascotStatusScreen onNext={() => setScreen('attendance')} />
         )}
@@ -358,7 +370,7 @@ export default function App() {
           </div>
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onGuidePress={() => setScreen('aiGuide')} />
+          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onCategoryDetail={() => setScreen('categoryExpense')} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }} />
