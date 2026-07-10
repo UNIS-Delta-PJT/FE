@@ -26,3 +26,8 @@
 
 ### 말풍선 (speech bubble)
 - 배경 `#FFFFFF` + drop shadow (`0 4px 14px rgba(0,0,0,0.12)`), 꼬리도 흰색으로 통일
+
+### 새 화면 추가 규칙
+- 새 화면은 App.jsx의 `fullscreen` 목록에 추가해 상단 패딩 없이 화면 최상단에 밀착시킬 것 (절대좌표는 화면 최상단 기준)
+- 화면 전환 시 스크롤은 자동으로 최상단 리셋됨 (App의 scrollRef effect) — 화면 내부 탭 전환 시에도 리셋 필요
+- 토스트: 낮은 높이 (padding 6px 16px)
