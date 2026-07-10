@@ -25,7 +25,7 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
       <p
         style={{
           position: 'absolute',
-          top: '292px',
+          top: '223px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -43,7 +43,7 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
       <p
         style={{
           position: 'absolute',
-          top: '366px',
+          top: '297px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -60,7 +60,7 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
       <div
         style={{
           position: 'absolute',
-          top: '430px',
+          top: '361px',
           left: '25.5px',
           width: '339px',
           display: 'grid',
@@ -129,7 +129,7 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
       <p
         style={{
           position: 'absolute',
-          top: '524px',
+          top: '455px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',

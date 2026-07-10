@@ -33,6 +33,26 @@ html, body {
 .toast-enter { animation: toastIn  0.3s ease forwards; }
 .toast-exit  { animation: toastOut 0.3s ease forwards; }
 
+/* 금융 퀴즈 — 단계 숫자 주위를 도는 링 */
+@keyframes quizRingSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.quiz-ring-spin {
+  animation: quizRingSpin 1.4s linear infinite;
+  transform-origin: center;
+}
+
+/* 맵 캐릭터 마커 — 칸 이동 시 통통 튀는 hop */
+@keyframes markerHop {
+  0%   { transform: translateY(0) scale(1); }
+  40%  { transform: translateY(-20px) scale(1.06, 0.94); }
+  70%  { transform: translateY(0) scale(0.96, 1.04); }
+  85%  { transform: translateY(-5px) scale(1); }
+  100% { transform: translateY(0) scale(1); }
+}
+.marker-hop { animation: markerHop 0.23s ease-out; }
+
 /* 예산 배분 완료 캐릭터 — fade in(1.5s) → 유지(1s) → fade out(0.5s), 총 3s */
 @keyframes fadeInHoldOut {
   0%   { opacity: 0; }

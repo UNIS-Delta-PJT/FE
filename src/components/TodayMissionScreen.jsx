@@ -35,7 +35,7 @@ export default function TodayMissionScreen({ onNext }) {
   return (
     <div
       className="bg-white overflow-hidden"
-      style={{ width: '390px', minHeight: '844px', position: 'relative' }}
+      style={{ width: '390px', minHeight: '100%', position: 'relative' }}
     >
       {/* 캐릭터 이미지 */}
       <img
@@ -44,7 +44,7 @@ export default function TodayMissionScreen({ onNext }) {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '125px',
+          top: '25px',
           left: '115px',
           width: '160px',
           height: '129px',
@@ -56,7 +56,7 @@ export default function TodayMissionScreen({ onNext }) {
       <p
         style={{
           position: 'absolute',
-          top: '273px',
+          top: '173px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -73,7 +73,7 @@ export default function TodayMissionScreen({ onNext }) {
       <p
         style={{
           position: 'absolute',
-          top: '313px',
+          top: '213px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -90,7 +90,7 @@ export default function TodayMissionScreen({ onNext }) {
       <div
         style={{
           position: 'absolute',
-          top: '346px',
+          top: '246px',
           left: 0,
           right: 0,
           display: 'flex',

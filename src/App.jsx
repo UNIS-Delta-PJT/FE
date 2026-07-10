@@ -16,6 +16,7 @@ import AttendanceCheckScreen from './components/AttendanceCheckScreen';
 import TodayMissionScreen from './components/TodayMissionScreen';
 import AdScreen from './components/AdScreen';
 import CategoryExpenseScreen from './components/CategoryExpenseScreen';
+import SettingsScreen from './components/SettingsScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
@@ -26,7 +27,7 @@ import ReportScreen from './components/ReportScreen';
 import AIReportScreen from './components/AIReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
-import CharacterComingSoon from './components/CharacterComingSoon';
+import CharacterMapScreen from './components/CharacterMapScreen';
 
 import { tempLogin } from './api/auth';
 import {
@@ -46,6 +47,8 @@ export default function App() {
   const [incomeFrom, setIncomeFrom] = useState(null);
   // 목표 예산/카테고리 설정 화면 진입 출처 — 'budget'이면 예산 탭에서 수정 모드 (버튼 '저장', 완료 시 탭 복귀)
   const [budgetFrom, setBudgetFrom] = useState(null);
+  // 광고 종료 후 복귀 위치 — 'home'(온보딩) | 'budget'(예산 수정 후)
+  const [adReturn, setAdReturn] = useState('home');
 
   // 예산 탭으로 복귀
   function backToBudgetTab() {
@@ -178,7 +181,7 @@ export default function App() {
   const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
-  const fullscreen = ['aiAnalyzing', 'categoryExpense'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
+  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -314,8 +317,14 @@ export default function App() {
           <BudgetSetupScreen
             onComplete={(total) => {
               setBudgetTotal(total);
-              if (budgetFrom === 'budget') backToBudgetTab();
-              else setScreen('ad');
+              // 온보딩/수정 모두 완료 후 광고 시청 → 각자 위치로 복귀
+              if (budgetFrom === 'budget') {
+                setBudgetFrom(null);
+                setAdReturn('budget');
+              } else {
+                setAdReturn('home');
+              }
+              setScreen('ad');
             }}
             onBack={() => (budgetFrom === 'budget' ? backToBudgetTab() : setScreen('budgetGoal'))}
             initialBudget={budgetGoal}
@@ -323,12 +332,27 @@ export default function App() {
           />
         )}
         {screen === 'ad' && (
-          <AdScreen onDone={() => setScreen('home')} />
+          <AdScreen
+            onDone={() => {
+              if (adReturn === 'budget') setTab('budget');
+              setScreen('home');
+              setAdReturn('home');
+            }}
+          />
         )}
         {screen === 'categoryExpense' && (
           <CategoryExpenseScreen
             expenses={reportExpenses}
             onBack={() => { setTab('report'); setScreen('home'); }}
+          />
+        )}
+        {screen === 'settings' && (
+          <SettingsScreen
+            onBack={backToBudgetTab}
+            onLogout={() => {
+              localStorage.removeItem('delta_uuid'); // 세션 종료 (예산/수입 데이터는 유지)
+              setScreen('login');
+            }}
           />
         )}
         {screen === 'mascotStatus' && (
@@ -386,10 +410,11 @@ export default function App() {
             onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }}
             onEditGoal={() => { setBudgetFrom('budget'); setScreen('budgetGoal'); }}
             onEditPlan={() => { setBudgetFrom('budget'); setScreen('budgetSetup'); }}
+            onSettings={() => setScreen('settings')}
           />
         )}
         {screen === 'home' && tab === 'character' && (
-          <CharacterComingSoon />
+          <CharacterMapScreen />
         )}
       </div>
     </div>

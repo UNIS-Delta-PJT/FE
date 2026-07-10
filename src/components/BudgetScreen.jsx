@@ -244,6 +244,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
     if (!newCatName.trim()) return;
     setCats(prev => [...prev, {
       category_id: Date.now(),
+      iconId: 'shop', // 커스텀 카테고리로 취급 → 카테고리별 예산 설정 화면에서 수정/삭제 가능
       name: newCatName.trim(),
       amount: parseInt(newCatAmount) || 0,
     }]);
@@ -369,8 +370,9 @@ function readFromStorage() {
 /* ─────────────────────────────────────────────────────────
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
-export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
+export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan, onSettings }) {
   const [showIncomePopup, setShowIncomePopup] = useState(false);
+  const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
   const [{ totalIncome, budgetTotal, budgetGoal, budgetCats }, setData] = useState(readFromStorage);
 
@@ -388,7 +390,7 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
       {/* 섹션 제목 */}
       <div className="flex items-center justify-between" style={{ marginLeft: 16, marginRight: 16, marginBottom: 12 }}>
         <h1 className="font-bold text-gray-900" style={{ fontSize: 20 }}>예산 설정</h1>
-        <button className="active:scale-90 transition-transform">
+        <button onClick={onSettings} className="active:scale-90 transition-transform">
           <img src={settingImg} alt="환경설정" width={40} height={40} draggable={false} />
         </button>
       </div>
@@ -440,19 +442,19 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
       </div>
 
       {/* 한 달 목표 예산 섹션 */}
-      <div
-        className="flex items-center justify-between"
-        style={{
-          marginLeft: 16, marginRight: 16, marginBottom: 24,
-          width: 353, height: 58,
-          backgroundColor: '#FFFFFF', borderRadius: 20,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          padding: '0 20px', boxSizing: 'border-box',
-        }}
-      >
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>한 달 목표 예산</span>
-        <div className="flex items-center" style={{ gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#1CD1A1' }}>
+      <div style={{ marginLeft: 16, marginRight: 16, marginBottom: 24, width: 353 }}>
+        {/* 섹션 제목 (카드 밖) */}
+        <p style={{ fontSize: 14, fontWeight: 600, color: '#000', marginBottom: 12 }}>한 달 목표 예산</p>
+        <div
+          className="flex items-center justify-between"
+          style={{
+            width: 353, height: 58,
+            backgroundColor: '#FFFFFF', borderRadius: 20,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            padding: '0 20px', boxSizing: 'border-box',
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#1A1A1A' }}>
             {(budgetGoal || budgetTotal || 0).toLocaleString('ko-KR')}원
           </span>
           {/* 수정 → 한 달 목표 예산 화면 (버튼: 저장) */}
@@ -513,9 +515,9 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
             </div>
           ))}
 
-          {/* 카테고리 추가하기 → 카테고리별 예산 설정 화면 */}
+          {/* 카테고리 추가하기 — 팝업에서 추가/수정 (설정 화면과 데이터 공유) */}
           <button
-            onClick={onEditPlan}
+            onClick={() => setShowBudgetEditPopup(true)}
             className="flex items-center justify-center active:scale-95 transition-transform"
             style={{
               width: 353,
@@ -535,42 +537,9 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
         </div>
       </div>
 
-      {/* 지난 기록 보기 섹션 */}
-      <div style={{ marginLeft: 16, marginRight: 16, width: 353, marginTop: 28 }}>
-        <p style={{ fontSize: 20, fontWeight: 700, color: '#000', marginBottom: 14 }}>지난 기록 보기</p>
-
-        {/* 예산 로드맵 버튼 */}
-        <button
-          className="flex items-center active:scale-[0.98] transition-transform"
-          style={{ width: 353, height: 88, borderRadius: 48, backgroundColor: '#1CD1A1', padding: '0 20px', gap: 16, boxSizing: 'border-box' }}
-        >
-          {/* 아이콘 배경 */}
-          <div
-            className="flex items-center justify-center flex-shrink-0 rounded-xl"
-            style={{ width: 48, height: 48, backgroundColor: 'rgba(255,255,255,0.1)' }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="6" cy="5" r="2.5" stroke="white" strokeWidth="1.5"/>
-              <circle cx="18" cy="19" r="2.5" stroke="white" strokeWidth="1.5"/>
-              <path
-                d="M6 7.5C6 7.5 6 13 12 13C18 13 18 16.5 18 16.5"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-
-          {/* 텍스트 */}
-          <div className="flex flex-col items-start gap-1">
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#FFFFFF' }}>예산 로드맵</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#FFFFFF' }}>한 해의 수입 지출, 저축 요약</span>
-          </div>
-        </button>
-      </div>
-
       {/* 팝업들 */}
       {showIncomePopup && <IncomeEditPopup onClose={() => setShowIncomePopup(false)} onSaved={refresh} />}
+      {showBudgetEditPopup && <BudgetEditPopup onClose={() => setShowBudgetEditPopup(false)} onSaved={refresh} />}
     </div>
   );
 }

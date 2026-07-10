@@ -222,18 +222,16 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       {/* 총합 박스 */}
       <div style={{ width: 353, marginBottom: 15 }}>
         <div
-          className="flex flex-col"
+          className="flex flex-col items-center justify-center"
           style={{
             height: 144,
             borderRadius: 20,
             backgroundColor: '#FFFFFF',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-            paddingTop: 20,
-            paddingRight: 24,
-            paddingBottom: 20,
-            paddingLeft: 24,
+            padding: '20px 24px',
             gap: 8,
             boxSizing: 'border-box',
+            textAlign: 'center',
           }}
         >
           <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '18px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>총합</p>
