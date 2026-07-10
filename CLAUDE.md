@@ -23,3 +23,6 @@
 - 큰 박스: corner radius 20px
 - 작은 박스: corner radius 10~15px
 - 박스 간 간격: 36px
+
+### 말풍선 (speech bubble)
+- 배경 `#FFFFFF` + drop shadow (`0 4px 14px rgba(0,0,0,0.12)`), 꼬리도 흰색으로 통일
