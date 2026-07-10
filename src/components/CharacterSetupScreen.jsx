@@ -1,19 +1,39 @@
 import { useState } from 'react';
-import characterImg from '../assets/character_preview.png';
+import characterImg from '../assets/character_base_noeyes.png'; // 눈 없는 민 얼굴 베이스
+import eyesRound from '../assets/eyes_01_round.png';
+import eyesWink from '../assets/eyes_02_wink.png';
+import eyesMixed from '../assets/eyes_03_mixed.png';
+import eyesClosed from '../assets/eyes_04_closed.png';
+import eyesCross from '../assets/eyes_05_cross.png';
+import eyesHeart from '../assets/eyes_06_heart.png';
 
 // 색상 탭 팔레트 (4x2)
 const COLORS = ['#FFFFFF', '#FFD1DC', '#E0C3FC', '#CAF0F8', '#FFECD2', '#AAF0D1', '#FBC4AB', '#98F5E1'];
+
+// 눈 탭 옵션 — round는 기본 이미지의 눈과 동일 (오버레이 생략)
+const EYE_OPTIONS = [
+  { id: 'round',  src: eyesRound },
+  { id: 'wink',   src: eyesWink },
+  { id: 'mixed',  src: eyesMixed },
+  { id: 'closed', src: eyesClosed },
+  { id: 'cross',  src: eyesCross },
+  { id: 'heart',  src: eyesHeart },
+];
 
 const TABS = ['색상', '눈'];
 
 export default function CharacterSetupScreen({ onNext }) {
   const [tab, setTab] = useState('색상');
   const [color, setColor] = useState('#FFFFFF');
+  const [eyes, setEyes] = useState('round');
   const [nickname, setNickname] = useState('');
+
+  const selectedEye = EYE_OPTIONS.find(o => o.id === eyes);
 
   function handleStart() {
     localStorage.setItem('delta_nickname', nickname.trim());
     localStorage.setItem('delta_character_color', color);
+    localStorage.setItem('delta_character_eyes', eyes);
     onNext();
   }
 
@@ -77,6 +97,23 @@ export default function CharacterSetupScreen({ onNext }) {
                 maskImage: `url(${characterImg})`,
                 maskSize: 'contain',
                 maskRepeat: 'no-repeat',
+                pointerEvents: 'none',
+              }}
+            />
+          )}
+          {/* 선택한 눈 — 민 얼굴 위 원래 눈 위치(중심 130,136)에 끼움 */}
+          {selectedEye && (
+            <img
+              src={selectedEye.src}
+              alt="선택한 눈"
+              draggable={false}
+              style={{
+                position: 'absolute',
+                left: '97px',
+                top: '122px',
+                width: '66px',
+                height: '27px',
+                objectFit: 'contain',
                 pointerEvents: 'none',
               }}
             />
@@ -224,27 +261,45 @@ export default function CharacterSetupScreen({ onNext }) {
           </div>
         )}
 
-        {/* 눈 탭 콘텐츠 (준비 중) */}
+        {/* 눈 탭 콘텐츠 */}
         {tab === '눈' && (
           <div
             style={{
               width: '302px',
               height: '144px',
-              display: 'flex',
-              alignItems: 'center',
+              padding: '8px 0',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 56px)',
+              gap: '16px',
               justifyContent: 'center',
+              boxSizing: 'border-box',
             }}
           >
-            <span
-              style={{
-                fontFamily: 'Pretendard, sans-serif',
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#999999',
-              }}
-            >
-              준비 중이에요!
-            </span>
+            {EYE_OPTIONS.map(({ id, src }) => (
+              <button
+                key={id}
+                onClick={() => setEyes(id)}
+                aria-label={`눈 모양 ${id}`}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: '#F4F4F4',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow:
+                    '4px 4px 10px rgba(0, 0, 0, 0.10), inset 3px 3px 6px rgba(255, 255, 255, 0.5), inset -3px -3px 6px rgba(0, 0, 0, 0.05)',
+                  outline: eyes === id ? '2px solid #1CD1A1' : 'none',
+                  outlineOffset: '3px',
+                  padding: 0,
+                }}
+              >
+                <img src={src} alt="" draggable={false} style={{ width: '38px', height: '16px', objectFit: 'contain', pointerEvents: 'none' }} />
+              </button>
+            ))}
           </div>
         )}
       </div>

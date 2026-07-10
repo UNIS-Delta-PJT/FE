@@ -14,8 +14,8 @@ export default function AttendanceScreen({ onNext }) {
       <div className="flex items-start justify-between" style={{ paddingTop: '180px' }}>
         {/* 말풍선 — 꼬리가 오른쪽(마스코트 방향) */}
         <div
-          className="relative bg-gray-100 rounded-2xl w-[70%] h-10 px-4 py-3 flex items-center justify-center"
-          style={{marginLeft: '24px' }}
+          className="relative bg-white rounded-2xl w-[70%] h-10 px-4 py-3 flex items-center justify-center"
+          style={{ marginLeft: '24px', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }}
         >
           <p className="text-gray-700 text-sm font-medium leading-relaxed">
             {mascotMessage}
@@ -28,7 +28,7 @@ export default function AttendanceScreen({ onNext }) {
               height: 0,
               borderTop: '8px solid transparent',
               borderBottom: '8px solid transparent',
-              borderLeft: '10px solid #F4F4F4',
+              borderLeft: '10px solid #FFFFFF',
             }}
           />
         </div>

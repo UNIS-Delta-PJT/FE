@@ -369,25 +369,10 @@ function readFromStorage() {
 /* ─────────────────────────────────────────────────────────
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
-export default function BudgetScreen({ onEditIncome }) {
+export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan }) {
   const [showIncomePopup, setShowIncomePopup] = useState(false);
-  const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
   const [{ totalIncome, budgetTotal, budgetGoal, budgetCats }, setData] = useState(readFromStorage);
-
-  // 토글 상태 — category_id 를 키로 사용 (기본값 true)
-  const [toggles, setToggles] = useState({});
-
-  // budgetCats가 바뀔 때마다 새 카테고리는 toggle=true 로 초기화
-  useEffect(() => {
-    setToggles(prev => {
-      const next = { ...prev };
-      budgetCats.forEach(c => {
-        if (!(c.category_id in next)) next[c.category_id] = true;
-      });
-      return next;
-    });
-  }, [budgetCats]);
 
   function refresh() {
     setData(readFromStorage());
@@ -454,65 +439,98 @@ export default function BudgetScreen({ onEditIncome }) {
         </div>
       </div>
 
-      {/* 카테고리별 예산 설정 섹션 */}
+      {/* 한 달 목표 예산 섹션 */}
+      <div
+        className="flex items-center justify-between"
+        style={{
+          marginLeft: 16, marginRight: 16, marginBottom: 24,
+          width: 353, height: 58,
+          backgroundColor: '#FFFFFF', borderRadius: 20,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          padding: '0 20px', boxSizing: 'border-box',
+        }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>한 달 목표 예산</span>
+        <div className="flex items-center" style={{ gap: 10 }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#1CD1A1' }}>
+            {(budgetGoal || budgetTotal || 0).toLocaleString('ko-KR')}원
+          </span>
+          {/* 수정 → 한 달 목표 예산 화면 (버튼: 저장) */}
+          <button onClick={onEditGoal} className="active:scale-90 transition-transform">
+            <EditIcon />
+          </button>
+        </div>
+      </div>
+
+      {/* 항목별 소비 계획 섹션 */}
       <div style={{ marginLeft: 16, marginRight: 16, width: 353 }}>
-        {/* 섹션 헤더 */}
+        {/* 섹션 헤더 + 수정하기 배지 */}
         <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#000' }}>카테고리별 예산 설정</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#000' }}>항목별 소비 계획</span>
+          {/* 수정 → 카테고리별 예산 설정 화면 (버튼: 저장) */}
           <button
-            onClick={() => setShowBudgetEditPopup(true)}
+            onClick={onEditPlan}
             className="active:opacity-60 transition-opacity"
-            style={{ fontSize: 13, color: '#1CD1A1', fontWeight: 500 }}
+            style={{
+              padding: '5px 12px',
+              borderRadius: 100,
+              backgroundColor: 'rgba(28, 209, 161, 0.15)', // 연초록
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#1CD1A1',
+            }}
           >
             수정하기
           </button>
         </div>
 
-        {/* 카테고리 아이템들 — delta_budget_categories 에서 동적으로 표시 */}
+        {/* 카테고리별 예산 아이템 — delta_budget_categories 에서 동적으로 표시 */}
         <div className="flex flex-col gap-3">
           {budgetCats.length === 0 ? (
             <p className="text-sm text-gray-400 text-center" style={{ padding: '20px 0' }}>
               등록된 카테고리가 없어요
             </p>
-          ) : budgetCats.map(cat => {
-            const active = toggles[cat.category_id] !== false;
-            const iconColor = active ? '#1CD1A1' : '#3D4A3E';
-            return (
-              <div
-                key={cat.category_id}
-                className="flex items-center"
-                style={{ width: 353, height: 72, borderRadius: 48, backgroundColor: '#F4F4F4', paddingLeft: 20, paddingRight: 20, boxSizing: 'border-box', gap: 12 }}
-              >
-                {/* 아이콘 */}
-                <div className="flex items-center justify-center flex-shrink-0 rounded-full bg-white" style={{ width: 36, height: 36 }}>
-                  <CategoryIcon name={cat.name} width={18} height={16} color={iconColor} />
-                </div>
-
-                {/* 텍스트 */}
-                <div className="flex flex-col flex-1">
-                  <span style={{ fontSize: 16, fontWeight: 600, color: '#000' }}>{cat.name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: '#000', marginTop: 2 }}>
-                    {(cat.amount || 0).toLocaleString('ko-KR')}원
-                  </span>
-                </div>
-
-                {/* 토글 */}
-                <Toggle
-                  active={active}
-                  onToggle={() => setToggles(prev => ({ ...prev, [cat.category_id]: !prev[cat.category_id] }))}
-                />
+          ) : budgetCats.map(cat => (
+            <div
+              key={cat.category_id}
+              className="flex items-center"
+              style={{ width: 353, height: 72, borderRadius: 48, backgroundColor: 'rgba(243, 244, 245, 0.9)', padding: 16, boxSizing: 'border-box', gap: 12 }}
+            >
+              {/* 아이콘 */}
+              <div className="flex items-center justify-center flex-shrink-0 rounded-full bg-white" style={{ width: 40, height: 40 }}>
+                <CategoryIcon name={cat.name} width={18} height={16} color="#1CD1A1" />
               </div>
-            );
-          })}
 
-          {/* 카테고리 추가하기 → BudgetEditPopup 열기 */}
+              {/* 카테고리명 + 한도 */}
+              <div className="flex flex-col">
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#000' }}>{cat.name}</span>
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 400, color: '#555555' }}>
+                  {(cat.amount || 0).toLocaleString('ko-KR')}원 한도
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {/* 카테고리 추가하기 → 카테고리별 예산 설정 화면 */}
           <button
-            onClick={() => setShowBudgetEditPopup(true)}
-            className="flex items-center justify-center gap-2 active:scale-95 transition-transform"
-            style={{ width: 353, height: 36, borderRadius: 48, backgroundColor: '#1CD1A1', boxSizing: 'border-box' }}
+            onClick={onEditPlan}
+            className="flex items-center justify-center active:scale-95 transition-transform"
+            style={{
+              width: 353,
+              height: 56,
+              borderRadius: 100,
+              background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)',
+              padding: '10px 20px',
+              gap: 10,
+              border: 'none',
+              cursor: 'pointer',
+              boxSizing: 'border-box',
+            }}
           >
-            <PlusCircle size={16} color="white" />
-            <span style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>카테고리 추가하기</span>
+            <PlusCircle size={18} color="white" />
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>카테고리 추가하기</span>
           </button>
         </div>
       </div>
@@ -553,7 +571,6 @@ export default function BudgetScreen({ onEditIncome }) {
 
       {/* 팝업들 */}
       {showIncomePopup && <IncomeEditPopup onClose={() => setShowIncomePopup(false)} onSaved={refresh} />}
-      {showBudgetEditPopup && <BudgetEditPopup onClose={() => setShowBudgetEditPopup(false)} onSaved={refresh} />}
     </div>
   );
 }

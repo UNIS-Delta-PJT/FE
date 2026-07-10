@@ -282,9 +282,21 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
 }
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────
-export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 0 }) {
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [customCategories, setCustomCategories] = useState([]);
+export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 0, submitLabel = '설정 완료' }) {
+  // 저장된 카테고리가 있으면 로드 (예산 탭에서 수정 진입 시 기존 값 유지)
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
+      const defaults = saved.filter(c => !c.iconId);
+      return defaults.length ? defaults : DEFAULT_CATEGORIES;
+    } catch { return DEFAULT_CATEGORIES; }
+  });
+  const [customCategories, setCustomCategories] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
+      return saved.filter(c => c.iconId);
+    } catch { return []; }
+  });
   const [budgetInput, setBudgetInput] = useState(initialBudget > 0 ? String(initialBudget) : '');
 
   const [toast, setToast] = useState(false);
@@ -406,13 +418,13 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         >
           {/* 말풍선 */}
           <div style={{ position: 'relative', marginBottom: 6, marginRight: 8 }}>
-            <div style={{ backgroundColor: '#F4F4F4', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '12px 20px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)' }}>
               <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555' }}>
                 이번 달도 잘 지켜보자!
               </span>
             </div>
             {/* 꼬리 — 오른쪽 하단 (캐릭터 방향) */}
-            <div style={{ position: 'absolute', bottom: '-9px', right: '32px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #F4F4F4' }} />
+            <div style={{ position: 'absolute', bottom: '-9px', right: '32px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '9px solid #FFFFFF' }} />
           </div>
           {/* 완료 캐릭터 */}
           <img src={budgetCompleteImg} alt="예산 설정 완료" style={{ width: 155, height: 155, objectFit: 'contain' }} />
@@ -552,7 +564,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
         className="bg-[#1CD1A1] rounded-4xl flex items-center justify-center active:scale-95 transition-transform shadow-lg"
         style={{ position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)', width: `${390 * 0.85}px`, height: '48px', fontSize: '15px' }}
       >
-        <span className="text-white font-bold">설정 완료</span>
+        <span className="text-white font-bold">{submitLabel}</span>
       </button>
     </div>
   );

@@ -5,7 +5,7 @@ export default function MascotStatusScreen({ onNext }) {
   return (
     <div className="flex flex-col items-center justify-center gap-8 px-6 overflow-hidden bg-white" style={{ height: '100vh', paddingBottom: '80px' }}>
       {/* 말풍선 — 사각형, 하단에 꼬리 */}
-      <div className="relative bg-gray-100 rounded-2xl px-5 py-4 w-[80%] h-10 flex items-center justify-center">
+      <div className="relative bg-white rounded-2xl px-5 py-4 w-[80%] h-10 flex items-center justify-center" style={{ boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }}>
         <p className="text-gray-700 text-sm font-medium leading-relaxed text-center">
           {mascotMessage}
         </p>
@@ -17,7 +17,7 @@ export default function MascotStatusScreen({ onNext }) {
             height: 0,
             borderLeft: '10px solid transparent',
             borderRight: '10px solid transparent',
-            borderTop: '10px solid #F4F4F4',
+            borderTop: '10px solid #FFFFFF',
           }}
         />
       </div>

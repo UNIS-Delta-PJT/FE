@@ -140,6 +140,8 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
   const [showPicker, setShowPicker] = useState(false);
 
   const totalIncome = incomes.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
+  // TODO: 백엔드 연동 시 지난달 예산 잔액으로 대체
+  const lastMonthLeftover = 0;
 
   useEffect(() => {
     localStorage.setItem('delta_incomes', JSON.stringify(incomes));
@@ -220,20 +222,29 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
       {/* 총합 박스 */}
       <div style={{ width: 353, marginBottom: 15 }}>
         <div
-          className="flex flex-col items-center justify-center"
+          className="flex flex-col"
           style={{
-            height: 104,
+            height: 144,
             borderRadius: 20,
-            backgroundColor: '#E6F8F3',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
             paddingTop: 20,
             paddingRight: 24,
             paddingBottom: 20,
             paddingLeft: 24,
+            gap: 8,
+            boxSizing: 'border-box',
           }}
         >
-          <p className="font-bold" style={{ fontSize: '12px', color: '#1A1A1A' }}>총합</p>
-          <p className="font-black text-[#1CD1A1]" style={{ fontSize: '24px' }}>
-            {totalIncome.toLocaleString('ko-KR')}원
+          <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '18px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>총합</p>
+          <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '24px', fontWeight: 700, color: '#1CD1A1', margin: 0 }}>
+            {(totalIncome + lastMonthLeftover).toLocaleString('ko-KR')}원
+          </p>
+          <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 500, color: '#999999', margin: 0 }}>
+            이번 달 수입 {totalIncome.toLocaleString('ko-KR')}원
+          </p>
+          <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 500, color: '#FF7682', margin: 0 }}>
+            + 지난달 남은 돈 {lastMonthLeftover.toLocaleString('ko-KR')}원
           </p>
         </div>
         <div className="flex justify-end" style={{ marginTop: 6 }}>

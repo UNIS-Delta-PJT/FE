@@ -15,6 +15,7 @@ function hexToFilter(hex = '#FFFFFF') {
   if (h === '#999999') return 'brightness(0) invert(60%)';
   if (h === '#EAEAEA') return 'brightness(0) invert(92%)';
   if (h === '#F4F4F4') return 'brightness(0) invert(96%)';
+  if (h === '#F5C308') return 'brightness(0) saturate(100%) invert(90%) sepia(27%) saturate(4624%) hue-rotate(355deg) brightness(97%) contrast(97%)';
   return 'brightness(0) invert(1)'; // fallback: white
 }
 

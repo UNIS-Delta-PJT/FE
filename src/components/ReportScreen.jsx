@@ -1,14 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
-import savingsIconImg from '../assets/icon_savings.png';
+import CalendarView from './CalendarView';
 import celebrationImg from '../assets/icon_celebration.png';
+import monthlyMascotImg from '../assets/budget_complete_character.png';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
 const DAY_MAP  = ['일', '월', '화', '수', '목', '금', '토'];
 const MOCK_PEER_RANK    = 23;   // 또래 상위 n% (백엔드 연동 전 mock)
-const MOCK_FIXED_EXPENSE = 85000; // 고정비 mock (백엔드 연동 전)
 
 const BAR_H = 125;
 const BAR_W = 24;
@@ -86,27 +86,7 @@ function computeMonthlyByCategory(expenses) {
     .sort((a, b) => b.amount - a.amount);
 }
 
-function computeGrade(rank) {
-  if (rank <= 10) return 'A';
-  if (rank <= 25) return 'B';
-  if (rank <= 50) return 'C';
-  if (rank <= 75) return 'D';
-  if (rank <= 90) return 'E';
-  return 'F';
-}
-
 // ── 공통 아이콘 ───────────────────────────────────────────────────────────────
-function ReceiptIcon({ color = '#1CD1A1', size = 20 }) {
-  return (
-    <svg width={size} height={Math.round(size * 20 / 18)} viewBox="0 0 18 20" fill="none">
-      <path d="M1 2C1 1.45 1.45 1 2 1H16C16.55 1 17 1.45 17 2V15L14.5 19L12 15L9.5 19L7 15L4.5 19L2 15L1 15V2Z"
-        stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      <path d="M4.5 6H13.5M4.5 9H13.5M4.5 12H9.5"
-        stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function PeopleIcon() {
   return (
     <svg width="32" height="24" viewBox="0 0 32 24" fill="none">
@@ -288,7 +268,7 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
   const clamped = Math.min(Math.max(pct, 0), 100);
   const cx      = size / 2;
   const cy      = size / 2;
-  const stroke  = Math.round(size * 0.13);
+  const stroke  = Math.round(size * 0.13) - 3; // 3px 더 얇게
   const r       = cx - stroke / 2 - 1;
   const circ    = 2 * Math.PI * r;
   const offset  = circ * (1 - clamped / 100);
@@ -309,8 +289,8 @@ function BudgetRing({ pct, size = 140, remaining = 0 }) {
         <defs>
           {/* 12시(상단, 연) → 6시(하단, 진) 방향 그라데이션 */}
           <linearGradient id="ringGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#D6F7EE" />
-            <stop offset="100%" stopColor="#1CD1A1" />
+            <stop offset="0%"   stopColor="#D0F8E7" />
+            <stop offset="100%" stopColor="#34E8B6" />
           </linearGradient>
         </defs>
 
@@ -378,6 +358,9 @@ function BudgetUsageCard({ spent, budgetTotal }) {
   );
 }
 
+// 순위별 프로그레스 바 색상
+const RANK_BAR_COLORS = ['#34E8B6', '#FF7682', '#F5C308'];
+
 function TopCategoriesCard({ categories }) {
   const top3  = categories.slice(0, 3);
   const total = categories.reduce((s, c) => s + c.amount, 0);
@@ -409,7 +392,7 @@ function TopCategoriesCard({ categories }) {
               </div>
             </div>
             <div style={{ height: 7, borderRadius: 9999, background: '#F4F4F4', overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, background: '#1CD1A1', transition: 'width 0.4s ease' }} />
+              <div style={{ width: `${pct}%`, height: '100%', borderRadius: 9999, background: RANK_BAR_COLORS[i], transition: 'width 0.4s ease' }} />
             </div>
           </div>
         );
@@ -418,35 +401,126 @@ function TopCategoriesCard({ categories }) {
   );
 }
 
-function MonthlyInfoCards({ fixedExpense, grade, peerRank }) {
-  return (
-    <div style={{ display: 'flex', gap: 19, width: 353 }}>
-      {/* 이번 달 고정비 */}
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        {/* 초록 영수증 아이콘 */}
-        <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(28,209,161,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ReceiptIcon color="#1CD1A1" size={18} />
-        </div>
-        <div>
-          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 12, color: '#000000', margin: '0 0 4px 0' }}>이번 달 고정비</p>
-          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#1A1A1A', margin: 0 }}>
-            ₩{fixedExpense.toLocaleString('ko-KR')}
-          </p>
-        </div>
-      </div>
+// ── 이번 달 가장 큰 지출 TOP 3 ────────────────────────────────────────────────
 
-      {/* 레온이의 성적표 */}
-      <div style={{ width: 167, height: 135, borderRadius: 32, backgroundColor: '#F4F4F4', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        {/* 텍스트 위로 */}
-        <div>
-          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 12, color: '#000000', margin: '0 0 2px 0' }}>레온이의 성적표</p>
-          <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 11, color: '#999999', margin: 0 }}>또래 상위 {peerRank}%</p>
-        </div>
-        {/* 등급 알파벳 아래로 — 왼쪽 정렬 */}
-        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#1CD1A1', lineHeight: 1, display: 'block' }}>
-          {grade}
+// TOP 순위 배지 색상 (배경 15% / 텍스트 100%)
+const TOP_BADGE_COLORS = ['#FF7682', '#F5C308', '#2DE1B0'];
+
+// 소비처 아바타 색상 (로고 이미지 확보 전 이니셜 아바타 — TODO: 브랜드 로고 교체)
+const MERCHANT_AVATAR_COLORS = ['#FF7682', '#90BAFF', '#F5C308', '#B78CF7', '#34E8B6'];
+
+const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
+
+function fmtDateWithDay(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}(${DAY_KR[d.getDay()]})`;
+}
+
+function TopExpensesCard({ expenses }) {
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  // 이번 달 지출 상위 3건
+  const top3 = expenses
+    .filter(e => e.expense_date?.startsWith(ym))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 3);
+
+  return (
+    <div style={{ width: 353, height: 318, backgroundColor: '#FFFFFF', borderRadius: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: '24px 22px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 18, color: '#000000', display: 'block' }}>
+        이번 달 가장 큰 지출 TOP 3
+      </span>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#9A9A9A', display: 'block', marginTop: 4, marginBottom: 20 }}>
+        {fmtDateWithDay(first)} - {fmtDateWithDay(last)}
+      </span>
+
+      {top3.length === 0 ? (
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, color: '#999999', textAlign: 'center', paddingTop: 40 }}>
+          이번 달 소비 내역이 없어요
         </span>
+      ) : top3.map((e, i) => {
+        const d = new Date(e.expense_date);
+        const pad = n => String(n).padStart(2, '0');
+        const badgeColor = TOP_BADGE_COLORS[i];
+        const avatarColor = MERCHANT_AVATAR_COLORS[i % MERCHANT_AVATAR_COLORS.length];
+        return (
+          <div key={e.expense_id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: i < top3.length - 1 ? 20 : 0 }}>
+            {/* 소비처 아이콘/로고 (40x40) — TODO: 브랜드 로고 이미지로 교체 */}
+            <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: `${avatarColor}26`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: avatarColor }}>
+                {(e.place || e.category || '?').charAt(0)}
+              </span>
+            </div>
+
+            {/* 소비처 + 카테고리/날짜 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#1A1A1A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {e.place || e.category}
+              </span>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#999999' }}>
+                {e.category || e.name} • {pad(d.getMonth() + 1)}.{pad(d.getDate())}
+              </span>
+            </div>
+
+            {/* 금액 + TOP 배지 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#333333' }}>
+                -{e.amount.toLocaleString('ko-KR')}원
+              </span>
+              <div style={{ width: 55, height: 20, borderRadius: 10, padding: '0 10px', backgroundColor: `${badgeColor}26`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 11, color: badgeColor, whiteSpace: 'nowrap' }}>
+                  TOP {i + 1}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── 월간 하단 마스코트 (지난달 대비 절약 멘트) ────────────────────────────────
+function MonthlySavingMascot({ expenses }) {
+  const now = new Date();
+  const day = now.getDate();
+
+  // 이번 달/지난달 같은 기간(1일~오늘 일자) 지출 합산
+  const sumRange = (year, month) => {
+    return expenses.reduce((sum, e) => {
+      const d = new Date(e.expense_date);
+      if (d.getFullYear() === year && d.getMonth() === month && d.getDate() <= day) {
+        return sum + (e.amount || 0);
+      }
+      return sum;
+    }, 0);
+  };
+
+  const thisMonth = sumRange(now.getFullYear(), now.getMonth());
+  const prevDate  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonth = sumRange(prevDate.getFullYear(), prevDate.getMonth());
+  const diff = lastMonth - thisMonth;
+  const message = diff >= 0
+    ? `지난달 이맘때보다 ${diff.toLocaleString('ko-KR')}원 덜 썼어요!`
+    : `지난달 이맘때보다 ${Math.abs(diff).toLocaleString('ko-KR')}원 더 썼어요!`;
+
+  return (
+    <div style={{ width: 353, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 24 }}>
+      {/* 말풍선 */}
+      <div style={{ position: 'relative', marginBottom: 10 }}>
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: '10px 16px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }}>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#555555' }}>
+            {message}
+          </span>
+        </div>
+        {/* 꼬리 — 아래 중앙 */}
+        <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '8px solid #FFFFFF' }} />
       </div>
+      {/* 마스코트 */}
+      <img src={monthlyMascotImg} alt="절약 마스코트" draggable={false} style={{ width: 160, height: 160, objectFit: 'contain' }} />
     </div>
   );
 }
@@ -596,148 +670,20 @@ function YearlySummaryCard({ expenses }) {
   const Row = ({ dotColor, label, value }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: dotColor, flexShrink: 0 }} />
-      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#555555' }}>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#FFFFFF' }}>
         {label}&nbsp;<span style={{ fontWeight: 700 }}>{value}</span>
       </span>
     </div>
   );
 
-  return (
-    <div style={{
-      width: 353,
-      backgroundColor: '#FFFFFF',
-      borderRadius: 24,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-      padding: 20,
-      boxSizing: 'border-box',
-    }}>
-      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#1A1A1A', margin: '0 0 18px 0' }}>
-        올해의 소비 요약
-      </p>
-      <Row dotColor="#BA1A1A" label="가장 많이 쓴 달:" value={mostSpendingMonth} />
-      <div style={{ height: 14 }} />
-      <Row dotColor="#1CD1A1" label="가장 절약한 달:" value={mostSavingMonth} />
-    </div>
-  );
-}
-
-
-function YearlyMiniCards({ expenses }) {
-  const today    = new Date();
-  const thisYear = today.getFullYear();
-
-  const monthlyTotals = useMemo(() => {
-    const totals = Array(12).fill(0);
-    expenses.forEach(e => {
-      if (!e.expense_date || !/^\d{4}-\d{2}-\d{2}$/.test(e.expense_date)) return;
-      const [y, m] = e.expense_date.split('-').map(Number);
-      if (y === thisYear) totals[m - 1] += e.amount;
-    });
-    return totals;
-  }, [expenses, thisYear]);
-
-  const thisYearTotal = monthlyTotals.reduce((s, v) => s + v, 0);
-  const savings = Math.max(MOCK_PREV_YEAR_TOTAL - thisYearTotal, 0);
-  const fmtSavings = savings === 0 ? '0원'
-    : savings >= 10000 ? `${Math.round(savings / 10000)}만원`
-    : `${savings.toLocaleString('ko-KR')}원`;
-
-  const cardBase = {
-    width: 167,
-    backgroundColor: '#F4F4F4',
-    borderRadius: 32,
-    padding: 20,
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  };
-
-  const headingStyle = {
-    fontFamily: 'Pretendard, sans-serif',
-    fontWeight: 500,
-    fontSize: 16,
-    color: '#555555',
-    textAlign: 'center',
-    margin: 0,
-  };
-
-  return (
-    <div style={{ display: 'flex', gap: 19, width: 353 }}>
-
-      {/* 올해의 소비 뱃지 */}
-      <div style={cardBase}>
-        <p style={headingStyle}>올해의 소비 뱃지</p>
-        <div style={{ paddingTop: 12 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: '50%',
-            backgroundColor: '#FED023',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <CategoryIcon name="카페" width={24} height={24} color="#FFFFFF" />
-          </div>
-        </div>
-        <span style={{
-          paddingTop: 12,
-          fontFamily: 'Pretendard, sans-serif',
-          fontWeight: 600,
-          fontSize: 16,
-          color: '#FED023',
-          textAlign: 'center',
-        }}>
-          프로 카페인러
-        </span>
-      </div>
-
-      {/* 총 절약 금액 */}
-      <div style={cardBase}>
-        <p style={headingStyle}>총 절약 금액</p>
-        <div style={{ paddingTop: 12 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: '50%',
-            backgroundColor: '#BDF2E4',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <img src={savingsIconImg} alt="절약" width={24} height={24} draggable={false} style={{ objectFit: 'contain' }} />
-          </div>
-        </div>
-        <span style={{
-          paddingTop: 12,
-          fontFamily: 'Pretendard, sans-serif',
-          fontWeight: 600,
-          fontSize: 16,
-          color: '#1CD1A1',
-          textAlign: 'center',
-        }}>
-          {fmtSavings}
-        </span>
-      </div>
-
-    </div>
-  );
-}
-
-function YearlyShareCard() {
-  function handleShare() {
-    if (navigator.share) {
-      navigator.share({
-        title: 'DELTA 소비 리포트',
-        text: '나의 올해 소비 리포트를 확인해보세요!',
-        url: window.location.href,
-      }).catch(() => {});
-    }
-  }
-
+  // 배경/크기: 기존 "리포트 공유하고 보너스 젬 받기" 카드와 동일 (350x125, #1CD1A1, 폭죽 이미지 포함)
   return (
     <div style={{
       width: 350,
       height: 125,
       borderRadius: 24,
       backgroundColor: '#1CD1A1',
-      paddingTop: 20,
-      paddingLeft: 20,
-      paddingRight: 20,
-      paddingBottom: 19,
+      padding: 20,
       boxSizing: 'border-box',
       position: 'relative',
       overflow: 'hidden',
@@ -745,44 +691,15 @@ function YearlyShareCard() {
       flexDirection: 'column',
       justifyContent: 'space-between',
     }}>
-      {/* 텍스트 */}
-      <p style={{
-        fontFamily: 'Pretendard, sans-serif',
-        fontWeight: 600,
-        fontSize: 16,
-        color: '#FFFFFF',
-        margin: 0,
-        lineHeight: 1.4,
-        whiteSpace: 'pre-line',
-        textAlign: 'left',
-      }}>
-        {'리포트 공유하고\n보너스 젬 받기'}
+      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#FFFFFF', margin: 0 }}>
+        올해의 소비 요약
       </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Row dotColor="#FF7682" label="가장 많이 쓴 달:" value={mostSpendingMonth} />
+        <Row dotColor="#FCED44" label="가장 절약한 달:" value={mostSavingMonth} />
+      </div>
 
-      {/* 지금 공유하기 버튼 */}
-      <button
-        onClick={handleShare}
-        style={{
-          alignSelf: 'flex-start',
-          paddingTop: 6,
-          paddingBottom: 6,
-          paddingLeft: 16,
-          paddingRight: 16,
-          borderRadius: 1000,
-          backgroundColor: '#FFFFFF',
-          border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'Pretendard, sans-serif',
-          fontWeight: 600,
-          fontSize: 12,
-          color: '#1CD1A1',
-          textAlign: 'center',
-        }}
-      >
-        지금 공유하기
-      </button>
-
-      {/* 축하 아이콘 — 카드 내 절대 위치 */}
+      {/* 폭죽 이미지 — 카드 내 절대 위치 */}
       <img
         src={celebrationImg}
         alt=""
@@ -801,19 +718,103 @@ function YearlyShareCard() {
   );
 }
 
+
+// ── 총 절약 금액 카드 ─────────────────────────────────────────────────────────
+
+// TODO: 백엔드 연동 시 카테고리별 절약 금액 API로 대체
+const MOCK_CATEGORY_SAVINGS = [
+  { name: '식비', amount: 40000, iconBg: '#AAF0D1',                  iconColor: '#20A275' },
+  { name: '교통', amount: 25000, iconBg: 'rgba(245, 195, 8, 0.25)',  iconColor: '#F5C308' },
+  { name: '문화', amount: 30000, iconBg: '#FFD1DC',                  iconColor: '#FF7682' },
+  { name: '기타', amount: 15000, iconBg: '#DAE8FF',                  iconColor: '#90BAFF' },
+];
+
+function TotalSavingsCard() {
+  const total = MOCK_CATEGORY_SAVINGS.reduce((s, c) => s + c.amount, 0);
+
+  return (
+    <div style={{
+      width: 353,
+      height: 422,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 24,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      padding: 20,
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <p style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#1A1A1A', margin: 0 }}>
+        총 절약 금액
+      </p>
+      <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#1CD1A1', display: 'block', marginTop: 4, marginBottom: 16 }}>
+        {total.toLocaleString('ko-KR')}원
+      </span>
+
+      {/* 카테고리별 절약 요약 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {MOCK_CATEGORY_SAVINGS.map(({ name, amount, iconBg, iconColor }) => (
+          <div
+            key={name}
+            style={{
+              width: 313,
+              height: 72,
+              borderRadius: 48,
+              backgroundColor: '#F3F4F5',
+              padding: 16,
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            {/* 카테고리 아이콘 */}
+            <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <CategoryIcon name={name} width={18} height={16} color={iconColor} />
+            </div>
+            {/* 카테고리명 + 절약 금액 */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#1A1A1A' }}>
+                {name}
+              </span>
+              <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 400, fontSize: 12, color: '#555555' }}>
+                {amount.toLocaleString('ko-KR')}원
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0, onCategoryDetail }) {
   const [periodTab, setPeriodTab] = useState('weekly');
+  const rootRef = useRef(null);
+
+  // 주간/월간/연간 탭 전환 시 스크롤 최상단으로 리셋
+  useEffect(() => {
+    let el = rootRef.current?.parentElement;
+    while (el) {
+      if (el.scrollTop > 0) { el.scrollTop = 0; break; }
+      el = el.parentElement;
+    }
+  }, [periodTab]);
 
   const weeklyData        = useMemo(() => computeWeeklyData(expenses),        [expenses]);
+  // 지출 캘린더용 날짜 → 금액 맵 (연간 탭)
+  const calendarData      = useMemo(() => expenses.reduce((map, e) => {
+    map[e.expense_date] = (map[e.expense_date] || 0) + e.amount;
+    return map;
+  }, {}), [expenses]);
   const compareData       = useMemo(() => computeWeekCompare(expenses),       [expenses]);
   const topCategory       = useMemo(() => computeTopCategory(expenses),       [expenses]);
   const monthlyByCategory = useMemo(() => computeMonthlyByCategory(expenses), [expenses]);
 
-  const grade = computeGrade(MOCK_PEER_RANK);
-
   return (
-    <div style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 0, boxSizing: 'border-box' }}>
+    <div ref={rootRef} style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 0, boxSizing: 'border-box' }}>
       {/* 제목 */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 20, color: '#1A1A1A', margin: 0 }}>리포트</h1>
@@ -865,21 +866,18 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <BudgetUsageCard spent={spent} budgetTotal={budgetTotal} />
               <TopCategoriesCard categories={monthlyByCategory} />
-              <MonthlyInfoCards
-                fixedExpense={MOCK_FIXED_EXPENSE}
-                grade={grade}
-                peerRank={MOCK_PEER_RANK}
-              />
+              <TopExpensesCard expenses={expenses} />
+              <MonthlySavingMascot expenses={expenses} />
             </div>
           )}
 
       {/* 연간 */}
       {periodTab === 'yearly' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, paddingBottom: 24 }}>
           <YearlyFlowCard expenses={expenses} />
           <YearlySummaryCard expenses={expenses} />
-          <YearlyMiniCards expenses={expenses} />
-          <YearlyShareCard />
+          <CalendarView calendarData={calendarData} />
+          <TotalSavingsCard />
         </div>
       )}
     </div>

@@ -30,7 +30,7 @@ function EditIcon({ size = 20, color = '#1CD1A1' }) {
   );
 }
 
-export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' }) {
+export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', submitLabel = '다음' }) {
   const [amount, setAmount] = useState(initialBudget ? String(initialBudget) : '');
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
@@ -207,7 +207,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '' })
             color: '#FFFFFF',
           }}
         >
-          다음
+          {submitLabel}
         </span>
       </button>
     </div>

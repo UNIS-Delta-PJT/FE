@@ -51,6 +51,7 @@ export default function CalendarView({ calendarData = {} }) {
     const key = toKey(date);
     const amount = calendarData[key] ?? 0;
     const isToday = key === toKey(today);
+    const isPast = !isToday && date < today;
     const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
     // M T W T F S S 순서: Mon=0 ... Sat=5, Sun=6
     const dayIdx = (date.getDay() + 6) % 7;
@@ -67,9 +68,10 @@ export default function CalendarView({ calendarData = {} }) {
 
     const circleBg = isToday
       ? 'bg-[#1CD1A1]/20 border border-[#1CD1A1]/20'
-      : amount > 0
-      ? 'bg-[#F4F4F4]'
       : '';
+
+    // 이전 날짜: #F3F4F5 80% 원 배경
+    const circleStyle = !isToday && isPast ? { backgroundColor: 'rgba(243, 244, 245, 0.8)' } : {};
 
     const dateStyle = isToday || amount > 0 ? { color: '#1CD1A1' } : {};
 
@@ -81,10 +83,10 @@ export default function CalendarView({ calendarData = {} }) {
       >
         <span
           className={`flex flex-col items-center justify-center font-bold gap-0.5 ${circleBg} ${textColorClass}`}
-          style={{ ...dateStyle, width: 42, height: 42, borderRadius: 50 }}
+          style={{ ...dateStyle, ...circleStyle, width: 42, height: 42, borderRadius: 50 }}
         >
           <span className="text-xs leading-none">{date.getDate()}</span>
-          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#1CD1A1' : '#EAEAEA' }}>
+          <span className="text-[8px] leading-none" style={{ color: amount > 0 ? '#15C898' : '#999999' }}>
             {formatAmount(amount)}
           </span>
         </span>

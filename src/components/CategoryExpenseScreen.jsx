@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { ArrowLeft, Utensils, Ticket, Bus, ShoppingBag } from 'lucide-react';
+import reactionImg from '../assets/reaction_character.png';
 
 // ── 카테고리 설정: 아이콘 + 프로그레스 그라데이션 (오른쪽으로 갈수록 진해짐) ──
 const CATEGORY_CONFIG = [
@@ -55,7 +56,7 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
   return (
     <div
       className="bg-white"
-      style={{ width: '390px', minHeight: '844px', position: 'relative' }}
+      style={{ width: '390px', minHeight: '930px', position: 'relative' }}
     >
       {/* 뒤로가기 */}
       <button
@@ -206,6 +207,47 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
           );
         })}
       </div>
+
+      {/* 리액션 캐릭터 + 말풍선 */}
+      {(() => {
+        // 이번 주 지출 1위 카테고리
+        const topKey = stats.total > 0
+          ? Object.entries(stats.sums).reduce((a, b) => (a[1] >= b[1] ? a : b))[0]
+          : null;
+        return (
+          // 카드 아래 전용 공간 (카드 끝 y597 이후)
+          <div>
+            {/* 말풍선 */}
+            <div style={{ position: 'absolute', top: '620px', right: '20px' }}>
+              <div
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  padding: '10px 16px',
+                  whiteSpace: 'pre-line',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+                }}
+              >
+                <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555', lineHeight: 1.4 }}>
+                  {topKey
+                    ? `${topKey} 지출이 가장 많았네!\n계획대로 잘 하고 있어`
+                    : '이번 주 지출이 아직 없어!\n계획대로 잘 하고 있어'}
+                </span>
+              </div>
+              {/* 꼬리 — 캐릭터 방향(아래) */}
+              <div style={{ position: 'absolute', bottom: '-8px', right: '48px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '8px solid #FFFFFF' }} />
+            </div>
+            {/* 캐릭터 */}
+            <img
+              src={reactionImg}
+              alt="리액션 캐릭터"
+              draggable={false}
+              style={{ position: 'absolute', top: '690px', left: '212px', width: '144px', height: '144px', objectFit: 'contain' }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

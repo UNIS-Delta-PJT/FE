@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import TopBar from './components/TopBar';
 import BudgetCard from './components/BudgetCard';
-import CalendarView from './components/CalendarView';
 import QuickActions from './components/QuickActions';
 import TodayExpenses from './components/TodayExpenses';
 import WeeklyGoal from './components/WeeklyGoal';
@@ -45,6 +44,15 @@ export default function App() {
 
   // 수입 리스트 화면 진입 출처 — 'budget'이면 예산 탭에서 수정하러 온 것 (완료/뒤로 시 예산 탭 복귀)
   const [incomeFrom, setIncomeFrom] = useState(null);
+  // 목표 예산/카테고리 설정 화면 진입 출처 — 'budget'이면 예산 탭에서 수정 모드 (버튼 '저장', 완료 시 탭 복귀)
+  const [budgetFrom, setBudgetFrom] = useState(null);
+
+  // 예산 탭으로 복귀
+  function backToBudgetTab() {
+    setBudgetFrom(null);
+    setTab('budget');
+    setScreen('home');
+  }
 
   // 목표 예산 (한 달 소비 계획 화면 입력값) — 예산 탭 저축 목표 계산에 사용
   const [budgetGoal, setBudgetGoal] = useState(() => {
@@ -88,14 +96,6 @@ export default function App() {
         if (b.saved_at) return 1;
         return b.expense_id - a.expense_id;
       });
-  }, [expenses]);
-
-  // 캘린더용 날짜 → 금액 맵
-  const calendarData = useMemo(() => {
-    return expenses.reduce((map, e) => {
-      map[e.expense_date] = (map[e.expense_date] || 0) + e.amount;
-      return map;
-    }, {});
   }, [expenses]);
 
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput'].includes(screen);
+  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
   const fullscreen = ['aiAnalyzing', 'categoryExpense'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
@@ -300,16 +300,26 @@ export default function App() {
         )}
         {screen === 'budgetGoal' && (
           <BudgetGoalScreen
-            onNext={(amount) => { setBudgetGoal(amount); setScreen('budgetSetup'); }}
-            onBack={() => setScreen('incomeSetup')}
+            onNext={(amount) => {
+              setBudgetGoal(amount);
+              if (budgetFrom === 'budget') backToBudgetTab();
+              else setScreen('budgetSetup');
+            }}
+            onBack={() => (budgetFrom === 'budget' ? backToBudgetTab() : setScreen('incomeSetup'))}
             initialBudget={budgetGoal}
+            submitLabel={budgetFrom === 'budget' ? '저장' : '다음'}
           />
         )}
         {screen === 'budgetSetup' && (
           <BudgetSetupScreen
-            onComplete={(total) => { setBudgetTotal(total); setScreen('ad'); }}
-            onBack={() => setScreen('budgetGoal')}
+            onComplete={(total) => {
+              setBudgetTotal(total);
+              if (budgetFrom === 'budget') backToBudgetTab();
+              else setScreen('ad');
+            }}
+            onBack={() => (budgetFrom === 'budget' ? backToBudgetTab() : setScreen('budgetGoal'))}
             initialBudget={budgetGoal}
+            submitLabel={budgetFrom === 'budget' ? '저장' : '설정 완료'}
           />
         )}
         {screen === 'ad' && (
@@ -363,7 +373,6 @@ export default function App() {
         {screen === 'home' && tab === 'home' && (
           <div className="flex flex-col items-center gap-[25px]">
             <BudgetCard totalAmount={budgetTotal} spent={spent} />
-            <CalendarView calendarData={calendarData} />
             <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
             <TodayExpenses expenses={todayExpenses} />
             <WeeklyGoal />
@@ -373,7 +382,11 @@ export default function App() {
           <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onCategoryDetail={() => setScreen('categoryExpense')} />
         )}
         {screen === 'home' && tab === 'budget' && (
-          <BudgetScreen onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }} />
+          <BudgetScreen
+            onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }}
+            onEditGoal={() => { setBudgetFrom('budget'); setScreen('budgetGoal'); }}
+            onEditPlan={() => { setBudgetFrom('budget'); setScreen('budgetSetup'); }}
+          />
         )}
         {screen === 'home' && tab === 'character' && (
           <CharacterComingSoon />
