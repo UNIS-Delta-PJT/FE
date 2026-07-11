@@ -407,8 +407,9 @@ export default function App() {
           <DirectInputScreen
             onBack={() => setScreen('home')}
             onSave={(exps) => addExpenses(exps)}
-            // 저장 완료 → 광고 → 주사위 → 맵 이동
-            onHome={() => { setAdReturn('dice'); setScreen('ad'); }}
+            // 다음 → 바로 주사위 / 광고 보고 코인 2배 → 30초 광고 → 주사위
+            onNext={() => setScreen('diceRoll')}
+            onDoubleAd={() => { setAdReturn('dice'); setScreen('ad'); }}
             allExpenses={expenses}
           />
         )}

@@ -1,14 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
+import coinIconImg from '../assets/icon_coin.png';
 import { createExpense, CATEGORY_ID_MAP, toDateString } from '../api/expenses';
 
 const CATEGORIES = ['식비', '교통', '문화', '기타'];
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
 const CAT_BUDGET_KEY = { '식비': '식비', '교통': '교통', '문화': '문화/여가', '기타': '기타' };
 
+// 코인 지급 (기록 완료 기본 +1, 광고 시청 시 +1 추가 = 2배)
+function giveRecordCoin() {
+  try {
+    const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
+    localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
+  } catch { /* noop */ }
+}
+const giveExtraCoin = giveRecordCoin;
+
 function emptyEntry() {
-  return { id: Date.now() + Math.random(), amount: '', category: null, date: new Date(), memo: '' };
+  return { id: Date.now() + Math.random(), amount: '', place: '', category: null, date: new Date(), memo: '' };
 }
 
 function formatDate(date) {
@@ -25,14 +35,14 @@ function formatDate(date) {
 }
 
 /* ─── 아이콘 ─── */
-function FlameIcon() {
+function FlameIcon({ color = '#735C00' }) {
   return (
     <svg width="16" height="20" viewBox="0 0 24 30" fill="none">
       <path
         fillRule="evenodd"
         clipRule="evenodd"
         d="M12 0C12 0 20 8.5 20 16C20 16 17 13.5 15 15C17 17.5 18.5 20 18.5 23C18.5 26.8 15.6 30 12 30C8.4 30 5.5 26.8 5.5 23C5.5 20 7 17.5 9 15C7 13.5 4 16 4 16C4 8.5 12 0 12 0ZM12 19.5C12 19.5 14.5 22 14.5 24C14.5 25.4 13.4 26.5 12 26.5C10.6 26.5 9.5 25.4 9.5 24C9.5 22 12 19.5 12 19.5Z"
-        fill="#735C00"
+        fill={color}
       />
     </svg>
   );
@@ -59,7 +69,7 @@ function MiniCalendar({ selected, onSelect }) {
   const next = () => { if (viewMonth===11){setViewMonth(0);setViewYear(y=>y+1);}else setViewMonth(m=>m+1); };
 
   return (
-    <div style={{ width: 353, backgroundColor: '#FFFFFF', borderRadius: 20, border: '2px solid #F4F4F4', padding: '16px 12px', boxSizing: 'border-box' }}>
+    <div style={{ width: 353, backgroundColor: '#FFFFFF', borderRadius: 20, boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)', padding: '16px 12px', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <button onClick={prev} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999999', fontSize: 20 }}>‹</button>
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14 }}>{viewYear}년 {MONTH_NAMES[viewMonth]}월</span>
@@ -93,7 +103,7 @@ function MiniCalendar({ selected, onSelect }) {
 /* ─── 단일 입력 폼 ─── */
 function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
 
       {/* 지출 금액 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -101,14 +111,27 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#000000' }}>지출 금액</span>
           <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#EF4444', marginBottom: 8 }} />
         </div>
-        <div style={{ width: 353, height: 64, borderRadius: 48, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 24, paddingRight: 24, boxSizing: 'border-box', gap: 4 }}>
+        <div style={{ width: 353, height: 52, borderRadius: 48, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 24, paddingRight: 24, boxSizing: 'border-box', gap: 4 }}>
           <input
             type="number" inputMode="numeric" placeholder="-"
             value={entry.amount}
             onChange={e => onUpdate('amount', e.target.value.replace(/[^0-9]/g, ''))}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 24, color: '#000000', textAlign: 'right' }}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 22, color: '#000000', textAlign: 'right' }}
           />
-          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 24, color: '#000000', flexShrink: 0 }}>원</span>
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 22, color: '#000000', flexShrink: 0 }}>원</span>
+        </div>
+      </div>
+
+      {/* 사용처 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#000000' }}>사용처</span>
+        <div style={{ width: 353, height: 52, borderRadius: 48, backgroundColor: '#F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 24, paddingRight: 24, boxSizing: 'border-box' }}>
+          <input
+            type="text" placeholder="예: 스타벅스"
+            value={entry.place}
+            onChange={e => onUpdate('place', e.target.value)}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#000000' }}
+          />
         </div>
       </div>
 
@@ -125,7 +148,8 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
               <button key={cat} onClick={() => onUpdate('category', cat)} style={{
                 height: 44, borderRadius: 32,
                 backgroundColor: active ? '#1CD1A1' : '#FFFFFF',
-                border: `2px solid ${active ? 'transparent' : '#EAEAEA'}`,
+                border: 'none',
+                boxShadow: active ? '0 4px 14px rgba(28, 209, 161, 0.35)' : '0 4px 14px rgba(0, 0, 0, 0.08)',
                 fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14,
                 color: active ? '#FFFFFF' : '#000000', cursor: 'pointer', transition: 'all 0.15s',
               }}>{cat}</button>
@@ -136,7 +160,7 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
 
       {/* 날짜 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ width: 353, height: 60, borderRadius: 32, backgroundColor: '#FFFFFF', border: '2px solid #F4F4F4', display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 16, boxSizing: 'border-box', gap: 10 }}>
+        <div style={{ width: 353, height: 52, borderRadius: 32, backgroundColor: '#FFFFFF', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)', display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 16, boxSizing: 'border-box', gap: 10 }}>
           <Calendar size={18} color="#999999" strokeWidth={1.8} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 14, color: '#000000' }}>{formatDate(entry.date)}</span>
           <button onClick={onToggleCal} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
@@ -173,8 +197,8 @@ function CategoryBar({ name, budget, spent }) {
         </div>
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 14, color: '#1CD1A1' }}>{pct}%</span>
       </div>
-      <div style={{ height: 8, borderRadius: 9999, backgroundColor: '#EAEAEA', overflow: 'hidden' }}>
-        <div style={{ height: 8, width: `${pct}%`, borderRadius: 9999, backgroundColor: '#1CD1A1' }} />
+      <div style={{ height: 14, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 9999, background: 'linear-gradient(90deg, #D4F8E9 0%, #33E7B5 100%)' }} />
       </div>
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 12, color: '#3D4A3E' }}>
         목표 지출까지 {remaining.toLocaleString('ko-KR')}원 남았습니다
@@ -184,7 +208,26 @@ function CategoryBar({ name, budget, spent }) {
 }
 
 /* ─── 저장 완료 화면 ─── */
-function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
+function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) {
+  // 토스트 시퀀스: 미션 완료(1초) → 사라진 뒤 코인 획득
+  const [missionToast, setMissionToast] = useState(true);
+  const [missionFading, setMissionFading] = useState(false);
+  const [coinToast, setCoinToast] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    // 진입 시 화면 상단으로 스크롤
+    let el = rootRef.current;
+    while (el) {
+      if (el.scrollTop > 0) { el.scrollTop = 0; break; }
+      el = el.parentElement;
+    }
+    const t1 = setTimeout(() => setMissionFading(true), 1000);
+    const t2 = setTimeout(() => setMissionToast(false), 1300);
+    const t3 = setTimeout(() => setCoinToast(true), 1500);
+    const t4 = setTimeout(() => setCoinToast(false), 4000);
+    return () => [t1, t2, t3, t4].forEach(clearTimeout);
+  }, []);
   const budgetTotal = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_total') || '0') || 0; } catch { return 0; } })();
   const budgetCats  = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_categories') || '[]'); } catch { return []; } })();
 
@@ -193,25 +236,73 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
   const remaining    = budgetTotal - allTotal;
 
   const catSpending = {};
-  savedEntries.forEach(e => { catSpending[e.category] = (catSpending[e.category] || 0) + e.amount; });
+  savedEntries.forEach(e => { catSpending[e.name] = (catSpending[e.name] || 0) + e.amount; });
 
   const getCatBudget = name => budgetCats.find(c => c.name === CAT_BUDGET_KEY[name])?.amount || 0;
   const usedCats = Object.keys(catSpending);
 
   return (
-    <div style={{ minHeight: '100%', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 60 }}>
+    <div ref={rootRef} style={{ minHeight: '100%', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 170 }}>
+
+      {/* 미션 완료 토스트 — 먼저 1초 */}
+      {missionToast && (
+        <div
+          className={missionFading ? 'toast-exit' : 'toast-enter'}
+          style={{
+            position: 'fixed',
+            top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '5px 12px',
+            borderRadius: 1000,
+            backgroundColor: 'rgba(254, 208, 35, 0.25)',
+            whiteSpace: 'nowrap',
+            zIndex: 50,
+          }}
+        >
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 12, color: '#FFCF19' }}>
+            "오늘의 지출 기록하기" 미션 완료!
+          </span>
+        </div>
+      )}
+
+      {/* 코인 획득 토스트 — 1초 뒤 화면 중앙 상단 */}
+      {coinToast && (
+        <div
+          className="toast-enter"
+          style={{
+            position: 'fixed',
+            top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '5px 12px',
+            borderRadius: 1000,
+            backgroundColor: 'rgba(254, 208, 35, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 5,
+            zIndex: 50,
+          }}
+        >
+          <img src={coinIconImg} alt="코인" draggable={false} style={{ width: 15, height: 15, objectFit: 'contain' }} />
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, fontWeight: 600, color: '#FFCF19', whiteSpace: 'nowrap' }}>
+            1코인 획득!
+          </span>
+        </div>
+      )}
 
       {/* 체크 아이콘 */}
-      <div style={{ marginTop: 148 }}><CheckIcon /></div>
+      <div style={{ marginTop: 40 }}><CheckIcon /></div>
 
-      <div style={{ height: 20 }} />
+      <div style={{ height: 16 }} />
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 24, color: '#000000' }}>기록 완료!</span>
       <div style={{ height: 8 }} />
       <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 500, fontSize: 16, color: '#000000' }}>오늘의 금융 성장을 응원해요!</span>
-      <div style={{ height: 32 }} />
+      <div style={{ height: 24 }} />
 
       {/* 요약 카드 */}
-      <div style={{ width: 353, minHeight: 245, borderRadius: 32, backgroundColor: '#FFFFFF', border: '1px solid #BBCBBB', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ width: 353, minHeight: 245, borderRadius: 32, backgroundColor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', padding: 24, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 600, fontSize: 16, color: '#000000' }}>오늘의 총 지출</span>
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 24, color: '#1CD1A1' }}>{sessionTotal.toLocaleString('ko-KR')}원</span>
@@ -233,14 +324,21 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
         )}
       </div>
 
-      {/* 홈으로 버튼 */}
-      <div style={{ marginTop: 32 }}>
+      {/* 다음(주사위) + 광고 보고 코인 2배 버튼 — 하단 고정 */}
+      <div style={{ position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', zIndex: 30 }}>
         <button
-          onClick={onHome}
+          onClick={onNext}
           className="active:scale-95 transition-transform"
-          style={{ width: 168, height: 56, borderRadius: 100, backgroundColor: '#1CD1A1', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF' }}
+          style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF', boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)' }}
         >
-          홈으로
+          다음
+        </button>
+        <button
+          onClick={() => { giveExtraCoin(); onDoubleAd(); }}
+          className="active:scale-95 transition-transform"
+          style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#1CD1A1', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)', whiteSpace: 'nowrap' }}
+        >
+          광고 보고 코인 2배!
         </button>
       </div>
     </div>
@@ -248,7 +346,7 @@ function SavedScreen({ savedEntries, allExpenses, streak, onHome }) {
 }
 
 /* ─── 메인 컴포넌트 ─── */
-export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses = [] }) {
+export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, allExpenses = [] }) {
   const [entries, setEntries]       = useState([emptyEntry()]);
   const [openCalId, setOpenCalId]   = useState(null);
   const [savedEntries, setSavedEntries] = useState([]);
@@ -277,24 +375,29 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
 
     setSaving(true);
     try {
-      // API 저장 — 응답에서 실제 expenseId 수집
+      // API 저장 — 실패해도 로컬 저장으로 진행 (TODO: 백엔드 복구 시 재동기화 로직)
       const apiResults = [];
       for (const e of valid) {
         const categoryId = CATEGORY_ID_MAP[e.category] ?? 4;
         const expenseDate = toDateString(e.date);
-        const result = await createExpense({
-          categoryId,
-          amount: parseInt(e.amount),
-          expenseDate,
-          memo: e.memo || '',
-        });
-        apiResults.push(result);
+        try {
+          const result = await createExpense({
+            categoryId,
+            amount: parseInt(e.amount),
+            expenseDate,
+            memo: e.memo || '',
+          });
+          apiResults.push(result);
+        } catch (err) {
+          console.warn('[handleSave] API 실패 — 로컬 저장으로 진행:', err.message);
+          apiResults.push(null); // 로컬 ID로 대체
+        }
       }
 
-      // 옵티미스틱 업데이트용 로컬 형식 생성 (실제 ID + 저장 시각 포함)
+      // 옵티미스틱 업데이트용 로컬 형식 생성 (실제 ID 또는 로컬 ID + 저장 시각 포함)
       const parsed = valid.map((e, i) => ({
         expense_id: apiResults[i]?.expenseId ?? (Date.now() + Math.random()),
-        place: e.memo || e.category,
+        place: e.place?.trim() || e.memo || e.category,
         name: e.category,
         amount: parseInt(e.amount),
         expense_date: toDateString(e.date), // 'YYYY-MM-DD' (필터링용)
@@ -304,19 +407,16 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
 
       onSave(parsed);
       localStorage.setItem('delta_streak', String(newStreak));
+      giveRecordCoin(); // 기록 완료 기본 보상 +1코인
       setSavedEntries(parsed);
       setView('saved');
-      setToastVisible(true);
+      // 코인 토스트(1.5초 시점)와 함께 그 아래에 표시
       setToastFading(false);
+      setTimeout(() => setToastVisible(true), 1500);
       setTimeout(() => {
         setToastFading(true);
         setTimeout(() => setToastVisible(false), 300);
-      }, 2500);
-    } catch (err) {
-      const status = err?.response?.status;
-      const msg = err?.response?.data?.message ?? err?.message ?? '알 수 없는 오류';
-      console.error('[handleSave]', status, msg, err);
-      alert(`저장에 실패했어요. (${status ?? 'network'}: ${msg})`);
+      }, 4000);
     } finally {
       setSaving(false);
     }
@@ -332,20 +432,20 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
           <div
             className={toastFading ? 'toast-exit' : 'toast-enter'}
             style={{
-              position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)',
-              width: 157, height: 38, borderRadius: 9999,
-              backgroundColor: 'rgba(254,208,35,0.2)', border: '1px solid #FED023',
+              position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 56px)', left: '50%', transform: 'translateX(-50%)',
+              padding: '4px 12px', borderRadius: 9999,
+              backgroundColor: 'rgba(255, 118, 130, 0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               zIndex: 50, whiteSpace: 'nowrap',
             }}
           >
-            <FlameIcon />
-            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 14, color: '#6F5900' }}>
+            <FlameIcon color="#FF7682" />
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 13, color: '#FF7682' }}>
               {newStreak}일 연속 기록 중!
             </span>
           </div>
         )}
-        <SavedScreen savedEntries={savedEntries} allExpenses={allExpenses} streak={newStreak} onHome={onHome} />
+        <SavedScreen savedEntries={savedEntries} allExpenses={allExpenses} streak={newStreak} onNext={onNext} onDoubleAd={onDoubleAd} />
       </div>
     );
   }
@@ -388,7 +488,7 @@ export default function DirectInputScreen({ onBack, onSave, onHome, allExpenses 
         <button
           onClick={addEntry}
           className="active:scale-95 transition-transform"
-          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: '#F4F4F4', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#1CD1A1' }}
+          style={{ flex: 1, height: 56, borderRadius: 100, backgroundColor: '#FFFFFF', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 15, color: '#1CD1A1' }}
         >
           지출 추가하기
         </button>

@@ -191,8 +191,9 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
     let pending = 0;
     try { pending = JSON.parse(localStorage.getItem('delta_pending_dice') || '0'); } catch { /* noop */ }
     if (pending > 0) {
-      localStorage.removeItem('delta_pending_dice');
       const t = setTimeout(() => {
+        // 소비(키 삭제)는 실행 시점에 — StrictMode 이중 마운트에도 안전
+        localStorage.removeItem('delta_pending_dice');
         showToast(`주사위 ${pending}! ${pending}칸 이동!`);
         setPosition(p => Math.min(TOTAL_STEPS, p + pending));
       }, 700);
@@ -470,10 +471,10 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
               <div
                 style={{
                   position: 'absolute',
-                  left: 136,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   top: 20,
-                  width: 121,
-                  height: 36,
+                  padding: '5px 12px',
                   borderRadius: 1000,
                   backgroundColor: 'rgba(254, 208, 35, 0.25)',
                   display: 'flex',

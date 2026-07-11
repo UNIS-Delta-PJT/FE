@@ -252,8 +252,7 @@ export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDi
             top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 121,
-            height: 36,
+            padding: '5px 12px',
             borderRadius: 1000,
             backgroundColor: 'rgba(254, 208, 35, 0.25)',
             display: 'flex',
@@ -298,11 +297,11 @@ export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDi
 
       {/* 오늘의 소비 기록하기 버튼 + 말풍선 */}
       <div style={{ position: 'relative', width: 353, marginTop: 46 }}>
-        {/* 말풍선 — 버튼 왼쪽 위 */}
-        <div style={{ position: 'absolute', top: -40, left: 8 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: '7px 14px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)' }}>
+        {/* 말풍선 — 버튼 왼쪽 위, 맵 하단에 살짝 걸치게 */}
+        <div style={{ position: 'absolute', top: -50, left: 8, zIndex: 2 }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: '7px 24px', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)' }}>
             <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#999999' }}>
-              오늘의 소비를 기록하면 주사위를 획득할 수 있어요!
+              기록하면 주사위 획득!
             </span>
           </div>
           {/* 꼬리 — 왼쪽 아래 (버튼 방향) */}
