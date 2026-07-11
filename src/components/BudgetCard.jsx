@@ -8,16 +8,11 @@ export default function BudgetCard({ totalAmount, spent = 0 }) {
 
   const formatKRW = (n) => n.toLocaleString('ko-KR');
 
-  // 프로그레스 색상: 80% 이상이면 빨강, 60% 이상이면 노랑
-  const barColor =
-    percent >= 80
-      ? 'from-red-500 to-rose-400'
-      : percent >= 60
-      ? 'from-amber-400 to-orange-400'
-      : 'from-[#1CD1A1] to-emerald-400';
-
   return (
-    <div className="rounded-2xl bg-gray-50 border border-gray-200 shadow-sm flex flex-col" style={{ width: 353, height: 136, padding: '16px', gap: 8, boxSizing: 'border-box' }}>
+    <div
+      className="flex flex-col"
+      style={{ width: 353, height: 140, padding: '16px', gap: 8, boxSizing: 'border-box', borderRadius: 20, backgroundColor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}
+    >
       {/* 상단: 남은 예산 + % */}
       <div>
         <p className="text-xs text-gray-400 mb-1 font-medium tracking-wide uppercase">
@@ -38,10 +33,10 @@ export default function BudgetCard({ totalAmount, spent = 0 }) {
 
       {/* 프로그레스 바 */}
       <div>
-        <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+        <div style={{ height: 14, borderRadius: 9999, backgroundColor: '#F4F4F4', overflow: 'hidden' }}>
           <div
-            className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-700`}
-            style={{ width: `${percent}%` }}
+            className="transition-all duration-700"
+            style={{ width: `${percent}%`, height: '100%', borderRadius: 9999, background: 'linear-gradient(90deg, #D4F8E9 0%, #33E7B5 100%)' }}
           />
         </div>
       </div>

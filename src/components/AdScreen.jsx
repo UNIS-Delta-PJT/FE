@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 
-const AD_DURATION = 30; // 초
-
 /**
- * 30초 광고 화면 (예산 설정 완료 → 홈 진입 사이)
+ * 광고 화면 (기본 30초, duration으로 조절 가능)
  * TODO: 광고 SDK(카카오 AdFit / AdMob 등) 연동 시 플레이스홀더 영역을 실제 광고로 교체
  */
-export default function AdScreen({ onDone }) {
-  const [remaining, setRemaining] = useState(AD_DURATION);
+export default function AdScreen({ onDone, duration = 30 }) {
+  const [remaining, setRemaining] = useState(duration);
 
   useEffect(() => {
     if (remaining <= 0) return;

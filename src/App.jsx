@@ -1,9 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import TopBar from './components/TopBar';
-import BudgetCard from './components/BudgetCard';
-import QuickActions from './components/QuickActions';
-import TodayExpenses from './components/TodayExpenses';
-import WeeklyGoal from './components/WeeklyGoal';
+import HomeScreen from './components/HomeScreen';
 import BottomNav from './components/BottomNav';
 import AIScanScreen from './components/AIScanScreen';
 import ScanResultScreen from './components/ScanResultScreen';
@@ -17,6 +13,8 @@ import TodayMissionScreen from './components/TodayMissionScreen';
 import AdScreen from './components/AdScreen';
 import CategoryExpenseScreen from './components/CategoryExpenseScreen';
 import SettingsScreen from './components/SettingsScreen';
+import GroupComposeScreen from './components/GroupComposeScreen';
+import DiceRollScreen from './components/DiceRollScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
@@ -47,8 +45,11 @@ export default function App() {
   const [incomeFrom, setIncomeFrom] = useState(null);
   // 목표 예산/카테고리 설정 화면 진입 출처 — 'budget'이면 예산 탭에서 수정 모드 (버튼 '저장', 완료 시 탭 복귀)
   const [budgetFrom, setBudgetFrom] = useState(null);
-  // 광고 종료 후 복귀 위치 — 'home'(온보딩) | 'budget'(예산 수정 후)
+  // 광고 종료 후 복귀 위치 — 'home'(온보딩) | 'budget'(예산 수정 후) | 'dice'(주사위)
   const [adReturn, setAdReturn] = useState('home');
+  // 설정/출석체크 진입 출처 — 홈 헤더 아이콘에서 진입 시 홈으로 복귀
+  const [settingsFrom, setSettingsFrom] = useState('budget');
+  const [attendFrom, setAttendFrom] = useState('onboarding');
 
   // 예산 탭으로 복귀
   function backToBudgetTab() {
@@ -181,7 +182,7 @@ export default function App() {
   const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
-  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
+  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -197,13 +198,6 @@ export default function App() {
     <div className="bg-[#FFFFFF] relative mx-auto overflow-hidden" style={{ width: '100%', maxWidth: '390px', minHeight: '100svh' }}>
       {/* 배경 그라데이션 장식 */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-[#FFFFFF]/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* 헤더 고정 */}
-      {screen === 'home' && tab === 'home' && (
-        <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 'min(100vw, 390px)', zIndex: 20, paddingTop: 'env(safe-area-inset-top, 44px)' }}>
-          <TopBar />
-        </div>
-      )}
 
       {/* 스캔 완료 토스트 */}
       {scanToast && (
@@ -250,9 +244,7 @@ export default function App() {
         ref={scrollRef}
         className={`absolute inset-0 ${scrollable ? 'overflow-y-auto' : 'overflow-hidden'}`}
         style={{
-          paddingTop: (screen === 'home' && tab === 'home')
-            ? 'calc(env(safe-area-inset-top, 54px) + 74px)'
-            : fullscreen
+          paddingTop: fullscreen
             ? '0px'
             : 'calc(env(safe-area-inset-top, 0px) + 20px)',
           paddingBottom: screen === 'home' ? '72px' : '0px',
@@ -274,7 +266,12 @@ export default function App() {
           <CharacterSetupScreen onNext={() => setScreen('attendanceCheck')} />
         )}
         {screen === 'attendanceCheck' && (
-          <AttendanceCheckScreen onNext={() => setScreen('todayMission')} />
+          <AttendanceCheckScreen
+            onNext={() => {
+              if (attendFrom === 'home') { setAttendFrom('onboarding'); setScreen('home'); }
+              else setScreen('todayMission');
+            }}
+          />
         )}
         {screen === 'todayMission' && (
           <TodayMissionScreen onNext={() => setScreen('incomeSetup')} />
@@ -334,9 +331,25 @@ export default function App() {
         {screen === 'ad' && (
           <AdScreen
             onDone={() => {
+              if (adReturn === 'dice') {
+                // 소비 입력 → 광고 → 주사위 플로우
+                setAdReturn('home');
+                setScreen('diceRoll');
+                return;
+              }
               if (adReturn === 'budget') setTab('budget');
               setScreen('home');
               setAdReturn('home');
+            }}
+          />
+        )}
+        {screen === 'diceRoll' && (
+          <DiceRollScreen
+            onDone={(value) => {
+              // 나온 눈만큼 맵 이동 예약 → 캐릭터 탭에서 소비
+              localStorage.setItem('delta_pending_dice', JSON.stringify(value));
+              setTab('character');
+              setScreen('home');
             }}
           />
         )}
@@ -348,7 +361,11 @@ export default function App() {
         )}
         {screen === 'settings' && (
           <SettingsScreen
-            onBack={backToBudgetTab}
+            onBack={() => {
+              if (settingsFrom === 'home') { setTab('home'); setScreen('home'); }
+              else backToBudgetTab();
+              setSettingsFrom('budget');
+            }}
             onLogout={() => {
               localStorage.removeItem('delta_uuid'); // 세션 종료 (예산/수입 데이터는 유지)
               setScreen('login');
@@ -390,17 +407,21 @@ export default function App() {
           <DirectInputScreen
             onBack={() => setScreen('home')}
             onSave={(exps) => addExpenses(exps)}
-            onHome={() => setScreen('home')}
+            // 저장 완료 → 광고 → 주사위 → 맵 이동
+            onHome={() => { setAdReturn('dice'); setScreen('ad'); }}
             allExpenses={expenses}
           />
         )}
         {screen === 'home' && tab === 'home' && (
-          <div className="flex flex-col items-center gap-[25px]">
-            <BudgetCard totalAmount={budgetTotal} spent={spent} />
-            <QuickActions onScan={() => setScreen('aiScan')} onDirectInput={() => setScreen('directInput')} />
-            <TodayExpenses expenses={todayExpenses} />
-            <WeeklyGoal />
-          </div>
+          <HomeScreen
+            expenses={todayExpenses}
+            budgetTotal={budgetTotal}
+            spent={spent}
+            onDirectInput={() => setScreen('directInput')}
+            onSettings={() => { setSettingsFrom('home'); setScreen('settings'); }}
+            onAttendance={() => { setAttendFrom('home'); setScreen('attendanceCheck'); }}
+            onMapClick={() => setTab('character')}
+          />
         )}
         {screen === 'home' && tab === 'report' && (
           <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onCategoryDetail={() => setScreen('categoryExpense')} />
@@ -410,11 +431,18 @@ export default function App() {
             onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }}
             onEditGoal={() => { setBudgetFrom('budget'); setScreen('budgetGoal'); }}
             onEditPlan={() => { setBudgetFrom('budget'); setScreen('budgetSetup'); }}
-            onSettings={() => setScreen('settings')}
+            onSettings={() => { setSettingsFrom('budget'); setScreen('settings'); }}
           />
         )}
         {screen === 'home' && tab === 'character' && (
-          <CharacterMapScreen />
+          <CharacterMapScreen
+            onGroupCompose={() => setScreen('groupCompose')}
+            // 퀴즈 정답 보상: 광고 → 주사위 한 번 더 → 눈만큼 이동
+            onExtraDice={() => { setAdReturn('dice'); setScreen('ad'); }}
+          />
+        )}
+        {screen === 'groupCompose' && (
+          <GroupComposeScreen onBack={() => { setTab('character'); setScreen('home'); }} />
         )}
       </div>
     </div>

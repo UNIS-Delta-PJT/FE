@@ -33,6 +33,16 @@ html, body {
 .toast-enter { animation: toastIn  0.3s ease forwards; }
 .toast-exit  { animation: toastOut 0.3s ease forwards; }
 
+/* 주사위 굴리기 흔들림 */
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg) translateY(0); }
+  25%  { transform: rotate(-12deg) translateY(-10px); }
+  50%  { transform: rotate(10deg) translateY(0); }
+  75%  { transform: rotate(-8deg) translateY(-6px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+.dice-rolling { animation: diceRoll 0.4s ease-in-out infinite; }
+
 /* 금융 퀴즈 — 단계 숫자 주위를 도는 링 */
 @keyframes quizRingSpin {
   from { transform: rotate(0deg); }

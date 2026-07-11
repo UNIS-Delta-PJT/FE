@@ -10,63 +10,11 @@ import groupIcon from '../assets/icon_group.png';
 import storeIcon from '../assets/icon_store.png';
 import coinIcon from '../assets/icon_coin.png';
 
-// ── 맵 구성 ──────────────────────────────────────────────────────────
-const TOTAL_STEPS = 100;
-
-// 노랑: 보물상자 (코인 지급)
-const YELLOW_STEPS = new Set([2, 7, 16, 20, 23, 30, 37, 43, 47, 50, 52, 56, 61, 65, 70, 71, 78, 83, 92, 97]);
-
-// 빨강: 페널티 (이동 효과)
-const RED_EFFECTS = {
-  10: { label: '처음으로', to: () => 1 },
-  22: { label: '처음으로', to: () => 1 },
-  86: { label: '처음으로', to: () => 1 },
-  55: { label: '2칸 뒤로', to: n => n - 2 },
-  91: { label: '2칸 뒤로', to: n => n - 2 },
-  67: { label: '1칸 뒤로', to: n => n - 1 },
-  27: { label: '3칸 뒤로', to: n => n - 3 },
-  40: { label: '5칸 뒤로', to: n => n - 5 },
-  77: { label: '5칸 뒤로', to: n => n - 5 },
-  75: { label: '6칸 뒤로', to: n => n - 6 },
-};
-
-// 컬러칩 (top: 윗면, base: 아래 입체 레이어)
-const COLOR = {
-  green:  { top: '#1CD1A1', base: '#149B77' },
-  yellow: { top: '#F5C308', base: '#C09903' },
-  red:    { top: '#FF7682', base: '#D9545F' },
-};
-
-function stepColor(n) {
-  if (YELLOW_STEPS.has(n)) return COLOR.yellow;
-  if (RED_EFFECTS[n]) return COLOR.red;
-  return COLOR.green;
-}
-
-// ── 지그재그 좌표 ────────────────────────────────────────────────────
-const ROW_H = 96;         // 스텝 간 세로 간격
-const PAD_TOP = 160;      // 최상단(100번) 위 여백
-const PAD_BOTTOM = 80;    // 최하단(1번) 아래 여백
-const X_LEFT = 120;
-const X_RIGHT = 270;
-const STEP_W = 65;
-const STEP_H = 60;
-const DEPTH = 7;          // 입체 두께
-
-// n번 스텝의 중심 좌표 (1번이 맨 아래)
-function stepPos(n) {
-  const y = PAD_TOP + (TOTAL_STEPS - n) * ROW_H;
-  const x = n % 2 === 0 ? X_LEFT : X_RIGHT;
-  return { x, y };
-}
-
-const MAP_HEIGHT = PAD_TOP + (TOTAL_STEPS - 1) * ROW_H + PAD_BOTTOM + STEP_H;
-
-// 길(도로) SVG 경로 문자열
-const ROAD_PATH = Array.from({ length: TOTAL_STEPS }, (_, i) => {
-  const { x, y } = stepPos(i + 1);
-  return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-}).join(' ');
+// ── 맵 구성 (공용 설정에서 로드) ─────────────────────────────────────
+import {
+  TOTAL_STEPS, YELLOW_STEPS, RED_EFFECTS, COLOR, stepColor,
+  STEP_W, STEP_H, DEPTH, stepPos, MAP_HEIGHT, ROAD_PATH,
+} from './mapConfig';
 
 const GROUPS = ['그룹 1', '그룹 2', '그룹 3', '그룹 4'];
 
@@ -168,7 +116,7 @@ function PlayerMarker({ stroke, isRainbow, nickname, animateKey }) {
   );
 }
 
-export default function CharacterMapScreen() {
+export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
   const [mapLevel, setMapLevel] = useState(() => {
     try { return JSON.parse(localStorage.getItem('delta_map_level') || '1'); } catch { return 1; }
   });
@@ -187,7 +135,7 @@ export default function CharacterMapScreen() {
   const [selectedOption, setSelectedOption] = useState(null);
   const [answered, setAnswered] = useState(null); // null | 'correct' | 'wrong'
   const [showExplain, setShowExplain] = useState(false);
-  const [quizAd, setQuizAd] = useState(null); // null | 'retry' | 'double'
+  const [quizAd, setQuizAd] = useState(null); // null | 'retry'
   const [coinToast, setCoinToast] = useState(false);
   const stepRefs = useRef({});
 
@@ -238,6 +186,20 @@ export default function CharacterMapScreen() {
   // 도착 효과 중복 실행 방지 — null로 시작해 마운트 시에도 1회 처리 (노랑/빨강에 갇힌 상태 자가 복구)
   const arrivedRef = useRef(null);
 
+  // 주사위 결과 소비 — 소비 입력 → 광고 → 주사위에서 예약된 이동을 실행
+  useEffect(() => {
+    let pending = 0;
+    try { pending = JSON.parse(localStorage.getItem('delta_pending_dice') || '0'); } catch { /* noop */ }
+    if (pending > 0) {
+      localStorage.removeItem('delta_pending_dice');
+      const t = setTimeout(() => {
+        showToast(`주사위 ${pending}! ${pending}칸 이동!`);
+        setPosition(p => Math.min(TOTAL_STEPS, p + pending));
+      }, 700);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   useEffect(() => {
     if (displayPos !== position) return;       // 아직 이동 중
     if (arrivedRef.current === position) return; // 이미 처리한 도착
@@ -286,13 +248,10 @@ export default function CharacterMapScreen() {
   }
 
   function closeQuiz() {
-    const wasCorrect = answered === 'correct';
     setQuiz(null);
     setSelectedOption(null);
     setAnswered(null);
     setShowExplain(false);
-    // 문제를 맞힌 경우: 닫히면서 자동으로 다음 칸 이동
-    if (wasCorrect) setPosition(p => p + 1);
   }
 
   function handleAnswer(i) {
@@ -401,11 +360,12 @@ export default function CharacterMapScreen() {
       {/* 그룹 구성 / 상점 아이콘 (상단 우측 고정, 배경 없이 벡터만) */}
       <div style={{ position: 'fixed', top: 82, left: 'calc(50% + 195px - 24px - 64px)', zIndex: 20, display: 'flex', alignItems: 'center', gap: 12, height: 39 }}>
         {[
-          { icon: groupIcon, label: '그룹 구성', size: 26 },
+          { icon: groupIcon, label: '그룹 구성', size: 26, onClick: onGroupCompose },
           { icon: storeIcon, label: '상점', size: 20 },
-        ].map(({ icon, label, size }) => (
+        ].map(({ icon, label, size, onClick }) => (
           <button
             key={label}
+            onClick={onClick}
             className="active:scale-90 transition-transform"
             style={{
               width: size,
@@ -660,9 +620,16 @@ export default function CharacterMapScreen() {
             {/* 결과 버튼 영역 */}
             {answered && (
               <>
-                {/* 광고 버튼 — 오답: 재도전 / 정답: 코인 두배 */}
+                {/* 광고 버튼 — 오답: 재도전 / 정답: 주사위 한 번 더 (광고 → 주사위 → 이동) */}
                 <button
-                  onClick={() => setQuizAd(answered === 'wrong' ? 'retry' : 'double')}
+                  onClick={() => {
+                    if (answered === 'wrong') {
+                      setQuizAd('retry');
+                    } else {
+                      closeQuiz();
+                      onExtraDice?.();
+                    }
+                  }}
                   className="active:scale-95 transition-transform"
                   style={{
                     position: 'absolute',
@@ -681,7 +648,7 @@ export default function CharacterMapScreen() {
                   }}
                 >
                   <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#FFFFFF' }}>
-                    {answered === 'wrong' ? '광고 보고 재도전하기' : '광고 보고 코인 두배!'}
+                    {answered === 'wrong' ? '광고 보고 재도전하기' : '광고 보고 주사위 한 번 더!'}
                   </span>
                 </button>
 
@@ -711,22 +678,15 @@ export default function CharacterMapScreen() {
         </div>
       )}
 
-      {/* 퀴즈 광고 (30초) — 재도전 / 코인 두배 */}
+      {/* 퀴즈 광고 (30초) — 오답 재도전용 */}
       {quizAd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: '#1A1A1A', display: 'flex', justifyContent: 'center' }}>
           <AdScreen
             onDone={() => {
-              if (quizAd === 'retry') {
-                // 같은 문제로 재도전
-                setSelectedOption(null);
-                setAnswered(null);
-                setShowExplain(false);
-              } else {
-                // 코인 두배: +1 추가 지급
-                giveCoin();
-                setCoinToast(true);
-                setTimeout(() => setCoinToast(false), 2500);
-              }
+              // 같은 문제로 재도전
+              setSelectedOption(null);
+              setAnswered(null);
+              setShowExplain(false);
               setQuizAd(null);
             }}
           />
