@@ -9,7 +9,7 @@ import OnboardingScreen from './components/OnboardingScreen';
 import LoginScreen from './components/LoginScreen';
 import CharacterSetupScreen from './components/CharacterSetupScreen';
 import AttendanceCheckScreen, { hasAttendedToday } from './components/AttendanceCheckScreen';
-import TodayMissionScreen from './components/TodayMissionScreen';
+import TodayMissionScreen, { DICE_ROLLED_KEY } from './components/TodayMissionScreen';
 import AdScreen from './components/AdScreen';
 import CategoryExpenseScreen from './components/CategoryExpenseScreen';
 import SettingsScreen from './components/SettingsScreen';
@@ -26,6 +26,7 @@ import AIReportScreen from './components/AIReportScreen';
 import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 import CharacterMapScreen from './components/CharacterMapScreen';
+import StoreScreen from './components/StoreScreen';
 
 import { tempLogin } from './api/auth';
 import {
@@ -185,10 +186,10 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense'].includes(screen);
+  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense', 'store'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
-  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
+  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose', 'ad', 'store'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -280,7 +281,10 @@ export default function App() {
           />
         )}
         {screen === 'todayMission' && (
-          <TodayMissionScreen onNext={() => setScreen('incomeSetup')} />
+          <TodayMissionScreen
+            onNext={() => setScreen('incomeSetup')}
+            todayExpenseCount={todayExpenses.length}
+          />
         )}
         {screen === 'incomeSetup' && (
           <IncomeSetupScreen
@@ -354,6 +358,7 @@ export default function App() {
             onDone={(value) => {
               // 나온 눈만큼 맵 이동 예약 → 캐릭터 탭에서 소비
               localStorage.setItem('delta_pending_dice', JSON.stringify(value));
+              localStorage.setItem(DICE_ROLLED_KEY, todayString()); // 오늘의 미션: 주사위 완료 기록
               setTab('character');
               setScreen('home');
             }}
@@ -444,12 +449,16 @@ export default function App() {
         {screen === 'home' && tab === 'character' && (
           <CharacterMapScreen
             onGroupCompose={() => setScreen('groupCompose')}
+            onStore={() => setScreen('store')}
             // 퀴즈 정답 보상: 광고 → 주사위 한 번 더 → 눈만큼 이동
             onExtraDice={() => { setAdReturn('dice'); setScreen('ad'); }}
           />
         )}
         {screen === 'groupCompose' && (
           <GroupComposeScreen onBack={() => { setTab('character'); setScreen('home'); }} />
+        )}
+        {screen === 'store' && (
+          <StoreScreen onBack={() => { setTab('character'); setScreen('home'); }} />
         )}
       </div>
     </div>

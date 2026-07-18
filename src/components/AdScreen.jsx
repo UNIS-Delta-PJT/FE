@@ -27,8 +27,8 @@ export default function AdScreen({ onDone, duration = 30 }) {
         justifyContent: 'center',
       }}
     >
-      {/* 우측 상단: 카운트다운 → 종료 시 닫기 버튼 */}
-      <div style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 16px)', right: 16, zIndex: 10 }}>
+      {/* 우측 상단: 카운트다운 → 종료 시 닫기 버튼 (컨테이너 기준 absolute — 앱 프레임 안에 고정) */}
+      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 16px)', right: 16, zIndex: 10 }}>
         {finished ? (
           <button
             onClick={onDone}
@@ -72,7 +72,7 @@ export default function AdScreen({ onDone, duration = 30 }) {
       {/* 좌측 상단: 광고 라벨 */}
       <div
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
           left: 16,
           padding: '4px 10px',
@@ -100,7 +100,7 @@ export default function AdScreen({ onDone, duration = 30 }) {
       {!finished && (
         <span
           style={{
-            position: 'fixed',
+            position: 'absolute',
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
             left: 0,
             right: 0,

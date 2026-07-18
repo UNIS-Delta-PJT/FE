@@ -3,7 +3,7 @@ import vehicleImg from '../assets/icon_vehicle.png';
 const W = '#FFFFFF'; // 벡터 아이콘 기본 컬러
 
 // PNG 아이콘을 SVG color prop과 동일하게 색상 적용하기 위한 CSS filter 변환
-function hexToFilter(hex = '#FFFFFF') {
+export function hexToFilter(hex = '#FFFFFF') {
   const h = (hex || '#FFFFFF').toUpperCase().trim();
   if (h === '#FFFFFF' || h === '#FFF' || h === 'WHITE') return 'brightness(0) invert(1)';
   if (h === '#000000' || h === '#000' || h === 'BLACK') return 'brightness(0)';
@@ -13,6 +13,7 @@ function hexToFilter(hex = '#FFFFFF') {
   if (h === '#555555' || h === '#555') return 'brightness(0) saturate(0%) brightness(33%)';
   if (h === '#1A1A1A') return 'brightness(0) invert(10%)';
   if (h === '#999999') return 'brightness(0) invert(60%)';
+  if (h === '#D1D1D1') return 'brightness(0) invert(82%)';
   if (h === '#EAEAEA') return 'brightness(0) invert(92%)';
   if (h === '#F4F4F4') return 'brightness(0) invert(96%)';
   if (h === '#F5C308') return 'brightness(0) saturate(100%) invert(90%) sepia(27%) saturate(4624%) hue-rotate(355deg) brightness(97%) contrast(97%)';

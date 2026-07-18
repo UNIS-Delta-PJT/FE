@@ -9,6 +9,7 @@ import quizCharacterImg from '../assets/quiz_banner.png';
 import groupIcon from '../assets/icon_group.png';
 import storeIcon from '../assets/icon_store.png';
 import coinIcon from '../assets/icon_coin.png';
+import { loadGroups } from './GroupComposeScreen';
 
 // ── 맵 구성 (공용 설정에서 로드) ─────────────────────────────────────
 import {
@@ -16,7 +17,16 @@ import {
   STEP_W, STEP_H, DEPTH, stepPos, MAP_HEIGHT, ROAD_PATH,
 } from './mapConfig';
 
-const GROUPS = ['그룹 1', '그룹 2', '그룹 3', '그룹 4'];
+// 그룹 토글 — 나만의 맵(솔로 플레이, id -1) + 내가 참여한 그룹들
+const SOLO_MAP = -1;
+function loadGroupOptions() {
+  return [
+    { id: SOLO_MAP, label: '나만의 맵' },
+    ...loadGroups()
+      .map((g, i) => (g !== null ? { id: i, label: `그룹 ${i + 1}` } : null))
+      .filter(Boolean),
+  ];
+}
 
 // 무지개 (본인 마커 stroke)
 const RAINBOW = 'linear-gradient(135deg, #FF7682 0%, #FF9F45 25%, #F5C308 45%, #1CD1A1 65%, #90BAFF 82%, #B78CF7 100%)';
@@ -116,7 +126,7 @@ function PlayerMarker({ stroke, isRainbow, nickname, animateKey }) {
   );
 }
 
-export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
+export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStore }) {
   const [mapLevel, setMapLevel] = useState(() => {
     try { return JSON.parse(localStorage.getItem('delta_map_level') || '1'); } catch { return 1; }
   });
@@ -125,8 +135,14 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
   });
   // 화면에 표시되는 마커 위치 — position을 향해 한 칸씩 통통 튀며 따라감
   const [displayPos, setDisplayPos] = useState(position);
+  // 그룹 토글 후보 — 그룹 구성 화면에서 만든 그룹만 노출
+  const groupOptions = loadGroupOptions();
   const [group, setGroup] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('delta_map_group') || '0'); } catch { return 0; }
+    try {
+      const saved = JSON.parse(localStorage.getItem('delta_map_group') ?? String(SOLO_MAP));
+      // 저장된 그룹이 탈퇴 등으로 사라졌으면 나만의 맵으로 복귀
+      return loadGroupOptions().some(o => o.id === saved) ? saved : SOLO_MAP;
+    } catch { return SOLO_MAP; }
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -310,8 +326,9 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
         <button
           onClick={() => setDropdownOpen(o => !o)}
           style={{
-            width: 78,
+            minWidth: 78,
             height: 39,
+            padding: '0 12px',
             borderRadius: 10,
             border: 'none',
             cursor: 'pointer',
@@ -321,24 +338,26 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
             justifyContent: 'center',
             gap: 4,
             boxShadow: '0 4px 14px rgba(28, 209, 161, 0.35)',
+            whiteSpace: 'nowrap',
           }}
         >
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 600, color: '#FFFFFF' }}>
-            {GROUPS[group]}
+            {groupOptions.find(o => o.id === group)?.label ?? '나만의 맵'}
           </span>
           <ChevronDown size={14} color="#FFFFFF" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
         </button>
 
-        {/* 펼침 목록 — 현재 그룹은 상단 버튼에 표시, 후보에는 나머지만 (중복 없음) */}
+        {/* 펼침 목록 — 현재 선택은 상단 버튼에 표시, 후보에는 나머지만 (중복 없음) */}
         {dropdownOpen && (
           <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {GROUPS.map((label, i) => i !== group && (
+            {groupOptions.map(({ id, label }) => id !== group && (
               <button
-                key={label}
-                onClick={() => { setGroup(i); setDropdownOpen(false); }}
+                key={id}
+                onClick={() => { setGroup(id); setDropdownOpen(false); }}
                 style={{
-                  width: 78,
+                  minWidth: 78,
                   height: 39,
+                  padding: '0 12px',
                   borderRadius: 10,
                   border: 'none',
                   cursor: 'pointer',
@@ -347,6 +366,7 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 14, fontWeight: 500, color: '#000000' }}>
@@ -362,7 +382,7 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
       <div style={{ position: 'fixed', top: 82, left: 'calc(50% + 195px - 24px - 64px)', zIndex: 20, display: 'flex', alignItems: 'center', gap: 12, height: 39 }}>
         {[
           { icon: groupIcon, label: '그룹 구성', size: 26, onClick: onGroupCompose },
-          { icon: storeIcon, label: '상점', size: 20 },
+          { icon: storeIcon, label: '상점', size: 20, onClick: onStore },
         ].map(({ icon, label, size, onClick }) => (
           <button
             key={label}
@@ -780,8 +800,8 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice }) {
           );
         })}
 
-        {/* 파티원 마커들 (mock) */}
-        {PARTY_MEMBERS.map(({ nickname, step, color }) => {
+        {/* 파티원 마커들 (mock) — 나만의 맵에서는 혼자 플레이 */}
+        {group !== SOLO_MAP && PARTY_MEMBERS.map(({ nickname, step, color }) => {
           const p = stepPos(step);
           return (
             <div

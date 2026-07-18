@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import coinIconImg from '../assets/icon_coin.png';
+import fireIcon from '../assets/fire_succession.png';
 import { createExpense, CATEGORY_ID_MAP, toDateString } from '../api/expenses';
+import { loadAttendanceDays } from './AttendanceCheckScreen';
 
 const CATEGORIES = ['식비', '교통', '문화', '기타'];
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
@@ -32,20 +34,6 @@ function formatDate(date) {
   if (same(date, yesterday)) return `어제, ${m}월 ${d}일`;
   if (same(date, tomorrow))  return `내일, ${m}월 ${d}일`;
   return `${date.getFullYear()}년 ${m}월 ${d}일`;
-}
-
-/* ─── 아이콘 ─── */
-function FlameIcon({ color = '#735C00' }) {
-  return (
-    <svg width="16" height="20" viewBox="0 0 24 30" fill="none">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 0C12 0 20 8.5 20 16C20 16 17 13.5 15 15C17 17.5 18.5 20 18.5 23C18.5 26.8 15.6 30 12 30C8.4 30 5.5 26.8 5.5 23C5.5 20 7 17.5 9 15C7 13.5 4 16 4 16C4 8.5 12 0 12 0ZM12 19.5C12 19.5 14.5 22 14.5 24C14.5 25.4 13.4 26.5 12 26.5C10.6 26.5 9.5 25.4 9.5 24C9.5 22 12 19.5 12 19.5Z"
-        fill={color}
-      />
-    </svg>
-  );
 }
 
 function CheckIcon() {
@@ -439,9 +427,14 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
               zIndex: 50, whiteSpace: 'nowrap',
             }}
           >
-            <FlameIcon color="#FF7682" />
+            <img
+              src={fireIcon}
+              alt="연속 기록"
+              draggable={false}
+              style={{ width: 16, height: 20, objectFit: 'contain' }}
+            />
             <span style={{ fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 13, color: '#FF7682' }}>
-              {newStreak}일 연속 기록 중!
+              {loadAttendanceDays().length}일 연속 기록 중!
             </span>
           </div>
         )}

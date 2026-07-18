@@ -3,35 +3,45 @@ import coinCheckIcon from '../assets/icon_coin_check.png';
 import calendarIcon from '../assets/icon_mission_calendar.png';
 import receiptIcon from '../assets/icon_mission_receipt.png';
 import diceIcon from '../assets/icon_mission_dice.png';
+import { hasAttendedToday } from './AttendanceCheckScreen';
+import { todayString } from '../api/expenses';
 
-// ── 미션 데이터 (TODO: 백엔드 연동 시 API로 대체) ───────────────────
-const MISSIONS = [
-  {
-    name: '오늘의 출석',
-    icon: calendarIcon,
-    iconBg: 'rgba(88, 204, 2, 0.1)',   // #58CC02 10%
-    iconColor: '#449F01',
-    done: true,
-  },
-  {
-    name: '오늘의 지출 기록하기',
-    icon: receiptIcon,
-    iconBg: 'rgba(28, 176, 246, 0.1)', // #1CB0F6 10%
-    iconColor: '#1CB0F6',
-    done: false,
-    progress: 0.5,
-  },
-  {
-    name: '주사위 1회 굴리기',
-    icon: diceIcon,
-    iconBg: 'rgba(144, 186, 255, 0.1)', // #90BAFF 10%
-    iconColor: '#90BAFF',
-    done: false,
-    progress: 0,
-  },
-];
+export const DICE_ROLLED_KEY = 'delta_dice_rolled_date';
 
-export default function TodayMissionScreen({ onNext }) {
+/** 오늘 주사위를 굴렸는지 */
+export function hasRolledDiceToday() {
+  return localStorage.getItem(DICE_ROLLED_KEY) === todayString();
+}
+
+export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
+  // ── 미션 상태 — 실제 액션 여부로 계산 (TODO: 백엔드 연동 시 API로 대체) ──
+  const missions = [
+    {
+      name: '오늘의 출석',
+      icon: calendarIcon,
+      iconBg: 'rgba(88, 204, 2, 0.1)',   // #58CC02 10%
+      iconColor: '#449F01',
+      done: hasAttendedToday(),
+      progress: 0,
+    },
+    {
+      name: '오늘의 지출 기록하기',
+      icon: receiptIcon,
+      iconBg: 'rgba(28, 176, 246, 0.1)', // #1CB0F6 10%
+      iconColor: '#1CB0F6',
+      done: todayExpenseCount > 0,
+      progress: 0,
+    },
+    {
+      name: '주사위 1회 굴리기',
+      icon: diceIcon,
+      iconBg: 'rgba(144, 186, 255, 0.1)', // #90BAFF 10%
+      iconColor: '#90BAFF',
+      done: hasRolledDiceToday(),
+      progress: 0,
+    },
+  ];
+
   return (
     <div
       className="bg-white overflow-hidden"
@@ -99,7 +109,7 @@ export default function TodayMissionScreen({ onNext }) {
           gap: '12px',
         }}
       >
-        {MISSIONS.map(({ name, icon, iconBg, iconColor, done, progress }) => (
+        {missions.map(({ name, icon, iconBg, iconColor, done, progress }) => (
           <div
             key={name}
             style={{

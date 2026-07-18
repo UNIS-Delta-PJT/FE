@@ -48,7 +48,7 @@ export default function CharacterAvatar({ size = 140, style = {}, color: colorPr
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: color,
+            background: color, // 단색 hex와 그라데이션(상점 아이템) 모두 지원
             mixBlendMode: 'multiply',
             opacity: 0.6,
             WebkitMaskImage: `url(${baseImg})`,
