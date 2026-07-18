@@ -27,6 +27,7 @@ import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 import CharacterMapScreen from './components/CharacterMapScreen';
 import StoreScreen from './components/StoreScreen';
+import CoinShopScreen from './components/CoinShopScreen';
 
 import { tempLogin } from './api/auth';
 import {
@@ -189,7 +190,7 @@ export default function App() {
   const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense', 'store'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
-  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose', 'ad', 'store'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
+  const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose', 'ad', 'store', 'coinShop'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -458,7 +459,13 @@ export default function App() {
           <GroupComposeScreen onBack={() => { setTab('character'); setScreen('home'); }} />
         )}
         {screen === 'store' && (
-          <StoreScreen onBack={() => { setTab('character'); setScreen('home'); }} />
+          <StoreScreen
+            onBack={() => { setTab('character'); setScreen('home'); }}
+            onCoinShop={() => setScreen('coinShop')}
+          />
+        )}
+        {screen === 'coinShop' && (
+          <CoinShopScreen onBack={() => setScreen('store')} />
         )}
       </div>
     </div>

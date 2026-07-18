@@ -71,7 +71,7 @@ function loadCoins() {
   try { return JSON.parse(localStorage.getItem('delta_coins') || '0'); } catch { return 0; }
 }
 
-export default function StoreScreen({ onBack }) {
+export default function StoreScreen({ onBack, onCoinShop }) {
   const [tab, setTab] = useState('shop');
   const [category, setCategory] = useState('menu');
   // 착용 미리보기 — 카테고리당 1개 { category: itemId }
@@ -137,8 +137,12 @@ export default function StoreScreen({ onBack }) {
         상점
       </p>
 
-      {/* 코인 잔액 — 헤딩과 같은 y축, 화면 우측 */}
-      <div style={{ position: 'absolute', top: '20px', right: '20px', height: '22px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+      {/* 코인 잔액 — 헤딩과 같은 y축, 화면 우측 (누르면 코인 상점) */}
+      <button
+        onClick={onCoinShop}
+        className="active:scale-90 transition-transform"
+        style={{ position: 'absolute', top: '20px', right: '20px', height: '22px', display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+      >
         <img
           src={coinIcon}
           alt="코인"
@@ -148,7 +152,7 @@ export default function StoreScreen({ onBack }) {
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 600, color: '#555555' }}>
           {coins}
         </span>
-      </div>
+      </button>
 
       {/* 내 캐릭터 (x60 y120, 272x272) — 온보딩 커스텀 + 착용 미리보기 오버레이 */}
       <div style={{ position: 'absolute', top: '120px', left: '60px', width: '272px', height: '272px' }}>
