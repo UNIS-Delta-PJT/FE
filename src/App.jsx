@@ -8,7 +8,7 @@ import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import LoginScreen from './components/LoginScreen';
 import CharacterSetupScreen from './components/CharacterSetupScreen';
-import AttendanceCheckScreen from './components/AttendanceCheckScreen';
+import AttendanceCheckScreen, { hasAttendedToday } from './components/AttendanceCheckScreen';
 import TodayMissionScreen from './components/TodayMissionScreen';
 import AdScreen from './components/AdScreen';
 import CategoryExpenseScreen from './components/CategoryExpenseScreen';
@@ -152,9 +152,15 @@ export default function App() {
   }
 
   // 스플래시 완료: UUID 있으면 home, 없으면 login
+  // 오늘 첫 접속이면 출석체크 화면을 하루 1회 먼저 노출
   function handleSplashDone() {
     if (localStorage.getItem('delta_uuid')) {
-      setScreen('home');
+      if (!hasAttendedToday()) {
+        setAttendFrom('home');
+        setScreen('attendanceCheck');
+      } else {
+        setScreen('home');
+      }
     } else {
       setScreen('login');
     }

@@ -1,49 +1,118 @@
+import { useEffect, useState } from 'react';
 import tickIcon from '../assets/clipboard_tick.png';
+import { todayString } from '../api/expenses';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+const STORAGE_KEY = 'delta_attendance_days';
 
-export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
-  // 이번 주 날짜 계산 (일요일 시작)
+/** 지금까지 출석한 날짜 목록 (YYYY-MM-DD 배열) */
+export function loadAttendanceDays() {
+  try {
+    const days = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(days) ? days : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 오늘 이미 출석체크를 했는지 — App에서 하루 1회 노출 판단용 */
+export function hasAttendedToday() {
+  return loadAttendanceDays().includes(todayString());
+}
+
+export default function AttendanceCheckScreen({ onNext }) {
   const today = new Date();
-  const todayDay = today.getDay(); // 0=일 ~ 6=토
-  const week = DAY_LABELS.map((label, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - todayDay + i);
+  const todayStr = todayString();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-based
+
+  // 출석 기록 읽기 — 오늘이 처음이면 애니메이션 대상으로 표시
+  const [{ attendedSet, newlyChecked }] = useState(() => {
+    const days = loadAttendanceDays();
+    const newly = !days.includes(todayStr);
     return {
-      label,
-      date: d.getDate(),
-      checked: i <= todayDay, // 오늘까지 연속 출석 성공
+      attendedSet: new Set(newly ? [...days, todayStr] : days),
+      newlyChecked: newly,
     };
   });
+  const totalCount = attendedSet.size;
+
+  // 오늘 출석 저장 (이미 기록돼 있으면 그대로 유지)
+  useEffect(() => {
+    const days = loadAttendanceDays();
+    if (!days.includes(todayStr)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...days, todayStr]));
+    }
+  }, [todayStr]);
+
+  // 오늘 칸이 회색 → 초록으로 넘어가는 타이밍 (처음 출석한 날만 연출)
+  const [flipped, setFlipped] = useState(!newlyChecked);
+  useEffect(() => {
+    if (!newlyChecked) return;
+    const t = setTimeout(() => setFlipped(true), 900);
+    return () => clearTimeout(t);
+  }, [newlyChecked]);
+
+  // 연속 출석 숫자 — 오늘 칸이 초록으로 바뀌는 순간 함께 롤업
+  const displayCount = flipped ? totalCount : totalCount - (newlyChecked ? 1 : 0);
+
+  // 이번 달 달력 데이터
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOffset = new Date(year, month, 1).getDay(); // 0=일
+  const mm = String(month + 1).padStart(2, '0');
+  const cells = [
+    ...Array.from({ length: firstDayOffset }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => {
+      const date = i + 1;
+      const dateStr = `${year}-${mm}-${String(date).padStart(2, '0')}`;
+      const isToday = dateStr === todayStr;
+      return {
+        date,
+        isToday,
+        isFuture: date > today.getDate(),
+        // 오늘 칸은 flip 연출 후에만 초록으로
+        checked: attendedSet.has(dateStr) && (!isToday || flipped),
+      };
+    }),
+  ];
 
   return (
     <div
       className="bg-white overflow-hidden"
       style={{ width: '390px', minHeight: '844px', position: 'relative' }}
     >
-      {/* 연속 출석 일수 */}
-      <p
+      {/* 연속 출석 일수 — 숫자가 넘어가는 롤업 */}
+      <div
         style={{
           position: 'absolute',
-          top: '223px',
+          top: '150px',
           left: 0,
           right: 0,
-          fontFamily: 'Pretendard, sans-serif',
-          fontSize: '100px',
-          fontWeight: 700,
-          color: '#34E8B6',
-          lineHeight: '74px',
+          height: '74px',
+          overflow: 'hidden',
           textAlign: 'center',
         }}
       >
-        {streak}
-      </p>
+        <p
+          key={displayCount}
+          className={flipped && newlyChecked ? 'attend-num-roll' : undefined}
+          style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: '100px',
+            fontWeight: 700,
+            color: '#34E8B6',
+            lineHeight: '74px',
+          }}
+        >
+          {displayCount}
+        </p>
+      </div>
 
       {/* 일 연속 출석 */}
       <p
         style={{
           position: 'absolute',
-          top: '297px',
+          top: '236px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -56,80 +125,104 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
         일 연속 출석
       </p>
 
-      {/* 요일 라벨 + 일별 출석 원 */}
+      {/* 이번 달 달력 */}
       <div
         style={{
           position: 'absolute',
-          top: '361px',
+          top: '308px',
           left: '25.5px',
           width: '339px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 45px)',
-          columnGap: '4px',
-          justifyItems: 'center',
-          rowGap: '10px',
         }}
       >
-        {week.map(({ label }) => (
-          <span
-            key={label}
-            style={{
-              fontFamily: 'Pretendard, sans-serif',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#5D5D5D',
-              height: '16px',
-              lineHeight: '16px',
-            }}
-          >
-            {label}
-          </span>
-        ))}
-        {week.map(({ label, date, checked }) => (
-          <div
-            key={`circle-${label}`}
-            style={{
-              width: '45px',
-              height: '45px',
-              borderRadius: '50%',
-              backgroundColor: checked ? '#34E8B6' : '#F0F0F0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {checked ? (
-              <img
-                src={tickIcon}
-                alt="출석 완료"
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  objectFit: 'contain',
-                  filter: 'brightness(0) invert(1)', // #FFFFFF
-                }}
-              />
+        <p
+          style={{
+            fontFamily: 'Pretendard, sans-serif',
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#1A1A1A',
+            textAlign: 'center',
+            marginBottom: '14px',
+          }}
+        >
+          {year}년 {month + 1}월
+        </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 45px)',
+            columnGap: '4px',
+            rowGap: '8px',
+            justifyItems: 'center',
+          }}
+        >
+          {DAY_LABELS.map((label) => (
+            <span
+              key={label}
+              style={{
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#5D5D5D',
+                height: '16px',
+                lineHeight: '16px',
+              }}
+            >
+              {label}
+            </span>
+          ))}
+          {cells.map((cell, i) =>
+            cell === null ? (
+              <div key={`blank-${i}`} style={{ width: '40px', height: '40px' }} />
             ) : (
-              <span
+              <div
+                key={cell.date}
+                className={`attend-cell-in${cell.isToday && flipped && newlyChecked ? ' attend-pop-in' : ''}`}
                 style={{
-                  fontFamily: 'Pretendard, sans-serif',
-                  fontSize: '18px',
-                  fontWeight: 500,
-                  color: '#575757',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: cell.checked ? '#34E8B6' : '#F0F0F0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animationDelay: cell.isToday && flipped && newlyChecked ? '0ms' : `${i * 18}ms`,
                 }}
               >
-                {date}
-              </span>
-            )}
-          </div>
-        ))}
+                {cell.checked ? (
+                  <img
+                    src={tickIcon}
+                    alt="출석 완료"
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      objectFit: 'contain',
+                      filter: 'brightness(0) invert(1)', // #FFFFFF
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: 'Pretendard, sans-serif',
+                      fontSize: '16px',
+                      fontWeight: 500,
+                      color: cell.isFuture ? '#B9B9B9' : '#575757',
+                    }}
+                  >
+                    {cell.date}
+                  </span>
+                )}
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {/* 응원 멘트 */}
       <p
         style={{
           position: 'absolute',
-          top: '455px',
+          top: '664px',
           left: 0,
           right: 0,
           fontFamily: 'Pretendard, sans-serif',
@@ -139,7 +232,7 @@ export default function AttendanceCheckScreen({ onNext, streak = 31 }) {
           textAlign: 'center',
         }}
       >
-        벌써 한달이나 지났다니!
+        오늘도 델타와 함께 출석 성공!
       </p>
 
       {/* 계속하기 버튼 (floating) */}
