@@ -317,12 +317,12 @@ export default function App() {
           <BudgetGoalScreen
             onNext={(amount) => {
               setBudgetGoal(amount);
-              if (budgetFrom === 'budget') backToBudgetTab();
-              else setScreen('budgetSetup');
+              // 총액과 카테고리 배분 합계가 항상 일치해야 하므로 수정 시에도 배분 단계까지 한 플로우로 진행
+              setScreen('budgetSetup');
             }}
             onBack={() => (budgetFrom === 'budget' ? backToBudgetTab() : setScreen('incomeSetup'))}
             initialBudget={budgetGoal}
-            submitLabel={budgetFrom === 'budget' ? '저장' : '다음'}
+            submitLabel="다음"
           />
         )}
         {screen === 'budgetSetup' && (
@@ -338,7 +338,7 @@ export default function App() {
               }
               setScreen('ad');
             }}
-            onBack={() => (budgetFrom === 'budget' ? backToBudgetTab() : setScreen('budgetGoal'))}
+            onBack={() => setScreen('budgetGoal')}
             initialBudget={budgetGoal}
             submitLabel={budgetFrom === 'budget' ? '저장' : '설정 완료'}
           />
@@ -446,8 +446,12 @@ export default function App() {
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen
             onEditIncome={() => { setIncomeFrom('budget'); setScreen('incomeSetup'); }}
-            onEditGoal={() => { setBudgetFrom('budget'); setScreen('budgetGoal'); }}
-            onEditPlan={() => { setBudgetFrom('budget'); setScreen('budgetSetup'); }}
+            onEditGoal={() => {
+              setBudgetFrom('budget');
+              // 카테고리 팝업에서 합계 동기화된 최신 목표 예산으로 시작
+              try { setBudgetGoal(JSON.parse(localStorage.getItem('delta_budget_goal')) || 0); } catch { /* noop */ }
+              setScreen('budgetGoal');
+            }}
             onSettings={() => { setSettingsFrom('budget'); setScreen('settings'); }}
           />
         )}

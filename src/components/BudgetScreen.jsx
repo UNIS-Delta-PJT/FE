@@ -255,9 +255,10 @@ function BudgetEditPopup({ onClose, onSaved }) {
   function handleSave() {
     // 카테고리 저장
     localStorage.setItem('delta_budget_categories', JSON.stringify(cats));
-    // 총 예산도 카테고리 합계로 동기화
+    // 총 예산·목표 예산 모두 카테고리 합계로 동기화 (합계 일치 규칙)
     const newTotal = cats.reduce((sum, c) => sum + (c.amount || 0), 0);
     localStorage.setItem('delta_budget_total', JSON.stringify(newTotal));
+    localStorage.setItem('delta_budget_goal', JSON.stringify(newTotal));
     onSaved?.();
     onClose();
   }
@@ -370,7 +371,7 @@ function readFromStorage() {
 /* ─────────────────────────────────────────────────────────
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
-export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan, onSettings }) {
+export default function BudgetScreen({ onEditIncome, onEditGoal, onSettings }) {
   const [showIncomePopup, setShowIncomePopup] = useState(false);
   const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
@@ -466,26 +467,9 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditPlan, onS
 
       {/* 항목별 소비 계획 섹션 */}
       <div style={{ marginLeft: 16, marginRight: 16, width: 353 }}>
-        {/* 섹션 헤더 + 수정하기 배지 */}
+        {/* 섹션 헤더 — 수정은 '한 달 목표 예산' 편집 버튼에서 총액→배분 한 플로우로 진행 (합계 일치 보장) */}
         <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: '#000' }}>항목별 소비 계획</span>
-          {/* 수정 → 카테고리별 예산 설정 화면 (버튼: 저장) */}
-          <button
-            onClick={onEditPlan}
-            className="active:opacity-60 transition-opacity"
-            style={{
-              padding: '5px 12px',
-              borderRadius: 100,
-              backgroundColor: 'rgba(28, 209, 161, 0.15)', // 연초록
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#1CD1A1',
-            }}
-          >
-            수정하기
-          </button>
         </div>
 
         {/* 카테고리별 예산 아이템 — delta_budget_categories 에서 동적으로 표시 */}

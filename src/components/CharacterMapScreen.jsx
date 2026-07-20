@@ -9,6 +9,9 @@ import quizCharacterImg from '../assets/quiz_banner.png';
 import groupIcon from '../assets/icon_group.png';
 import storeIcon from '../assets/icon_store.png';
 import coinIcon from '../assets/icon_coin.png';
+import foundTreasureImg from '../assets/found_treasure.png';
+import trapImg from '../assets/trap.png';
+import ribbonsBannerImg from '../assets/store_ribbons.png';
 import { loadGroups } from './GroupComposeScreen';
 
 // ── 맵 구성 (공용 설정에서 로드) ─────────────────────────────────────
@@ -30,6 +33,9 @@ function loadGroupOptions() {
 
 // 무지개 (본인 마커 stroke)
 const RAINBOW = 'linear-gradient(135deg, #FF7682 0%, #FF9F45 25%, #F5C308 45%, #1CD1A1 65%, #90BAFF 82%, #B78CF7 100%)';
+
+// 하단 플로팅 배너 로테이션 — 화면 진입 시마다 번갈아 표시 (모듈 스코프라 세션 내 유지)
+let bannerRotation = 0;
 
 // 금융 퀴즈 문제 은행 — TODO: 백엔드 연동 시 API로 대체
 const QUIZ_BANK = [
@@ -146,6 +152,10 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
   });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  // 보물상자/함정 도착 팝업 — { type: 'treasure'|'trap', value: 코인수|뒤로 갈 칸수, next: 확인 후 이동할 칸 }
+  const [mapEvent, setMapEvent] = useState(null);
+  // 하단 배너 — 진입할 때마다 퀴즈 ↔ 상점 추천 번갈아 표시
+  const [banner] = useState(() => (bannerRotation++ % 2 === 0 ? 'quiz' : 'store'));
   // 금융 퀴즈 — { step, quiz } | null
   const [quiz, setQuiz] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -188,11 +198,18 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
     setTimeout(() => setToast(null), 1600);
   }
 
-  function giveCoin() {
+  function giveCoin(amount = 1) {
     try {
       const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
-      localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
+      localStorage.setItem('delta_coins', JSON.stringify(coins + amount));
     } catch { /* noop */ }
+  }
+
+  // 보물상자/함정 팝업 확인 → 예약된 위치로 이동
+  function handleMapEventConfirm() {
+    const next = mapEvent?.next;
+    setMapEvent(null);
+    if (next != null) setPosition(next);
   }
 
   // ── 이동 규칙 ─────────────────────────────────────────────────────
@@ -200,7 +217,8 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
   // - 뒤로: 빨간 칸 도착 시에만 자동 후퇴
   // - 노랑: 도착 시 코인 지급 후 자동으로 다음 칸 통과
   // 도착 효과 중복 실행 방지 — null로 시작해 마운트 시에도 1회 처리 (노랑/빨강에 갇힌 상태 자가 복구)
-  const arrivedRef = useRef(null);
+  // 마운트 시 현재 칸은 이미 처리된 도착으로 간주 — 보물 칸에 머문 채 재진입해도 코인 재지급 방지
+  const arrivedRef = useRef(position);
 
   // 주사위 결과 소비 — 소비 입력 → 광고 → 주사위에서 예약된 이동을 실행
   useEffect(() => {
@@ -235,20 +253,20 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
       return () => clearTimeout(t);
     }
 
-    // 빨강: 자동 후퇴 (라벨 표시 없이 도착 시 발동)
+    // 빨강: 함정 팝업 → 확인 시 후퇴
     const red = RED_EFFECTS[n];
     if (red) {
-      showToast(red.label + '!');
-      const t = setTimeout(() => setPosition(Math.max(1, red.to(n))), 900);
-      return () => clearTimeout(t);
+      const to = Math.max(1, red.to(n));
+      setMapEvent({ type: 'trap', value: n - to, next: to });
+      return;
     }
 
-    // 노랑: 보물상자 → 코인 지급 후 자동으로 다음 칸 이동
+    // 노랑: 보물상자 팝업 → 코인 2~5개 랜덤 지급, 확인 후 해당 칸에 머무름
     if (YELLOW_STEPS.has(n)) {
-      giveCoin();
-      showToast('보물상자 발견! +1 Coin');
-      const t = setTimeout(() => setPosition(n + 1), 1200);
-      return () => clearTimeout(t);
+      const reward = 2 + Math.floor(Math.random() * 4); // 2~5
+      giveCoin(reward);
+      setMapEvent({ type: 'treasure', value: reward, next: null });
+      return;
     }
 
     // 초록: 대기 — 해당 칸을 클릭하면 퀴즈 시작
@@ -432,10 +450,10 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.10), inset 0 2px 6px rgba(255, 255, 255, 0.7)',
           }}
         />
-        {/* 캐릭터 이미지 (섹션 기준 x11 y0, 96x90 — 박스 위로 살짝 돌출) */}
+        {/* 캐릭터/아이템 이미지 (섹션 기준 x11 y0, 96x90 — 박스 위로 살짝 돌출) */}
         <img
-          src={quizCharacterImg}
-          alt="퀴즈 캐릭터"
+          src={banner === 'quiz' ? quizCharacterImg : ribbonsBannerImg}
+          alt={banner === 'quiz' ? '퀴즈 캐릭터' : '추천 아이템'}
           draggable={false}
           style={{ position: 'absolute', left: 11, top: 0, width: 96, height: 90, objectFit: 'contain', pointerEvents: 'none' }}
         />
@@ -453,10 +471,11 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
             whiteSpace: 'pre-line',
           }}
         >
-          {'금융 퀴즈 풀고\n주사위 한 번 더!'}
+          {banner === 'quiz' ? '금융 퀴즈 풀고\n주사위 한 번 더!' : '오늘의 귀여운\n추천 아이템 등장!'}
         </span>
-        {/* 퀴즈 풀기 버튼 */}
+        {/* 액션 버튼 — 퀴즈 풀기 / 상점 가기 */}
         <button
+          onClick={banner === 'store' ? onStore : undefined}
           className="active:scale-95 transition-transform"
           style={{
             position: 'absolute',
@@ -477,7 +496,7 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
           }}
         >
           <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap' }}>
-            퀴즈 풀기
+            {banner === 'quiz' ? '퀴즈 풀기' : '상점 가기'}
           </span>
         </button>
       </div>
@@ -711,6 +730,89 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
               setQuizAd(null);
             }}
           />
+        </div>
+      )}
+
+      {/* 보물상자/함정 도착 팝업 */}
+      {mapEvent && (
+        <div
+          className="map-event-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 70,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 20px',
+          }}
+        >
+          {/* 타이틀 */}
+          <p
+            className="map-event-pop"
+            style={{
+              fontFamily: 'Pretendard, sans-serif',
+              fontSize: '36px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              textAlign: 'center',
+              animationDelay: '0.05s',
+            }}
+          >
+            {mapEvent.type === 'treasure' ? '앗싸! 보물상자 발견' : '앗, 함정에 빠졌어요!'}
+          </p>
+
+          {/* 이미지 (281x281) */}
+          <img
+            src={mapEvent.type === 'treasure' ? foundTreasureImg : trapImg}
+            alt={mapEvent.type === 'treasure' ? '보물상자' : '함정'}
+            draggable={false}
+            className="map-event-pop"
+            style={{ width: '281px', height: '281px', objectFit: 'contain', animationDelay: '0.18s' }}
+          />
+
+          {/* 설명 */}
+          <p
+            className="map-event-fade-up"
+            style={{
+              fontFamily: 'Pretendard, sans-serif',
+              fontSize: '18px',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.8)',
+              textAlign: 'center',
+              animationDelay: '0.4s',
+            }}
+          >
+            {mapEvent.type === 'treasure'
+              ? `${mapEvent.value}코인을 획득했어요!`
+              : `아쉽지만 ${mapEvent.value}칸 뒤로 돌아가야 해요`}
+          </p>
+
+          {/* 확인 버튼 (148x56) */}
+          <button
+            onClick={handleMapEventConfirm}
+            className="map-event-fade-up"
+            style={{
+              marginTop: '28px',
+              width: '148px',
+              height: '56px',
+              padding: '20px 10px',
+              borderRadius: '100px',
+              border: 'none',
+              cursor: 'pointer',
+              backgroundColor: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animationDelay: '0.5s',
+            }}
+          >
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '16px', fontWeight: 600, color: '#1CD1A1' }}>
+              확인
+            </span>
+          </button>
         </div>
       )}
 
