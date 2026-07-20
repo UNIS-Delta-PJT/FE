@@ -29,7 +29,7 @@ import CharacterMapScreen from './components/CharacterMapScreen';
 import StoreScreen from './components/StoreScreen';
 import CoinShopScreen from './components/CoinShopScreen';
 
-import { tempLogin } from './api/auth';
+import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
 import {
   getDailyExpenses,
   transformExpense,
@@ -157,10 +157,32 @@ export default function App() {
     setScreen('characterSetup'); // 첫 로그인: 캐릭터 꾸미기부터
   }
 
-  // 스플래시 완료: UUID 있으면 home, 없으면 login
+  // ─── 카카오 로그인 리다이렉트 처리 (?code=인가코드) ────────────────
+  // 진행 중이면 스플래시 완료 시 화면 전환을 이 플로우가 담당
+  const kakaoLoginRef = useRef(new URLSearchParams(window.location.search).has('code'));
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (!code) return;
+    (async () => {
+      try {
+        const data = await completeKakaoLogin(code);
+        // 신규 유저는 캐릭터 꾸미기부터, 기존 유저는 홈으로
+        setScreen(data?.isNewUser ? 'characterSetup' : 'home');
+      } catch (err) {
+        console.warn('[kakaoLogin] 실패 — 로그인 화면으로 이동:', err.message);
+        setScreen('login');
+      } finally {
+        kakaoLoginRef.current = false;
+        window.history.replaceState({}, '', '/'); // 인가코드 URL 정리
+      }
+    })();
+  }, []);
+
+  // 스플래시 완료: 로그인돼 있으면 home, 없으면 login
   // 오늘 첫 접속이면 출석체크 화면을 하루 1회 먼저 노출
   function handleSplashDone() {
-    if (localStorage.getItem('delta_uuid')) {
+    if (kakaoLoginRef.current) return; // 카카오 로그인 처리 중 — 완료 시 해당 플로우가 화면 전환
+    if (localStorage.getItem('delta_uuid') || localStorage.getItem('delta_access_token')) {
       if (!hasAttendedToday()) {
         setAttendFrom('home');
         setScreen('attendanceCheck');
@@ -383,6 +405,7 @@ export default function App() {
               setSettingsFrom('budget');
             }}
             onLogout={() => {
+              apiLogout().catch(() => {}); // 서버 Refresh Token 폐기 + delta_access_token 삭제
               localStorage.removeItem('delta_uuid'); // 세션 종료 (예산/수입 데이터는 유지)
               setScreen('login');
             }}

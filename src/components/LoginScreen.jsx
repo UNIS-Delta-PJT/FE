@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isKakaoConfigured, startKakaoLogin } from '../api/auth';
 import appleIcon from '../assets/icon-apple.png';
 import kakaoIcon from '../assets/icon-kakao.png';
 import googleIcon from '../assets/icon-google.png';
@@ -195,16 +196,16 @@ export default function LoginScreen({ onLogin, onTempLogin }) {
           <div style={{ flex: 1, height: '1px', backgroundColor: '#EAEAEA' }} />
         </div>
 
-        {/* 소셜 로그인 버튼 */}
+        {/* 소셜 로그인 버튼 — 카카오는 키 설정 시 인가 페이지로 이동, 나머지는 연동 예정 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
           {[
             { icon: appleIcon, label: 'Apple로 계속하기' },
-            { icon: kakaoIcon, label: '카카오톡으로 계속하기' },
+            { icon: kakaoIcon, label: '카카오톡으로 계속하기', onClick: () => (isKakaoConfigured() ? startKakaoLogin() : showToast()) },
             { icon: googleIcon, label: 'Google로 계속하기' },
-          ].map(({ icon, label }) => (
+          ].map(({ icon, label, onClick }) => (
             <button
               key={label}
-              onClick={showToast}
+              onClick={onClick || showToast}
               style={{
                 width: '353px',
                 height: '60px',
