@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import CharacterAvatar from './CharacterAvatar';
 import { hexToFilter } from './CategoryIcons';
+import { updateCharacter } from '../api/user';
 import coinIcon from '../assets/icon_coin.png';
 import storeMenuIcon from '../assets/store_menu.png';
 import storePaletteIcon from '../assets/store_palette.png';
@@ -87,11 +88,14 @@ export default function StoreScreen({ onBack, onCoinShop }) {
   function equipColor(c) {
     setColor(c);
     localStorage.setItem('delta_character_color', c);
+    // 서버 캐릭터 정보 동기화 — 실패 시 로컬만 유지
+    updateCharacter({ color: c }).catch(() => {});
   }
 
   function equipEyes(id) {
     setEyes(id);
     localStorage.setItem('delta_character_eyes', id);
+    updateCharacter({ eyes: id }).catch(() => {});
   }
 
   // 아이템 착용 토글 — 같은 카테고리는 1개만 (다시 누르면 벗기)

@@ -31,10 +31,9 @@ import CoinShopScreen from './components/CoinShopScreen';
 
 import { tempLogin } from './api/auth';
 import {
-  getExpenses,
+  getDailyExpenses,
   transformExpense,
   todayString,
-  currentYearMonth,
 } from './api/expenses';
 // TODO: 백엔드 연동 후 아래 import 및 사용 제거
 import { MOCK_YEARLY_EXPENSES } from './data/mockData';
@@ -109,29 +108,34 @@ export default function App() {
   }, [budgetTotal]);
 
   // ─── API: 소비 내역 로드 (saved_at 보존 + 로컬 전용 항목 유지) ──────
+  // 명세에는 일별 조회만 있어 오늘 내역만 서버와 동기화, 과거 내역은 로컬 유지
   const loadExpenses = useCallback(async () => {
-    if (!localStorage.getItem('delta_uuid')) return;
+    if (!localStorage.getItem('delta_uuid') && !localStorage.getItem('delta_access_token')) return;
     try {
-      const raw = await getExpenses(currentYearMonth());
+      const today = todayString();
+      const data = await getDailyExpenses(today);
       setExpenses(prev => {
         // 기존 항목의 saved_at을 expense_id 기준으로 보존
         const savedAtMap = {};
         prev.forEach(e => { if (e.saved_at) savedAtMap[e.expense_id] = e.saved_at; });
 
-        const apiItems = raw.map(e => {
+        const apiItems = (data?.expenses ?? []).map(e => {
           const item = transformExpense(e);
           if (savedAtMap[item.expense_id]) item.saved_at = savedAtMap[item.expense_id];
           return item;
         });
 
-        // API에 없는 로컬 전용 항목(스캔 결과 등) 보존
+        // 오늘이 아닌 항목과, API에 없는 오늘의 로컬 전용 항목(스캔 결과 등)은 보존
         const apiIds = new Set(apiItems.map(i => i.expense_id));
-        const localOnly = prev.filter(e => e.saved_at && !apiIds.has(e.expense_id));
+        const keep = prev.filter(e =>
+          e.expense_date !== today || (e.saved_at && !apiIds.has(e.expense_id))
+        );
 
-        return [...apiItems, ...localOnly];
+        return [...keep, ...apiItems];
       });
     } catch (err) {
-      console.error('[loadExpenses]', err);
+      // 서버 라우트 미배포(404) 등 — 로컬 데이터로 계속 동작
+      console.warn('[loadExpenses] API 실패 — 로컬 데이터 유지:', err.message);
     }
   }, []);
 

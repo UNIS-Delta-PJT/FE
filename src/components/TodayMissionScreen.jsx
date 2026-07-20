@@ -3,8 +3,10 @@ import coinCheckIcon from '../assets/icon_coin_check.png';
 import calendarIcon from '../assets/icon_mission_calendar.png';
 import receiptIcon from '../assets/icon_mission_receipt.png';
 import diceIcon from '../assets/icon_mission_dice.png';
+import { useEffect, useState } from 'react';
 import { hasAttendedToday } from './AttendanceCheckScreen';
 import { todayString } from '../api/expenses';
+import { getDailyMissions } from '../api/missions';
 
 export const DICE_ROLLED_KEY = 'delta_dice_rolled_date';
 
@@ -14,14 +16,27 @@ export function hasRolledDiceToday() {
 }
 
 export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
-  // ── 미션 상태 — 실제 액션 여부로 계산 (TODO: 백엔드 연동 시 API로 대체) ──
+  // 서버 미션 상태 (GET /api/v1/missions/daily) — 성공 시 로컬 판정보다 우선
+  const [serverDone, setServerDone] = useState(null);
+  useEffect(() => {
+    getDailyMissions()
+      .then(list => {
+        if (!Array.isArray(list) || !list.length) return;
+        const map = {};
+        list.forEach(({ missionType, isDone }) => { map[missionType] = isDone; });
+        setServerDone(map);
+      })
+      .catch(() => {}); // 서버 미가동 시 로컬 판정 유지
+  }, []);
+
+  // ── 미션 상태 — 서버 응답 우선, 없으면 로컬 액션 여부로 계산 ──
   const missions = [
     {
       name: '오늘의 출석',
       icon: calendarIcon,
       iconBg: 'rgba(88, 204, 2, 0.1)',   // #58CC02 10%
       iconColor: '#449F01',
-      done: hasAttendedToday(),
+      done: serverDone?.ATTENDANCE ?? hasAttendedToday(),
       progress: 0,
     },
     {
@@ -29,7 +44,7 @@ export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
       icon: receiptIcon,
       iconBg: 'rgba(28, 176, 246, 0.1)', // #1CB0F6 10%
       iconColor: '#1CB0F6',
-      done: todayExpenseCount > 0,
+      done: serverDone?.EXPENSE_RECORD ?? (todayExpenseCount > 0),
       progress: 0,
     },
     {
@@ -37,7 +52,7 @@ export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
       icon: diceIcon,
       iconBg: 'rgba(144, 186, 255, 0.1)', // #90BAFF 10%
       iconColor: '#90BAFF',
-      done: hasRolledDiceToday(),
+      done: serverDone?.DICE ?? hasRolledDiceToday(),
       progress: 0,
     },
   ];

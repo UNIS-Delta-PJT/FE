@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { updateNotifications } from '../api/user';
 
 /**
  * 야간 방해금지 설정 여부 확인 유틸
@@ -65,6 +66,8 @@ export default function SettingsScreen({ onBack, onLogout }) {
     setDnd(prev => {
       const next = !prev;
       localStorage.setItem('delta_dnd_night', JSON.stringify(next));
+      // 서버 알림 설정 동기화 (PATCH /api/v1/users/notifications) — 실패 시 로컬만 유지
+      updateNotifications({ isPushEnabled: true, isNightPushDisabled: next }).catch(() => {});
       return next;
     });
   }

@@ -3,7 +3,7 @@ import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import coinIconImg from '../assets/icon_coin.png';
 import fireIcon from '../assets/fire_succession.png';
-import { createExpense, CATEGORY_ID_MAP, toDateString } from '../api/expenses';
+import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString } from '../api/expenses';
 import { loadAttendanceDays } from './AttendanceCheckScreen';
 
 const CATEGORIES = ['식비', '교통', '문화', '기타'];
@@ -363,28 +363,22 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
 
     setSaving(true);
     try {
-      // API 저장 — 실패해도 로컬 저장으로 진행 (TODO: 백엔드 복구 시 재동기화 로직)
-      const apiResults = [];
-      for (const e of valid) {
-        const categoryId = CATEGORY_ID_MAP[e.category] ?? 4;
-        const expenseDate = toDateString(e.date);
-        try {
-          const result = await createExpense({
-            categoryId,
-            amount: parseInt(e.amount),
-            expenseDate,
-            memo: e.memo || '',
-          });
-          apiResults.push(result);
-        } catch (err) {
-          console.warn('[handleSave] API 실패 — 로컬 저장으로 진행:', err.message);
-          apiResults.push(null); // 로컬 ID로 대체
-        }
+      // API 일괄 저장 (명세: POST /api/v1/finances/expenses) — 실패해도 로컬 저장으로 진행
+      try {
+        await createExpenses(valid.map(e => ({
+          amount: parseInt(e.amount),
+          placeName: e.place?.trim() || e.memo || e.category,
+          categoryId: CATEGORY_ID_MAP[e.category] ?? 3,
+          expenseDate: toDateTimeString(e.date),
+          memo: e.memo || null,
+        })));
+      } catch (err) {
+        console.warn('[handleSave] API 실패 — 로컬 저장으로 진행:', err.message);
       }
 
-      // 옵티미스틱 업데이트용 로컬 형식 생성 (실제 ID 또는 로컬 ID + 저장 시각 포함)
-      const parsed = valid.map((e, i) => ({
-        expense_id: apiResults[i]?.expenseId ?? (Date.now() + Math.random()),
+      // 옵티미스틱 업데이트용 로컬 형식 생성 (서버 ID는 이후 loadExpenses 동기화로 반영)
+      const parsed = valid.map((e) => ({
+        expense_id: Date.now() + Math.random(),
         place: e.place?.trim() || e.memo || e.category,
         name: e.category,
         amount: parseInt(e.amount),

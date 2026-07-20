@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { updateCharacter } from '../api/user';
 import characterImg from '../assets/character_base_noeyes.png'; // 눈 없는 민 얼굴 베이스
 import eyesRound from '../assets/eyes_01_round.png';
 import eyesWink from '../assets/eyes_02_wink.png';
@@ -34,6 +35,8 @@ export default function CharacterSetupScreen({ onNext }) {
     localStorage.setItem('delta_nickname', nickname.trim());
     localStorage.setItem('delta_character_color', color);
     localStorage.setItem('delta_character_eyes', eyes);
+    // 서버에도 캐릭터 저장 (PATCH /api/v1/users/character) — 실패 시 로컬만 유지
+    updateCharacter({ nickname: nickname.trim(), color, eyes }).catch(() => {});
     onNext();
   }
 

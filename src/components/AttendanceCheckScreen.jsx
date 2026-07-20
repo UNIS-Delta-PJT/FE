@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import tickIcon from '../assets/clipboard_tick.png';
 import { todayString } from '../api/expenses';
+import { checkAttendance } from '../api/missions';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const STORAGE_KEY = 'delta_attendance_days';
@@ -43,6 +44,8 @@ export default function AttendanceCheckScreen({ onNext }) {
     if (!days.includes(todayStr)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...days, todayStr]));
     }
+    // 서버에도 출석 기록 — 실패나 409(이미 출석)는 무시하고 로컬 기준으로 표시
+    checkAttendance().catch(() => {});
   }, [todayStr]);
 
   // 오늘 칸이 회색 → 초록으로 넘어가는 타이밍 (처음 출석한 날만 연출)
