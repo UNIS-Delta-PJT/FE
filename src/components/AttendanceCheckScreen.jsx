@@ -43,6 +43,11 @@ export default function AttendanceCheckScreen({ onNext }) {
     const days = loadAttendanceDays();
     if (!days.includes(todayStr)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...days, todayStr]));
+      // 출석 리워드 +1코인 — 하루 첫 출석에만 적립 (TODO: 미션 리워드 API 배포 시 서버 지급으로 교체)
+      try {
+        const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
+        localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
+      } catch { /* noop */ }
     }
     // 서버에도 출석 기록 — 실패나 409(이미 출석)는 무시하고 로컬 기준으로 표시
     checkAttendance().catch(() => {});

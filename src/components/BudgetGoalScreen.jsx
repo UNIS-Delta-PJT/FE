@@ -30,7 +30,18 @@ function EditIcon({ size = 20, color = '#1CD1A1' }) {
   );
 }
 
-export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', submitLabel = '다음' }) {
+export default function BudgetGoalScreen({
+  onNext,
+  onBack,
+  initialBudget = '',
+  submitLabel = '다음',
+  // 화면 문구 커스터마이즈 — 저축 목표 금액 화면 등에서 같은 포맷 재사용
+  title = '한 달 소비 계획',
+  subtitle = '멋진 계획은 부자가 되는 첫 걸음이에요!',
+  label = '목표 예산',
+  warningMessage = '목표 예산이 입력되지 않았어요!',
+  belowInput = null,
+}) {
   const [amount, setAmount] = useState(initialBudget ? String(initialBudget) : '');
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
@@ -62,7 +73,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', s
       style={{ minHeight: '100%', paddingBottom: '100px', paddingLeft: '20px', paddingRight: '20px' }}
     >
       {/* 토스트 */}
-      <WarningToast visible={toast} fading={toastFading} message="목표 예산이 입력되지 않았어요!" bottom={100} />
+      <WarningToast visible={toast} fading={toastFading} message={warningMessage} bottom={100} />
 
       {/* 헤더 spacer */}
       <div style={{ height: '39px', flexShrink: 0 }} />
@@ -86,7 +97,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', s
           <ArrowLeft size={20} className="text-gray-800" />
         </button>
         <h1 className="font-black text-gray-900" style={{ fontSize: '18px' }}>
-          한 달 소비 계획
+          {title}
         </h1>
       </div>
 
@@ -101,10 +112,10 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', s
           paddingLeft: '4px',
         }}
       >
-        멋진 계획은 부자가 되는 첫 걸음이에요!
+        {subtitle}
       </p>
 
-      {/* 목표 예산 라벨 */}
+      {/* 목표 금액 라벨 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginBottom: '10px', paddingLeft: '4px' }}>
         <span
           style={{
@@ -114,7 +125,7 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', s
             color: '#1A1A1A',
           }}
         >
-          목표 예산
+          {label}
         </span>
         <span
           style={{
@@ -176,6 +187,9 @@ export default function BudgetGoalScreen({ onNext, onBack, initialBudget = '', s
         )}
         <EditIcon size={18} color="#1CD1A1" />
       </div>
+
+      {/* input 아래 부가 정보 (예: 나의 한 달 총수입) */}
+      {belowInput}
 
       {/* 다음 버튼 */}
       <button

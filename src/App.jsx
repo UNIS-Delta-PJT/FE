@@ -30,6 +30,7 @@ import StoreScreen from './components/StoreScreen';
 import CoinShopScreen from './components/CoinShopScreen';
 
 import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
+import { updateSavings } from './api/finance';
 import {
   getDailyExpenses,
   transformExpense,
@@ -51,6 +52,8 @@ export default function App() {
   // 설정/출석체크 진입 출처 — 홈 헤더 아이콘에서 진입 시 홈으로 복귀
   const [settingsFrom, setSettingsFrom] = useState('budget');
   const [attendFrom, setAttendFrom] = useState('onboarding');
+  // 오늘의 미션 진입 출처 — 홈 헤더 아이콘에서 진입 시 홈으로 복귀
+  const [missionFrom, setMissionFrom] = useState('onboarding');
 
   // 예산 탭으로 복귀
   function backToBudgetTab() {
@@ -213,7 +216,7 @@ export default function App() {
     }, 1700);
   }
 
-  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'aiGuide', 'result', 'directInput', 'categoryExpense', 'store'].includes(screen);
+  const scrollable = ['home', 'login', 'characterSetup', 'attendanceCheck', 'todayMission', 'incomeSetup', 'budgetGoal', 'budgetSetup', 'savingsGoal', 'aiGuide', 'result', 'directInput', 'categoryExpense', 'store'].includes(screen);
   // 하단 네비게이션이 유지되는 화면 (home + 리포트 상세)
   const showNav = screen === 'home' || screen === 'categoryExpense';
   const fullscreen = ['aiAnalyzing', 'categoryExpense', 'settings', 'attendanceCheck', 'todayMission', 'groupCompose', 'ad', 'store', 'coinShop'].includes(screen); // 패딩 없이 꽉 채우는 화면 (상단이 화면 끝에 밀착)
@@ -309,7 +312,10 @@ export default function App() {
         )}
         {screen === 'todayMission' && (
           <TodayMissionScreen
-            onNext={() => setScreen('incomeSetup')}
+            onNext={() => {
+              if (missionFrom === 'home') { setMissionFrom('onboarding'); setScreen('home'); }
+              else setScreen('incomeSetup');
+            }}
             todayExpenseCount={todayExpenses.length}
           />
         )}
@@ -347,6 +353,45 @@ export default function App() {
             submitLabel="다음"
           />
         )}
+        {screen === 'savingsGoal' && (() => {
+          let totalIncome = 0;
+          let savedGoal = 0;
+          try {
+            totalIncome = JSON.parse(localStorage.getItem('delta_incomes') || '[]')
+              .reduce((sum, i) => sum + (parseInt(i.amount) || 0), 0);
+            savedGoal = JSON.parse(localStorage.getItem('delta_savings_goal') || '0') || 0;
+          } catch { /* noop */ }
+          return (
+            <BudgetGoalScreen
+              title="저축 목표 금액"
+              subtitle="수입의 일부를 먼저 떼어두는 똑똑한 저축 습관을 만들어봐요"
+              label="목표 저축액"
+              warningMessage="목표 저축액이 입력되지 않았어요!"
+              submitLabel="저장"
+              initialBudget={savedGoal}
+              belowInput={
+                <p
+                  style={{
+                    fontFamily: 'Pretendard, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#999999',
+                    marginTop: '12px',
+                    paddingLeft: '4px',
+                  }}
+                >
+                  나의 한 달 총수입: {totalIncome.toLocaleString('ko-KR')}원
+                </p>
+              }
+              onNext={(amount) => {
+                localStorage.setItem('delta_savings_goal', JSON.stringify(amount));
+                updateSavings(amount).catch(() => {}); // 서버 동기화 — 실패 시 로컬만 유지
+                backToBudgetTab();
+              }}
+              onBack={backToBudgetTab}
+            />
+          );
+        })()}
         {screen === 'budgetSetup' && (
           <BudgetSetupScreen
             onComplete={(total) => {
@@ -458,7 +503,7 @@ export default function App() {
             budgetTotal={budgetTotal}
             spent={spent}
             onDirectInput={() => setScreen('directInput')}
-            onSettings={() => { setSettingsFrom('home'); setScreen('settings'); }}
+            onMission={() => { setMissionFrom('home'); setScreen('todayMission'); }}
             onAttendance={() => { setAttendFrom('home'); setScreen('attendanceCheck'); }}
             onMapClick={() => setTab('character')}
           />
@@ -475,6 +520,7 @@ export default function App() {
               try { setBudgetGoal(JSON.parse(localStorage.getItem('delta_budget_goal')) || 0); } catch { /* noop */ }
               setScreen('budgetGoal');
             }}
+            onEditSavings={() => setScreen('savingsGoal')}
             onSettings={() => { setSettingsFrom('budget'); setScreen('settings'); }}
           />
         )}

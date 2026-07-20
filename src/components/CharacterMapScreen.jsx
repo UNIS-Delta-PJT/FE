@@ -289,6 +289,14 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
     setShowExplain(false);
   }
 
+  // 배너 '퀴즈 풀기' — 칸과 무관하게 문제 은행에서 랜덤 1문제 (step: null → 링에 ★ 표시)
+  function openBannerQuiz() {
+    setSelectedOption(null);
+    setAnswered(null);
+    setShowExplain(false);
+    setQuiz({ step: null, quiz: QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)] });
+  }
+
   function handleAnswer(i) {
     if (answered) return; // 이미 답변함
     setSelectedOption(i);
@@ -475,7 +483,7 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
         </span>
         {/* 액션 버튼 — 퀴즈 풀기 / 상점 가기 */}
         <button
-          onClick={banner === 'store' ? onStore : undefined}
+          onClick={banner === 'store' ? onStore : openBannerQuiz}
           className="active:scale-95 transition-transform"
           style={{
             position: 'absolute',
@@ -594,7 +602,7 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
               </svg>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 28, fontWeight: 600, color: '#1CD1A1' }}>
-                  {quiz.step}
+                  {quiz.step ?? '★'}
                 </span>
               </div>
             </div>

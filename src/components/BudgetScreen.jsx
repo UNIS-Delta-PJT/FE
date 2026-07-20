@@ -362,28 +362,31 @@ function readFromStorage() {
     const budgetTotal = JSON.parse(localStorage.getItem('delta_budget_total') || '0') || 0;
     const budgetGoal = JSON.parse(localStorage.getItem('delta_budget_goal') || '0') || 0;
     const budgetCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
-    return { totalIncome, budgetTotal, budgetGoal, budgetCats };
+    const savingsGoal = JSON.parse(localStorage.getItem('delta_savings_goal') || '0') || 0;
+    return { totalIncome, budgetTotal, budgetGoal, budgetCats, savingsGoal };
   } catch {
-    return { totalIncome: 0, budgetTotal: 0, budgetGoal: 0, budgetCats: [] };
+    return { totalIncome: 0, budgetTotal: 0, budgetGoal: 0, budgetCats: [], savingsGoal: 0 };
   }
 }
 
 /* ─────────────────────────────────────────────────────────
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
-export default function BudgetScreen({ onEditIncome, onEditGoal, onSettings }) {
+export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, onSettings }) {
   const [showIncomePopup, setShowIncomePopup] = useState(false);
   const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
-  const [{ totalIncome, budgetTotal, budgetGoal, budgetCats }, setData] = useState(readFromStorage);
+  const [{ totalIncome, budgetTotal, budgetGoal, budgetCats, savingsGoal }, setData] = useState(readFromStorage);
 
   function refresh() {
     setData(readFromStorage());
   }
 
-  // 저축 목표 금액 = 수입 총합 − 목표 예산 (한 달 소비 계획 입력값, 없으면 확정 예산 총액으로 fallback)
+  // 현재 저축액 = 수입 총합 − 목표 예산 (한 달 소비 계획 입력값, 없으면 확정 예산 총액으로 fallback)
   const savings = Math.max(0, totalIncome - (budgetGoal || budgetTotal));
-  const savingsPct = totalIncome > 0 ? Math.min(100, (savings / totalIncome) * 100) : 0;
+  // 표시할 저축 목표: 직접 설정한 값 우선, 없으면 계산값
+  const displaySavingsGoal = savingsGoal || savings;
+  const savingsPct = totalIncome > 0 ? Math.min(100, (displaySavingsGoal / totalIncome) * 100) : 0;
 
   return (
     <div className="relative flex flex-col bg-white" style={{ minHeight: '100%', paddingBottom: 20 }}>
@@ -417,8 +420,14 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onSettings }) {
 
         {/* 저축 목표 금액 */}
         <div className="flex flex-col gap-3">
-          <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>저축 목표 금액</span>
-          <AmountBox amount={savings} />
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>저축 목표 금액</span>
+            {/* 수정 → 저축 목표 금액 화면 (한 달 소비 계획과 같은 포맷) */}
+            <button onClick={onEditSavings} className="active:scale-90 transition-transform">
+              <EditIcon />
+            </button>
+          </div>
+          <AmountBox amount={displaySavingsGoal} />
         </div>
 
         <div style={{ height: 1, backgroundColor: '#F4F4F4' }} />

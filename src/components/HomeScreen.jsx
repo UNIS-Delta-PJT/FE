@@ -4,7 +4,7 @@ import AdScreen from './AdScreen';
 import BudgetCard from './BudgetCard';
 import TodayExpenses from './TodayExpenses';
 import CharacterAvatar from './CharacterAvatar';
-import settingImg from '../assets/setting.png';
+import missionIcon from '../assets/home_todays_mission.png';
 import coinIcon from '../assets/icon_coin.png';
 import { TOTAL_STEPS, stepColor, STEP_W, STEP_H, DEPTH, stepPos, MAP_HEIGHT, ROAD_PATH } from './mapConfig';
 
@@ -226,7 +226,7 @@ function OxQuizCard({ onCoin }) {
 }
 
 // ── 홈 화면 ──────────────────────────────────────────────────────────
-export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDirectInput, onSettings, onAttendance, onMapClick }) {
+export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDirectInput, onMission, onAttendance, onMapClick }) {
   const position = (() => {
     try { return JSON.parse(localStorage.getItem('delta_map_position') || '1'); } catch { return 1; }
   })();
@@ -280,8 +280,8 @@ export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDi
             <Stamp size={24} color="#1A1A1A" strokeWidth={1.8} />
           </button>
           {/* 환경설정 */}
-          <button onClick={onSettings} className="active:scale-90 transition-transform" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <img src={settingImg} alt="환경설정" width={36} height={36} draggable={false} />
+          <button onClick={onMission} className="active:scale-90 transition-transform" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <img src={missionIcon} alt="오늘의 미션" width={36} height={36} draggable={false} />
           </button>
         </div>
       </div>
