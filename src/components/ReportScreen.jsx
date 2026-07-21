@@ -4,11 +4,13 @@ import CategoryIcon from './CategoryIcons';
 import CalendarView from './CalendarView';
 import celebrationImg from '../assets/icon_celebration.png';
 import monthlyMascotImg from '../assets/budget_complete_character.png';
+import { getWeeklyReport, getMonthlyReport, getAnnualReport } from '../api/reports';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 const DAYS_KR  = ['월', '화', '수', '목', '금', '토', '일'];
 const DAY_MAP  = ['일', '월', '화', '수', '목', '금', '토'];
-const MOCK_PEER_RANK    = 23;   // 또래 상위 n% (백엔드 연동 전 mock)
+const DOW_TO_KR = { MON: '월', TUE: '화', WED: '수', THU: '목', FRI: '금', SAT: '토', SUN: '일' };
+const FALLBACK_PEER_RANK = 23; // 서버 응답이 없을 때만 사용하는 대체값
 
 const BAR_H = 125;
 const BAR_W = 24;
@@ -361,9 +363,11 @@ function BudgetUsageCard({ spent, budgetTotal }) {
 // 순위별 프로그레스 바 색상
 const RANK_BAR_COLORS = ['#34E8B6', '#FF7682', '#F5C308'];
 
+// categories: [{ name, amount, percentage? }] — percentage가 있으면(서버 리포트) 그대로 사용,
+// 없으면(로컬 폴백) top3 합계 대비 비율로 근사 계산
 function TopCategoriesCard({ categories }) {
   const top3  = categories.slice(0, 3);
-  const total = categories.reduce((s, c) => s + c.amount, 0);
+  const localTotal = categories.reduce((s, c) => s + c.amount, 0);
   const fmt   = v => (v / 10000).toFixed(1) + '만';
 
   return (
@@ -374,8 +378,8 @@ function TopCategoriesCard({ categories }) {
 
       {top3.length === 0 ? (
         <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 13, color: '#999999', textAlign: 'center', paddingBottom: 8 }}>이번 달 소비 내역이 없어요</span>
-      ) : top3.map(({ name, amount }, i) => {
-        const pct = total > 0 ? (amount / total) * 100 : 0;
+      ) : top3.map(({ name, amount, percentage }, i) => {
+        const pct = percentage ?? (localTotal > 0 ? (amount / localTotal) * 100 : 0);
         return (
           <div key={name} style={{ marginBottom: i < top3.length - 1 ? 16 : 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -416,14 +420,15 @@ function fmtDateWithDay(d) {
   return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}(${DAY_KR[d.getDay()]})`;
 }
 
-function TopExpensesCard({ expenses }) {
+// items가 주어지면(서버 월간 리포트의 topExpenses) 그대로 사용, 없으면 로컬 expenses에서 계산
+function TopExpensesCard({ expenses, items }) {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
   const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   // 이번 달 지출 상위 3건
-  const top3 = expenses
+  const top3 = items ?? expenses
     .filter(e => e.expense_date?.startsWith(ym))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 3);
@@ -484,28 +489,38 @@ function TopExpensesCard({ expenses }) {
 }
 
 // ── 월간 하단 마스코트 (지난달 대비 절약 멘트) ────────────────────────────────
-function MonthlySavingMascot({ expenses }) {
+// comparison이 주어지면(서버 월간 리포트의 lastMonthComparison) 그대로 사용,
+// 없으면 로컬 expenses에서 같은 기간(1일~오늘 일자) 비교로 근사 계산
+function MonthlySavingMascot({ expenses, comparison }) {
   const now = new Date();
   const day = now.getDate();
 
-  // 이번 달/지난달 같은 기간(1일~오늘 일자) 지출 합산
-  const sumRange = (year, month) => {
-    return expenses.reduce((sum, e) => {
-      const d = new Date(e.expense_date);
-      if (d.getFullYear() === year && d.getMonth() === month && d.getDate() <= day) {
-        return sum + (e.amount || 0);
-      }
-      return sum;
-    }, 0);
-  };
+  let message;
+  if (comparison) {
+    const { changeAmount } = comparison; // 음수: 절약, 양수: 더 지출
+    message = changeAmount <= 0
+      ? `지난달보다 ${Math.abs(changeAmount).toLocaleString('ko-KR')}원 덜 썼어요!`
+      : `지난달보다 ${changeAmount.toLocaleString('ko-KR')}원 더 썼어요!`;
+  } else {
+    // 이번 달/지난달 같은 기간(1일~오늘 일자) 지출 합산
+    const sumRange = (year, month) => {
+      return expenses.reduce((sum, e) => {
+        const d = new Date(e.expense_date);
+        if (d.getFullYear() === year && d.getMonth() === month && d.getDate() <= day) {
+          return sum + (e.amount || 0);
+        }
+        return sum;
+      }, 0);
+    };
 
-  const thisMonth = sumRange(now.getFullYear(), now.getMonth());
-  const prevDate  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonth = sumRange(prevDate.getFullYear(), prevDate.getMonth());
-  const diff = lastMonth - thisMonth;
-  const message = diff >= 0
-    ? `지난달 이맘때보다 ${diff.toLocaleString('ko-KR')}원 덜 썼어요!`
-    : `지난달 이맘때보다 ${Math.abs(diff).toLocaleString('ko-KR')}원 더 썼어요!`;
+    const thisMonth = sumRange(now.getFullYear(), now.getMonth());
+    const prevDate  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonth = sumRange(prevDate.getFullYear(), prevDate.getMonth());
+    const diff = lastMonth - thisMonth;
+    message = diff >= 0
+      ? `지난달 이맘때보다 ${diff.toLocaleString('ko-KR')}원 덜 썼어요!`
+      : `지난달 이맘때보다 ${Math.abs(diff).toLocaleString('ko-KR')}원 더 썼어요!`;
+  }
 
   return (
     <div style={{ width: 353, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 24 }}>
@@ -552,9 +567,10 @@ function YearTrendIcon({ color = '#1CD1A1', isUp = false }) {
   );
 }
 
-const MOCK_PREV_YEAR_TOTAL = 4_800_000; // 전년 연간 지출 mock
+const FALLBACK_PREV_YEAR_TOTAL = 4_800_000; // 서버에서 전년도 리포트를 못 가져왔을 때만 사용
 
-function YearlyFlowCard({ expenses }) {
+// monthlyTotals/prevYearTotal이 주어지면(서버 연간 리포트) 그대로 사용, 없으면 로컬 expenses로 근사 계산
+function YearlyFlowCard({ expenses, monthlyTotals: serverTotals, prevYearTotal }) {
   const LABEL_MONTHS = new Set([0, 2, 4, 6, 8, 11]); // 1·3·5·7·9·12월만 표시
   const MONTH_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
@@ -562,7 +578,7 @@ function YearlyFlowCard({ expenses }) {
   const thisYear       = today.getFullYear();
   const currentMonthIdx = today.getMonth();
 
-  const monthlyTotals = useMemo(() => {
+  const localTotals = useMemo(() => {
     const totals = Array(12).fill(0);
     expenses.forEach(e => {
       if (!e.expense_date || !/^\d{4}-\d{2}-\d{2}$/.test(e.expense_date)) return;
@@ -571,10 +587,12 @@ function YearlyFlowCard({ expenses }) {
     });
     return totals;
   }, [expenses, thisYear]);
+  const monthlyTotals = serverTotals ?? localTotals;
 
   const thisYearTotal = monthlyTotals.reduce((s, v) => s + v, 0);
-  const rawChange = MOCK_PREV_YEAR_TOTAL > 0
-    ? ((thisYearTotal - MOCK_PREV_YEAR_TOTAL) / MOCK_PREV_YEAR_TOTAL) * 100
+  const prevTotal = prevYearTotal ?? FALLBACK_PREV_YEAR_TOTAL;
+  const rawChange = prevTotal > 0
+    ? ((thisYearTotal - prevTotal) / prevTotal) * 100
     : 0;
   const isUp       = rawChange > 0;
   const changeAbs  = Math.abs(rawChange).toFixed(1);
@@ -642,10 +660,12 @@ function YearlyFlowCard({ expenses }) {
   );
 }
 
-function YearlySummaryCard({ expenses }) {
+// summary가 주어지면(서버 연간 리포트의 annualSummary) 그대로 사용, 없으면 로컬 expenses로 근사 계산
+function YearlySummaryCard({ expenses, summary }) {
   const today    = new Date();
   const thisYear = today.getFullYear();
   const MONTH_LABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const toLabel = (ym) => ym ? `${parseInt(ym.split('-')[1], 10)}월` : '-';
 
   const monthlyTotals = useMemo(() => {
     const totals = Array(12).fill(0);
@@ -657,15 +677,21 @@ function YearlySummaryCard({ expenses }) {
     return totals;
   }, [expenses, thisYear]);
 
-  const nonZero = monthlyTotals
-    .map((val, idx) => ({ val, idx }))
-    .filter(({ val }) => val > 0);
+  let mostSpendingMonth, mostSavingMonth;
+  if (summary) {
+    mostSpendingMonth = toLabel(summary.highestSpendingMonth);
+    mostSavingMonth = toLabel(summary.lowestSpendingMonth);
+  } else {
+    const nonZero = monthlyTotals
+      .map((val, idx) => ({ val, idx }))
+      .filter(({ val }) => val > 0);
 
-  const maxEntry = nonZero.length ? nonZero.reduce((a, b) => a.val > b.val ? a : b) : null;
-  const minEntry = nonZero.length ? nonZero.reduce((a, b) => a.val < b.val ? a : b) : null;
+    const maxEntry = nonZero.length ? nonZero.reduce((a, b) => a.val > b.val ? a : b) : null;
+    const minEntry = nonZero.length ? nonZero.reduce((a, b) => a.val < b.val ? a : b) : null;
 
-  const mostSpendingMonth = maxEntry ? MONTH_LABELS[maxEntry.idx] : '-';
-  const mostSavingMonth   = minEntry ? MONTH_LABELS[minEntry.idx] : '-';
+    mostSpendingMonth = maxEntry ? MONTH_LABELS[maxEntry.idx] : '-';
+    mostSavingMonth   = minEntry ? MONTH_LABELS[minEntry.idx] : '-';
+  }
 
   const Row = ({ dotColor, label, value }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -721,16 +747,27 @@ function YearlySummaryCard({ expenses }) {
 
 // ── 총 절약 금액 카드 ─────────────────────────────────────────────────────────
 
-// TODO: 백엔드 연동 시 카테고리별 절약 금액 API로 대체
-const MOCK_CATEGORY_SAVINGS = [
-  { name: '식비', amount: 40000, iconBg: '#AAF0D1',                  iconColor: '#20A275' },
-  { name: '교통', amount: 25000, iconBg: 'rgba(245, 195, 8, 0.25)',  iconColor: '#F5C308' },
-  { name: '문화', amount: 30000, iconBg: '#FFD1DC',                  iconColor: '#FF7682' },
-  { name: '기타', amount: 15000, iconBg: '#DAE8FF',                  iconColor: '#90BAFF' },
+// 카테고리명 → 아이콘 배경/색상 — 서버가 새 카테고리명을 주면 기본값(회색)으로 표시
+const SAVINGS_STYLE = {
+  '식비': { iconBg: '#AAF0D1',                 iconColor: '#20A275' },
+  '교통': { iconBg: 'rgba(245, 195, 8, 0.25)', iconColor: '#F5C308' },
+  '문화': { iconBg: '#FFD1DC',                 iconColor: '#FF7682' },
+  '쇼핑': { iconBg: '#DAE8FF',                 iconColor: '#90BAFF' },
+};
+const DEFAULT_SAVINGS_STYLE = { iconBg: '#EAEAEA', iconColor: '#999999' };
+
+// 서버 미가동 시에만 사용하는 대체 데이터
+const FALLBACK_CATEGORY_SAVINGS = [
+  { name: '식비', amount: 40000 },
+  { name: '교통', amount: 25000 },
+  { name: '문화', amount: 30000 },
+  { name: '기타', amount: 15000 },
 ];
 
-function TotalSavingsCard() {
-  const total = MOCK_CATEGORY_SAVINGS.reduce((s, c) => s + c.amount, 0);
+// categorySavings가 주어지면(서버 연간 리포트) 그대로 사용
+function TotalSavingsCard({ categorySavings }) {
+  const items = categorySavings ?? FALLBACK_CATEGORY_SAVINGS;
+  const total = items.reduce((s, c) => s + c.amount, 0);
 
   return (
     <div style={{
@@ -753,7 +790,9 @@ function TotalSavingsCard() {
 
       {/* 카테고리별 절약 요약 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {MOCK_CATEGORY_SAVINGS.map(({ name, amount, iconBg, iconColor }) => (
+        {items.map(({ name, amount }) => {
+          const { iconBg, iconColor } = SAVINGS_STYLE[name] || DEFAULT_SAVINGS_STYLE;
+          return (
           <div
             key={name}
             style={{
@@ -782,7 +821,8 @@ function TotalSavingsCard() {
               </span>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -794,6 +834,31 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
   const [periodTab, setPeriodTab] = useState('weekly');
   const rootRef = useRef(null);
 
+  // 명세: GET /reports/weekly, /monthly, /annual — 탭을 처음 열 때 한 번씩 로드, 실패 시 로컬 계산으로 폴백
+  const [weeklyReport, setWeeklyReport] = useState(null);
+  const [monthlyReport, setMonthlyReport] = useState(null);
+  const [annualReport, setAnnualReport] = useState(null);
+  const [prevYearTotal, setPrevYearTotal] = useState(null);
+
+  useEffect(() => {
+    if (periodTab === 'weekly' && !weeklyReport) {
+      const d = new Date();
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      getWeeklyReport(dateStr).then(setWeeklyReport).catch(() => {});
+    }
+    if (periodTab === 'monthly' && !monthlyReport) {
+      const d = new Date();
+      const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      getMonthlyReport(monthStr).then(setMonthlyReport).catch(() => {});
+    }
+    if (periodTab === 'yearly' && !annualReport) {
+      const year = new Date().getFullYear();
+      getAnnualReport(year).then(setAnnualReport).catch(() => {});
+      // 전년 대비 계산용 — 실패해도 YearlyFlowCard가 대체값으로 처리
+      getAnnualReport(year - 1).then(r => setPrevYearTotal(r?.annualSummary?.totalSpent)).catch(() => {});
+    }
+  }, [periodTab, weeklyReport, monthlyReport, annualReport]);
+
   // 주간/월간/연간 탭 전환 시 스크롤 최상단으로 리셋
   useEffect(() => {
     let el = rootRef.current?.parentElement;
@@ -803,15 +868,59 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
     }
   }, [periodTab]);
 
-  const weeklyData        = useMemo(() => computeWeeklyData(expenses),        [expenses]);
-  // 지출 캘린더용 날짜 → 금액 맵 (연간 탭)
-  const calendarData      = useMemo(() => expenses.reduce((map, e) => {
+  // ── 주간 — 서버 리포트 우선, 없으면 로컬 expenses로 근사 계산 ──
+  const weeklyData = useMemo(() => {
+    if (weeklyReport?.dailyExpenses) {
+      const data = { 월: 0, 화: 0, 수: 0, 목: 0, 금: 0, 토: 0, 일: 0 };
+      weeklyReport.dailyExpenses.forEach(d => { data[DOW_TO_KR[d.dayOfWeek]] = d.amount; });
+      return data;
+    }
+    return computeWeeklyData(expenses);
+  }, [weeklyReport, expenses]);
+  const compareData = useMemo(() => {
+    if (weeklyReport) {
+      return { thisWeek: weeklyReport.weeklyTotalExpense, lastWeek: weeklyReport.lastWeekComparison?.lastWeekTotalExpense ?? 0 };
+    }
+    return computeWeekCompare(expenses);
+  }, [weeklyReport, expenses]);
+  const topCategory = useMemo(() => {
+    if (weeklyReport?.topCategory) return { name: weeklyReport.topCategory.categoryName };
+    return computeTopCategory(expenses);
+  }, [weeklyReport, expenses]);
+  const peerRank = weeklyReport?.peerRanking?.percentile ?? FALLBACK_PEER_RANK;
+
+  // ── 월간 ──
+  const monthlyByCategory = useMemo(() => {
+    if (monthlyReport?.topCategories) {
+      return monthlyReport.topCategories.map(c => ({ name: c.categoryName, amount: c.amount, percentage: c.percentage }));
+    }
+    return computeMonthlyByCategory(expenses);
+  }, [monthlyReport, expenses]);
+  const monthlyTopExpenses = useMemo(() => {
+    if (!monthlyReport?.topExpenses) return null;
+    return monthlyReport.topExpenses.map(e => ({
+      expense_id: e.expenseId,
+      place: e.placeName,
+      category: e.categoryName,
+      amount: e.amount,
+      expense_date: e.expenseDate,
+    }));
+  }, [monthlyReport]);
+
+  // ── 연간 — 지출 캘린더는 명세에 없어 로컬 expenses 기준 유지 ──
+  const calendarData = useMemo(() => expenses.reduce((map, e) => {
     map[e.expense_date] = (map[e.expense_date] || 0) + e.amount;
     return map;
   }, {}), [expenses]);
-  const compareData       = useMemo(() => computeWeekCompare(expenses),       [expenses]);
-  const topCategory       = useMemo(() => computeTopCategory(expenses),       [expenses]);
-  const monthlyByCategory = useMemo(() => computeMonthlyByCategory(expenses), [expenses]);
+  const annualMonthlyTotals = useMemo(() => {
+    if (!annualReport?.monthlyExpenses) return null;
+    const totals = Array(12).fill(0);
+    annualReport.monthlyExpenses.forEach(m => {
+      const idx = parseInt(m.month.split('-')[1], 10) - 1;
+      if (idx >= 0 && idx < 12) totals[idx] = m.totalSpent;
+    });
+    return totals;
+  }, [annualReport]);
 
   return (
     <div ref={rootRef} style={{ minHeight: '100%', paddingLeft: 20, paddingRight: 17, paddingBottom: 0, boxSizing: 'border-box' }}>
@@ -838,7 +947,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <DayChart weeklyData={weeklyData} />
               <WeekCompareCard data={compareData} />
-              <InfoCards topCategory={topCategory} peerRank={MOCK_PEER_RANK} />
+              <InfoCards topCategory={topCategory} peerRank={peerRank} />
               {/* 카테고리별 지출 전체보기 */}
               <button
                 onClick={onCategoryDetail}
@@ -864,20 +973,23 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
           {/* 월간 */}
           {periodTab === 'monthly' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <BudgetUsageCard spent={spent} budgetTotal={budgetTotal} />
+              <BudgetUsageCard
+                spent={monthlyReport?.totalSpent ?? spent}
+                budgetTotal={monthlyReport?.totalExpenseBudget ?? budgetTotal}
+              />
               <TopCategoriesCard categories={monthlyByCategory} />
-              <TopExpensesCard expenses={expenses} />
-              <MonthlySavingMascot expenses={expenses} />
+              <TopExpensesCard expenses={expenses} items={monthlyTopExpenses} />
+              <MonthlySavingMascot expenses={expenses} comparison={monthlyReport?.lastMonthComparison} />
             </div>
           )}
 
       {/* 연간 */}
       {periodTab === 'yearly' && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, paddingBottom: 24 }}>
-          <YearlyFlowCard expenses={expenses} />
-          <YearlySummaryCard expenses={expenses} />
+          <YearlyFlowCard expenses={expenses} monthlyTotals={annualMonthlyTotals} prevYearTotal={prevYearTotal} />
+          <YearlySummaryCard expenses={expenses} summary={annualReport?.annualSummary} />
           <CalendarView calendarData={calendarData} />
-          <TotalSavingsCard />
+          <TotalSavingsCard categorySavings={annualReport?.categorySavings} />
         </div>
       )}
     </div>

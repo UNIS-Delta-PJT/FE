@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ArrowLeft, Utensils, Ticket, Bus, ShoppingBag } from 'lucide-react';
 import reactionImg from '../assets/reaction_character.png';
+import { getWeeklyReport } from '../api/reports';
 
 // ── 카테고리 설정: 아이콘 + 프로그레스 그라데이션 (오른쪽으로 갈수록 진해짐) ──
 const CATEGORY_CONFIG = [
@@ -40,18 +41,32 @@ function fmtPeriod(monday, sunday) {
 export default function CategoryExpenseScreen({ expenses = [], onBack }) {
   const { monday, sunday } = getThisWeekRange();
 
+  // 명세: GET /reports/weekly의 categoryExpenses — 실패 시 로컬 expenses로 근사 계산
+  const [weeklyReport, setWeeklyReport] = useState(null);
+  useEffect(() => {
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    getWeeklyReport(dateStr).then(setWeeklyReport).catch(() => {});
+  }, []);
+
   // 이번 주 지출을 카테고리 그룹별로 합산
   const stats = useMemo(() => {
     const sums = { 식비: 0, 문화비: 0, 교통비: 0, 기타: 0 };
-    expenses.forEach(e => {
-      const d = new Date(e.expense_date);
-      if (d >= monday && d <= sunday) {
-        sums[groupOf(e.category)] += e.amount || 0;
-      }
-    });
+    if (weeklyReport?.categoryExpenses) {
+      weeklyReport.categoryExpenses.forEach(c => {
+        sums[groupOf(c.categoryName)] += c.amount || 0;
+      });
+    } else {
+      expenses.forEach(e => {
+        const d = new Date(e.expense_date);
+        if (d >= monday && d <= sunday) {
+          sums[groupOf(e.category)] += e.amount || 0;
+        }
+      });
+    }
     const total = Object.values(sums).reduce((a, b) => a + b, 0);
     return { sums, total };
-  }, [expenses, monday, sunday]);
+  }, [weeklyReport, expenses, monday, sunday]);
 
   return (
     <div
