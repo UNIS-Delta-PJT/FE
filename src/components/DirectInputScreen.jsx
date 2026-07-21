@@ -3,10 +3,11 @@ import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import coinIconImg from '../assets/icon_coin.png';
 import fireIcon from '../assets/fire_succession.png';
-import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString, currentYearMonth } from '../api/expenses';
+import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString, currentYearMonth, todayString } from '../api/expenses';
 import { getExpenseCategories, loadCategoriesCache } from '../api/finance';
 import { claimMissionReward } from '../api/missions';
 import { loadAttendanceDays } from './AttendanceCheckScreen';
+import { hasRolledDiceToday } from './TodayMissionScreen';
 
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
 
@@ -194,7 +195,10 @@ function CategoryBar({ name, budget, spent }) {
 }
 
 /* ─── 저장 완료 화면 ─── */
-function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) {
+function SavedScreen({ savedEntries, allExpenses, streak, dailyTotalExpense, isFirstRecordOfDay, onNext, onDoubleAd, onFinish }) {
+  // 주사위는 하루 1번, 오늘의 첫 지출 기록에만 제공 — 그 외엔 이미 오늘 몫을 썼거나(다른 경로 포함)
+  // 두 번째 이후 기록이라 서버가 DICE_NOT_ENABLED로 거부할 것이 확실하므로 아예 제안하지 않음
+  const canRollDice = isFirstRecordOfDay && !hasRolledDiceToday();
   // 토스트 시퀀스: 미션 완료(1초) → 사라진 뒤 코인 획득
   const [missionToast, setMissionToast] = useState(true);
   const [missionFading, setMissionFading] = useState(false);
@@ -218,15 +222,24 @@ function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) 
   const budgetCats  = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_categories') || '[]'); } catch { return []; } })();
 
   const sessionTotal = savedEntries.reduce((sum, e) => sum + e.amount, 0);
-  // 예산은 월 단위(budgetTotal)인데 allExpenses는 전체 기간 내역이라 이번 달로 범위를 좁혀야 함.
-  // allExpenses는 App의 상태 업데이트 타이밍에 따라 이번 세션에 방금 저장한 항목을 이미
-  // 포함할 수도 있어, savedEntries와 겹치는 id는 제외하고 합산해 이중 계산을 막음
-  const currentYM  = currentYearMonth();
-  const savedIds   = new Set(savedEntries.map(e => e.expense_id));
-  const monthTotal = allExpenses
-    .filter(e => e.expense_date?.startsWith(currentYM) && !savedIds.has(e.expense_id))
-    .reduce((sum, e) => sum + e.amount, 0) + sessionTotal;
-  const remaining  = budgetTotal - monthTotal;
+  // 예산은 월 단위인데 allExpenses는 전체 기간 내역이라 이번 달로 좁혀야 함.
+  // 오늘 몫은 App이 백그라운드에서 서버 재조회(loadExpenses)를 이미 시작해둔 상태라
+  // allExpenses에 방금 저장한 항목이 로컬 임시본/서버 확정본 중 어느 쪽으로 들어있을지
+  // 시점마다 달라 id 비교로는 중복을 완전히 막을 수 없음 — 그래서 오늘 몫은 아예
+  // allExpenses에서 빼고, 서버가 확정해준 dailyTotalExpense(명세: POST /finances/expenses
+  // 응답)를 그대로 신뢰해 한 번만 더함
+  const currentYM = currentYearMonth();
+  const today = todayString();
+  const savedIds = new Set(savedEntries.map(e => e.expense_id));
+  const monthExcludingToday = allExpenses
+    .filter(e => e.expense_date?.startsWith(currentYM) && e.expense_date !== today)
+    .reduce((sum, e) => sum + e.amount, 0);
+  const todayTotal = typeof dailyTotalExpense === 'number'
+    ? dailyTotalExpense
+    : allExpenses
+        .filter(e => e.expense_date === today && !savedIds.has(e.expense_id))
+        .reduce((sum, e) => sum + e.amount, 0) + sessionTotal;
+  const remaining = budgetTotal - (monthExcludingToday + todayTotal);
 
   const catSpending = {};
   savedEntries.forEach(e => { catSpending[e.name] = (catSpending[e.name] || 0) + e.amount; });
@@ -317,32 +330,46 @@ function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) 
         )}
       </div>
 
-      {/* 다음(주사위) + 광고 보고 코인 2배 버튼 — 하단 고정 */}
+      {/* 하단 고정 버튼 — 오늘 첫 기록일 때만 주사위 제공(하루 1번), 그 외엔 바로 홈으로 */}
       <div style={{ position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', zIndex: 30 }}>
-        <button
-          onClick={onNext}
-          className="active:scale-95 transition-transform"
-          style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF', boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)' }}
-        >
-          다음
-        </button>
-        <button
-          onClick={onDoubleAd}
-          className="active:scale-95 transition-transform"
-          style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#1CD1A1', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)', whiteSpace: 'nowrap' }}
-        >
-          광고 보고 코인 2배!
-        </button>
+        {canRollDice ? (
+          <>
+            <button
+              onClick={onNext}
+              className="active:scale-95 transition-transform"
+              style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF', boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)' }}
+            >
+              다음
+            </button>
+            <button
+              onClick={onDoubleAd}
+              className="active:scale-95 transition-transform"
+              style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#1CD1A1', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)', whiteSpace: 'nowrap' }}
+            >
+              광고 보고 코인 2배!
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={onFinish}
+            className="active:scale-95 transition-transform"
+            style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, background: 'linear-gradient(90deg, #1CD1A1 0%, #34E8B6 100%)', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#FFFFFF', boxShadow: '0 4px 20px rgba(28, 209, 161, 0.40)' }}
+          >
+            확인
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 /* ─── 메인 컴포넌트 ─── */
-export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, allExpenses = [] }) {
+export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, onFinish, allExpenses = [] }) {
   const [entries, setEntries]       = useState([emptyEntry()]);
   const [openCalId, setOpenCalId]   = useState(null);
   const [savedEntries, setSavedEntries] = useState([]);
+  const [isFirstRecordOfDay, setIsFirstRecordOfDay] = useState(false);
+  const [dailyTotalExpense, setDailyTotalExpense] = useState(null);
   const [view, setView]             = useState('input');
   const [toastVisible, setToastVisible] = useState(false);
   const [toastFading, setToastFading]   = useState(false);
@@ -386,6 +413,8 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
           memo: e.memo || null,
         })));
         synced = true;
+        setIsFirstRecordOfDay(Boolean(result?.isFirstRecordOfDay));
+        if (typeof result?.dailyTotalExpense === 'number') setDailyTotalExpense(result.dailyTotalExpense);
         // 오늘의 첫 기록이면 '지출 기록' 미션 리워드(1코인) 수령
         if (result?.isFirstRecordOfDay) {
           claimMissionReward('EXPENSE_RECORD')
@@ -453,7 +482,16 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
             </span>
           </div>
         )}
-        <SavedScreen savedEntries={savedEntries} allExpenses={allExpenses} streak={newStreak} onNext={onNext} onDoubleAd={onDoubleAd} />
+        <SavedScreen
+          savedEntries={savedEntries}
+          allExpenses={allExpenses}
+          streak={newStreak}
+          dailyTotalExpense={dailyTotalExpense}
+          isFirstRecordOfDay={isFirstRecordOfDay}
+          onNext={onNext}
+          onDoubleAd={onDoubleAd}
+          onFinish={onFinish}
+        />
       </div>
     );
   }

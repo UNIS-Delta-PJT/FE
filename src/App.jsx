@@ -25,7 +25,7 @@ import DirectInputScreen from './components/DirectInputScreen';
 import AIAnalyzingScreen from './components/AIAnalyzingScreen';
 import CharacterMapScreen from './components/CharacterMapScreen';
 import StoreScreen from './components/StoreScreen';
-import CoinShopScreen from './components/CoinShopScreen';
+import CoinShopScreen, { applyServerCoinBalance } from './components/CoinShopScreen';
 
 import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
 import { updateSavings, getFinanceSummary } from './api/finance';
@@ -192,7 +192,7 @@ export default function App() {
         localStorage.setItem('delta_user_id', JSON.stringify(data.userId));
       }
       if (typeof data.coinBalance === 'number') {
-        localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
+        applyServerCoinBalance(data.coinBalance);
       }
       if (typeof data.mapPosition === 'number') {
         localStorage.setItem('delta_map_position', JSON.stringify(data.mapPosition));
@@ -584,9 +584,11 @@ export default function App() {
           <DirectInputScreen
             onBack={() => setScreen('home')}
             onSave={(exps) => addExpenses(exps)}
-            // 다음 → 바로 주사위 / 광고 보고 코인 2배 → 30초 광고 → 주사위
+            // 다음 → 바로 주사위 / 광고 보고 코인 2배 → 30초 광고 → 주사위 (오늘 첫 기록일 때만 제공)
             onNext={() => setScreen('diceRoll')}
             onDoubleAd={() => { setAdReturn('dice'); setScreen('ad'); }}
+            // 오늘 두 번째 이후 기록 — 주사위는 하루 1번이라 바로 홈으로
+            onFinish={() => setScreen('home')}
             allExpenses={expenses}
           />
         )}

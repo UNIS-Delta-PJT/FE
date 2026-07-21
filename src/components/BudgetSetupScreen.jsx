@@ -288,11 +288,15 @@ function CustomCategoryItem({ cat, totalBudget, maxAllowed, onUpdate, onDelete }
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────
 export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 0, submitLabel = '설정 완료' }) {
   // 저장된 카테고리가 있으면 로드 (예산 탭에서 수정 진입 시 기존 값 유지)
+  // 캐시가 옛 버전(카테고리 개수/이름이 다름)일 수 있어 이름으로만 금액을 가져오고,
+  // 기본 4종(식비/교통/쇼핑/문화) 자체는 캐시 내용과 무관하게 항상 보장함
   const [categories, setCategories] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
-      const defaults = saved.filter(c => !c.iconId);
-      return defaults.length ? defaults : DEFAULT_CATEGORIES;
+      return DEFAULT_CATEGORIES.map(d => {
+        const cached = saved.find(c => !c.iconId && c.name === d.name);
+        return cached ? { ...d, amount: cached.amount } : d;
+      });
     } catch { return DEFAULT_CATEGORIES; }
   });
   const [customCategories, setCustomCategories] = useState(() => {

@@ -18,6 +18,21 @@ function loadCoins() {
   try { return JSON.parse(localStorage.getItem('delta_coins') || '0'); } catch { return 0; }
 }
 
+// 실제 결제 확정 API가 없어 모의 구매로 얻은 코인은 서버 잔액과 별도로 누적 보관해뒀다가,
+// 서버 값으로 동기화될 때마다 위에 더해줌 — 안 그러면 다른 화면 갔다 오면 구매한 코인이 사라짐
+const MOCK_BONUS_KEY = 'delta_coins_mock_bonus';
+
+function loadMockBonus() {
+  try { return JSON.parse(localStorage.getItem(MOCK_BONUS_KEY) || '0') || 0; } catch { return 0; }
+}
+
+/** 서버 코인 잔액에 모의 구매 보너스를 더해 delta_coins에 반영 — 다른 화면의 서버 동기화에서도 사용 */
+export function applyServerCoinBalance(serverBalance) {
+  const total = serverBalance + loadMockBonus();
+  localStorage.setItem('delta_coins', JSON.stringify(total));
+  return total;
+}
+
 export default function CoinShopScreen({ onBack }) {
   const [coins, setCoins] = useState(loadCoins);
   const [products, setProducts] = useState(FALLBACK_PRODUCTS);
@@ -36,8 +51,7 @@ export default function CoinShopScreen({ onBack }) {
           })));
         }
         if (typeof data.coinBalance === 'number') {
-          setCoins(data.coinBalance);
-          localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
+          setCoins(applyServerCoinBalance(data.coinBalance));
         }
       })
       .catch(() => {}); // 서버 미가동 — 폴백 상품 목록 유지

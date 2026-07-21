@@ -261,17 +261,33 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
         }
         if (Array.isArray(data.expenseBudgets)) {
           const prevCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
-          const nextCats = data.expenseBudgets.map(b => {
-            const name = b.categoryName;
+          const byName = {};
+          data.expenseBudgets.forEach(b => { byName[b.categoryName] = b; });
+
+          // 기본 카테고리(식비/교통/쇼핑/문화)는 이번 달에 배정 금액이 아직 없어(0원/미설정)
+          // 서버 응답에 빠져 있을 수 있는데, 그렇다고 목록에서 사라지면 안 되므로 항상 4개 다 노출
+          const fixedCats = [...FIXED_CATEGORY_NAMES].map(name => {
+            const b = byName[name];
             const existing = prevCats.find(c => c.name === name);
             return {
-              category_id: existing?.category_id ?? b.expenseBudgetId,
-              iconId: FIXED_CATEGORY_NAMES.has(name) ? undefined : (existing?.iconId ?? 'shop'),
+              category_id: existing?.category_id ?? b?.expenseBudgetId ?? CATEGORY_ID_MAP[name],
+              iconId: undefined,
               name,
-              amount: b.amount,
+              amount: b?.amount ?? 0,
             };
           });
-          localStorage.setItem('delta_budget_categories', JSON.stringify(nextCats));
+          const customCats = data.expenseBudgets
+            .filter(b => !FIXED_CATEGORY_NAMES.has(b.categoryName))
+            .map(b => {
+              const existing = prevCats.find(c => c.name === b.categoryName);
+              return {
+                category_id: existing?.category_id ?? b.expenseBudgetId,
+                iconId: existing?.iconId ?? 'shop',
+                name: b.categoryName,
+                amount: b.amount,
+              };
+            });
+          localStorage.setItem('delta_budget_categories', JSON.stringify([...fixedCats, ...customCats]));
         }
         refresh();
       })
