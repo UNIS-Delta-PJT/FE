@@ -200,7 +200,9 @@ function SavedScreen({ savedEntries, allExpenses, streak, dailyTotalExpense, isF
   // 두 번째 이후 기록이라 서버가 DICE_NOT_ENABLED로 거부할 것이 확실하므로 아예 제안하지 않음
   const canRollDice = isFirstRecordOfDay && !hasRolledDiceToday();
   // 토스트 시퀀스: 미션 완료(1초) → 사라진 뒤 코인 획득
-  const [missionToast, setMissionToast] = useState(true);
+  // 미션 리워드(1코인)는 오늘 첫 기록에만 지급되므로(핸들세이브에서 isFirstRecordOfDay일 때만
+  // claimMissionReward 호출) 그 외엔 실제로 받은 게 없는데 토스트만 뜨는 걸 막기 위해 함께 게이팅
+  const [missionToast, setMissionToast] = useState(isFirstRecordOfDay);
   const [missionFading, setMissionFading] = useState(false);
   const [coinToast, setCoinToast] = useState(false);
   const rootRef = useRef(null);
@@ -212,12 +214,13 @@ function SavedScreen({ savedEntries, allExpenses, streak, dailyTotalExpense, isF
       if (el.scrollTop > 0) { el.scrollTop = 0; break; }
       el = el.parentElement;
     }
+    if (!isFirstRecordOfDay) return;
     const t1 = setTimeout(() => setMissionFading(true), 1000);
     const t2 = setTimeout(() => setMissionToast(false), 1300);
     const t3 = setTimeout(() => setCoinToast(true), 1500);
     const t4 = setTimeout(() => setCoinToast(false), 4000);
     return () => [t1, t2, t3, t4].forEach(clearTimeout);
-  }, []);
+  }, [isFirstRecordOfDay]);
   const budgetTotal = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_total') || '0') || 0; } catch { return 0; } })();
   const budgetCats  = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_categories') || '[]'); } catch { return []; } })();
 
