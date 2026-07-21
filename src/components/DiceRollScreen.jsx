@@ -1,36 +1,52 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import diceImg from '../assets/dice.png';
 import radialImg from '../assets/radial.png';
 import resultCharacterImg from '../assets/dice_result_character.png';
+import { rollDice } from '../api/map';
 
 /**
  * 주사위 화면 — 소비 기록/퀴즈 보상으로 진입
- * onDone(value): 나온 눈만큼 맵 이동
+ * onDone(data): 명세(POST /map/dice) 응답 { diceResult, previousPosition, landedPosition, finalPosition, event }
+ *   서버 미가동 시 event 없이 diceResult만 채워 로컬 규칙 폴백을 알림
+ * onError(message): 403 DICE_NOT_ENABLED 등 — 이번엔 주사위를 굴릴 수 없음
  */
-export default function DiceRollScreen({ onDone }) {
+export default function DiceRollScreen({ onDone, onError }) {
   const [phase, setPhase] = useState('ready'); // ready | rolling | done
-  const resultRef = useRef(1);
+  const [result, setResult] = useState(null);
 
-  function roll() {
+  async function roll() {
     if (phase !== 'ready') return;
     setPhase('rolling');
-    // 2초 동안 주사위가 돌아간 뒤 결과 확정
+    const start = Date.now();
+    let data = null;
+    try {
+      data = await rollDice();
+    } catch (err) {
+      if (err.response?.data?.code === 'DICE_NOT_ENABLED') {
+        setPhase('ready');
+        onError?.(err.response.data.message || '금융 퀴즈를 먼저 풀어주세요.');
+        return;
+      }
+      // 네트워크 오류 등 — 로컬 랜덤 눈금으로 폴백 (맵 화면에서 기존 로컬 규칙 적용)
+    }
+    // 최소 2초는 굴러가는 연출 유지
+    const wait = Math.max(0, 2000 - (Date.now() - start));
     setTimeout(() => {
-      resultRef.current = Math.floor(Math.random() * 6) + 1;
+      setResult(data ?? { diceResult: Math.floor(Math.random() * 6) + 1 });
       setPhase('done');
-    }, 2000);
+    }, wait);
   }
 
   // 결과 확인 후 자동으로 맵 이동
   useEffect(() => {
     if (phase !== 'done') return;
-    const t = setTimeout(() => onDone(resultRef.current), 2000);
+    const t = setTimeout(() => onDone(result), 2000);
     return () => clearTimeout(t);
   }, [phase]);
 
   /* ─── 결과 화면 (2초 후 자동으로 맵 이동) ─── */
   if (phase === 'done') {
-    const n = resultRef.current;
+    const n = result.diceResult;
     return (
       <div style={{ width: '390px', minHeight: '100svh', position: 'relative', backgroundColor: '#FFFFFF' }}>
         {/* 타이틀 */}

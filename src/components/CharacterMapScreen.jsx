@@ -12,8 +12,9 @@ import coinIcon from '../assets/icon_coin.png';
 import foundTreasureImg from '../assets/found_treasure.png';
 import trapImg from '../assets/trap.png';
 import ribbonsBannerImg from '../assets/store_ribbons.png';
-import { loadGroups } from './GroupComposeScreen';
+import { getMyGroups, loadGroupsCache } from '../api/group';
 import { todayString } from '../api/expenses';
+import { getFinanceQuiz, submitFinanceQuiz } from '../api/quiz';
 
 // ── 맵 구성 (공용 설정에서 로드) ─────────────────────────────────────
 import {
@@ -21,16 +22,22 @@ import {
   STEP_W, STEP_H, DEPTH, stepPos, MAP_HEIGHT, ROAD_PATH,
 } from './mapConfig';
 
+function loadMyUserId() {
+  try { return JSON.parse(localStorage.getItem('delta_user_id') || 'null'); } catch { return null; }
+}
+
 // 그룹 토글 — 나만의 맵(솔로 플레이, id -1) + 내가 참여한 그룹들
+// 명세: GET /api/v1/groups — 매 마운트마다 새로 조회하지만, 그 전까지는 캐시로 즉시 렌더
 const SOLO_MAP = -1;
 function loadGroupOptions() {
   return [
     { id: SOLO_MAP, label: '나만의 맵' },
-    ...loadGroups()
-      .map((g, i) => (g !== null ? { id: i, label: `그룹 ${i + 1}` } : null))
-      .filter(Boolean),
+    ...loadGroupsCache().map((g, i) => ({ id: g.groupId, label: `그룹 ${i + 1}` })),
   ];
 }
+
+// 파티원 마커 색 — 서버는 색상을 내려주지 않으므로 멤버 순서로 로테이션
+const PARTY_COLORS = ['#F5C308', '#1CD1A1', '#FF7682', '#90BAFF'];
 
 // 무지개 (본인 마커 stroke)
 const RAINBOW = 'linear-gradient(135deg, #FF7682 0%, #FF9F45 25%, #F5C308 45%, #1CD1A1 65%, #90BAFF 82%, #B78CF7 100%)';
@@ -50,12 +57,6 @@ const QUIZ_BANK = [
   { q: '갑작스러운 지출에 대비해 모아두는 돈은?', options: ['용돈', '투자금', '대출금', '비상금'], answer: 3, explain: '비상금은 예상치 못한 지출에 대비해 따로 모아두는 돈이에요. 보통 월 지출의 3배 정도를 권장해요.' },
 ];
 
-// 파티원 mock — TODO: 백엔드 연동 시 실제 파티 데이터로 대체
-const PARTY_MEMBERS = [
-  { nickname: '핑키', step: 8,  color: '#F5C308' },
-  { nickname: '초코', step: 14, color: '#1CD1A1' },
-  { nickname: '몽이', step: 3,  color: '#FF7682' },
-];
 
 // 구름 배치 — 화면(844px)당 최대 3개, C1/C2/C3 골고루
 const CLOUDS = Array.from({ length: Math.floor(MAP_HEIGHT / 320) }, (_, i) => ({
@@ -142,8 +143,12 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
   });
   // 화면에 표시되는 마커 위치 — position을 향해 한 칸씩 통통 튀며 따라감
   const [displayPos, setDisplayPos] = useState(position);
-  // 그룹 토글 후보 — 그룹 구성 화면에서 만든 그룹만 노출
-  const groupOptions = loadGroupOptions();
+  // 그룹 토글 후보 — 명세: GET /api/v1/groups. 캐시로 즉시 렌더 후 마운트 시 최신화
+  const [groupsData, setGroupsData] = useState(() => loadGroupsCache());
+  const groupOptions = [
+    { id: SOLO_MAP, label: '나만의 맵' },
+    ...groupsData.map((g, i) => ({ id: g.groupId, label: `그룹 ${i + 1}` })),
+  ];
   const [group, setGroup] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('delta_map_group') ?? String(SOLO_MAP));
@@ -151,6 +156,21 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
       return loadGroupOptions().some(o => o.id === saved) ? saved : SOLO_MAP;
     } catch { return SOLO_MAP; }
   });
+
+  useEffect(() => {
+    getMyGroups()
+      .then(data => {
+        setGroupsData(data);
+        // 최신 목록에 더 이상 없는 그룹을 보고 있었다면 나만의 맵으로 복귀
+        setGroup(g => (g === SOLO_MAP || data.some(gr => gr.groupId === g)) ? g : SOLO_MAP);
+      })
+      .catch(() => {}); // 서버 미가동 — 캐시된 목록 유지
+  }, []);
+  // 현재 선택된 그룹의 멤버(나 제외) — 파티원 마커 렌더링용
+  const myUserId = loadMyUserId();
+  const partyMembers = group === SOLO_MAP
+    ? []
+    : (groupsData.find(g => g.groupId === group)?.members ?? []).filter(m => m.userId !== myUserId);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toast, setToast] = useState(null);
   // 보물상자/함정 도착 팝업 — { type: 'treasure'|'trap', value: 코인수|뒤로 갈 칸수, next: 확인 후 이동할 칸 }
@@ -220,15 +240,38 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
   // 도착 효과 중복 실행 방지 — null로 시작해 마운트 시에도 1회 처리 (노랑/빨강에 갇힌 상태 자가 복구)
   // 마운트 시 현재 칸은 이미 처리된 도착으로 간주 — 보물 칸에 머문 채 재진입해도 코인 재지급 방지
   const arrivedRef = useRef(position);
+  // 명세: POST /map/dice — 서버가 내려준 이번 이동의 이벤트(도착 칸 종류/보상/최종 위치). 없으면 로컬 규칙으로 폴백
+  const pendingEventRef = useRef(null);
+  // 이번 도착(들)이 서버 주사위 결과에 의한 것인지 — true인 동안은 트랩 확인 후 후속 착지까지도
+  // 로컬 RED/YELLOW 규칙을 절대 다시 적용하지 않음 (서버가 이미 최종 위치까지 결정했으므로)
+  const serverRollActiveRef = useRef(false);
 
   // 주사위 결과 소비 — 소비 입력 → 광고 → 주사위에서 예약된 이동을 실행
   useEffect(() => {
+    let serverResult = null;
+    try { serverResult = JSON.parse(localStorage.getItem('delta_pending_dice_result') || 'null'); } catch { /* noop */ }
+
+    if (serverResult) {
+      const t = setTimeout(() => {
+        localStorage.removeItem('delta_pending_dice_result');
+        serverRollActiveRef.current = true;
+        // finalPosition은 응답 최상위 필드라 event 객체에 함께 담아 후속 처리에서 쓰기 편하게 함
+        pendingEventRef.current = { ...serverResult.event, finalPosition: serverResult.finalPosition };
+        showToast(`주사위 ${serverResult.diceResult}! ${serverResult.diceResult}칸 이동!`);
+        setPosition(Math.min(TOTAL_STEPS, serverResult.landedPosition));
+      }, 700);
+      return () => clearTimeout(t);
+    }
+
+    // 서버 미가동 등으로 이벤트 정보 없이 눈금만 받은 경우 — 기존 로컬 규칙으로 폴백
     let pending = 0;
     try { pending = JSON.parse(localStorage.getItem('delta_pending_dice') || '0'); } catch { /* noop */ }
     if (pending > 0) {
       const t = setTimeout(() => {
         // 소비(키 삭제)는 실행 시점에 — StrictMode 이중 마운트에도 안전
         localStorage.removeItem('delta_pending_dice');
+        serverRollActiveRef.current = false;
+        pendingEventRef.current = null;
         showToast(`주사위 ${pending}! ${pending}칸 이동!`);
         setPosition(p => Math.min(TOTAL_STEPS, p + pending));
       }, 700);
@@ -241,6 +284,55 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
     if (arrivedRef.current === position) return; // 이미 처리한 도착
     arrivedRef.current = position;
     const n = position;
+
+    // 서버가 이번 도착의 이벤트를 이미 결정해준 경우 — 그대로 반영 (명세: POST /map/dice)
+    if (serverRollActiveRef.current) {
+      const event = pendingEventRef.current;
+
+      // 이벤트를 이미 소비한 뒤의 후속 착지(트랩 확인 후 이동) — 서버가 결정한 최종 위치이므로 추가 처리 없음
+      if (!event) {
+        serverRollActiveRef.current = false;
+        return;
+      }
+      pendingEventRef.current = null;
+
+      if (event.eventType === 'FINISH') {
+        showToast(event.description || '맵 클리어! 다음 맵으로 이동!');
+        const t = setTimeout(() => {
+          setMapLevel(l => l + 1);
+          const finalPos = event.finalPosition ?? 1;
+          serverRollActiveRef.current = false;
+          setPosition(finalPos);
+          setDisplayPos(finalPos);
+          arrivedRef.current = finalPos;
+        }, 1600);
+        return () => clearTimeout(t);
+      }
+
+      if (event.eventType === 'TREASURE') {
+        if (typeof event.coinBalance === 'number') {
+          localStorage.setItem('delta_coins', JSON.stringify(event.coinBalance));
+        } else {
+          giveCoin(event.rewardCoin || 1);
+        }
+        serverRollActiveRef.current = false;
+        setMapEvent({ type: 'treasure', value: event.rewardCoin ?? 0, next: null });
+        return;
+      }
+
+      if (event.eventType === 'BACK' || event.eventType === 'RESET') {
+        const to = Math.max(1, event.finalPosition ?? 1);
+        // serverRollActiveRef는 true로 유지 — 확인 후 후속 착지까지 이 시퀀스의 일부
+        setMapEvent({ type: 'trap', value: n - to, next: to });
+        return;
+      }
+
+      // NORMAL — 팝업 없이 해당 칸에 머무름
+      serverRollActiveRef.current = false;
+      return;
+    }
+
+    // ── 아래는 로컬 폴백 (서버 이벤트 정보가 없을 때만) ──────────────
 
     // 100번 도착 → 다음 맵으로 (1번부터 다시)
     if (n >= TOTAL_STEPS) {
@@ -280,8 +372,9 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
     setShowExplain(false);
   }
 
-  // 배너 '퀴즈 풀기' — 문제 은행에서 랜덤 1문제, 하루에 한 번만 (맞춰야 주사위를 굴릴 수 있음)
-  function openBannerQuiz() {
+  // 배너 '퀴즈 풀기' — 명세: GET /quiz/finance, 하루에 한 번만 (맞춰야 주사위를 굴릴 수 있음)
+  // 서버 미가동 시 로컬 문제은행으로 폴백
+  async function openBannerQuiz() {
     if (localStorage.getItem('delta_map_quiz_date') === todayString()) {
       showToast('오늘의 퀴즈는 이미 풀었어요!');
       return;
@@ -289,14 +382,45 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
     setSelectedOption(null);
     setAnswered(null);
     setShowExplain(false);
-    setQuiz({ step: null, quiz: QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)] });
+    try {
+      const data = await getFinanceQuiz();
+      setQuiz({
+        step: null,
+        quizId: data.quizId,
+        source: 'server',
+        quiz: { q: data.question, options: data.options.map(o => o.content), answer: null, explain: null },
+      });
+    } catch {
+      setQuiz({ step: null, source: 'local', quiz: QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)] });
+    }
   }
 
-  function handleAnswer(i) {
+  async function handleAnswer(i) {
     if (answered) return; // 이미 답변함
     // 오늘의 퀴즈 사용 처리 — 재도전은 광고를 통해서만 (openBannerQuiz의 하루 1회 가드)
     localStorage.setItem('delta_map_quiz_date', todayString());
     setSelectedOption(i);
+
+    if (quiz.source === 'server' && quiz.quizId != null) {
+      try {
+        // 명세: POST /quiz/finance/submit — selectedOption은 1부터 시작
+        const res = await submitFinanceQuiz(quiz.quizId, i + 1);
+        setQuiz(prev => ({ ...prev, quiz: { ...prev.quiz, answer: res.correctOption - 1, explain: res.explanation } }));
+        setAnswered(res.isCorrect ? 'correct' : 'wrong');
+        if (res.isCorrect) {
+          if (typeof res.coinBalance === 'number') localStorage.setItem('delta_coins', JSON.stringify(res.coinBalance));
+          else giveCoin();
+          setCoinToast(true);
+          setTimeout(() => setCoinToast(false), 2500);
+        }
+      } catch {
+        // 제출 실패 — 정답을 알 수 없어 채점 불가, 안전하게 오답 처리
+        setAnswered('wrong');
+      }
+      return;
+    }
+
+    // 로컬 문제은행 — 정답을 이미 알고 있으므로 즉시 채점
     if (i === quiz.quiz.answer) {
       setAnswered('correct');
       giveCoin();
@@ -909,12 +1033,12 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
           );
         })}
 
-        {/* 파티원 마커들 (mock) — 나만의 맵에서는 혼자 플레이 */}
-        {group !== SOLO_MAP && PARTY_MEMBERS.map(({ nickname, step, color }) => {
-          const p = stepPos(step);
+        {/* 파티원 마커들 (명세: GET /api/v1/groups — 그룹 멤버의 실제 mapPosition) — 나만의 맵에서는 혼자 플레이 */}
+        {group !== SOLO_MAP && partyMembers.map(({ userId, nickname, mapPosition }, i) => {
+          const p = stepPos(Math.min(TOTAL_STEPS, Math.max(1, mapPosition || 1)));
           return (
             <div
-              key={nickname}
+              key={userId}
               style={{
                 position: 'absolute',
                 left: p.x - 40,
@@ -923,7 +1047,7 @@ export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore
                 pointerEvents: 'none',
               }}
             >
-              <PlayerMarker stroke={color} nickname={nickname} />
+              <PlayerMarker stroke={PARTY_COLORS[i % PARTY_COLORS.length]} nickname={nickname} />
             </div>
           );
         })}

@@ -1,83 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Copy } from 'lucide-react';
 import CharacterAvatar from './CharacterAvatar';
+import { createGroup, getMyGroups, leaveGroup } from '../api/group';
+import { ENUM_TO_BODY_COLOR, ENUM_TO_EYE_SHAPE } from '../api/user';
 
-const GROUPS = ['그룹 1', '그룹 2', '그룹 3', '그룹 4'];
-const GROUPS_KEY = 'delta_groups';
-const MAX_MEMBERS = 3; // 나를 제외한 그룹당 최대 멤버 수
+const GROUP_LABELS = ['그룹 1', '그룹 2', '그룹 3', '그룹 4'];
+const MAX_MEMBERS = 3; // 나를 제외한 화면 표시용 카드 수 (서버에 그룹 인원 상한 명세는 없음 — 순수 UI 연출)
 
-// 그룹 슬롯 4개 — null이면 아직 만들어지지 않은 빈 그룹
-// TODO: 백엔드 연동 시 API로 대체
-export function loadGroups() {
-  try {
-    const g = JSON.parse(localStorage.getItem(GROUPS_KEY));
-    if (Array.isArray(g) && g.length === 4) return g;
-  } catch { /* noop */ }
-  return [null, null, null, null];
-}
-
-function saveGroups(groups) {
-  localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-}
-
-// 초대 코드 — 최초 1회 생성 후 유지 (알파벳 + 숫자 6자리)
-function getInviteCode() {
-  try {
-    let code = localStorage.getItem('delta_invite_code');
-    if (!code) {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      localStorage.setItem('delta_invite_code', code);
-    }
-    return code;
-  } catch {
-    return 'DELTA1';
-  }
+function loadMyUserId() {
+  try { return JSON.parse(localStorage.getItem('delta_user_id') || 'null'); } catch { return null; }
 }
 
 export default function GroupComposeScreen({ onBack }) {
-  const [groups, setGroups] = useState(loadGroups);
+  // 명세: GET /api/v1/groups — 내가 속한 그룹(최대 4개) + 구성원 현황
+  const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const [toast, setToast] = useState(null);
-  const inviteCode = getInviteCode();
+  const myUserId = loadMyUserId();
 
-  function updateGroups(next) {
-    setGroups(next);
-    saveGroups(next);
-  }
-
-  // 초대 링크(?invite=코드) 실제 참여 처리는 App.jsx의 processPendingInvite()가 담당
-  // (POST /api/v1/groups/join) — 로그인 후 home 진입 시 자동 전송되고, 성공하면 URL의
-  // ?invite= 는 App 마운트 시점에 이미 정리되므로 이 화면에서는 쿼리를 다시 읽지 않음.
-  // TODO: 그룹 목록/멤버 API가 없어 아래 groups 상태는 여전히 localStorage 기반 목업 —
-  // 그룹 조회 API가 나오면 joinGroupByInviteCode()가 반환한 groupId로 목록을 새로고침해야 함
+  useEffect(() => {
+    getMyGroups().then(setGroups).catch(() => {}); // 서버 미가동 시 빈 목록 유지
+  }, []);
 
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 1600);
   }
 
-  // 빈 슬롯에 그룹 만들기
-  function handleCreateGroup() {
-    if (groups[selectedGroup] !== null) return;
-    const next = [...groups];
-    next[selectedGroup] = { members: [] };
-    updateGroups(next);
-    showToast(`${GROUPS[selectedGroup]}이 만들어졌어요!`);
+  // 빈 슬롯에 그룹 만들기 (명세: POST /api/v1/groups)
+  async function handleCreateGroup() {
+    if (groups[selectedGroup]) return;
+    try {
+      await createGroup();
+      showToast(`${GROUP_LABELS[selectedGroup]}이 만들어졌어요!`);
+      const data = await getMyGroups();
+      setGroups(data);
+      setSelectedGroup(data.length - 1); // 방금 만든 그룹으로 탭 이동
+    } catch (err) {
+      showToast(err.response?.data?.message || '그룹을 만들지 못했어요');
+    }
   }
 
-  // 그룹 탈퇴 — 슬롯을 비워 다른 그룹에 참여할 수 있게 함
-  function handleLeaveGroup() {
-    if (groups[selectedGroup] === null) return;
-    const next = [...groups];
-    next[selectedGroup] = null;
-    updateGroups(next);
-    showToast(`${GROUPS[selectedGroup]}에서 탈퇴했어요`);
+  // 그룹 탈퇴 (명세: DELETE /api/v1/groups/{groupId}/leave)
+  async function handleLeaveGroup() {
+    const target = groups[selectedGroup];
+    if (!target) return;
+    try {
+      await leaveGroup(target.groupId);
+      showToast(`${GROUP_LABELS[selectedGroup]}에서 탈퇴했어요`);
+      const data = await getMyGroups();
+      setGroups(data);
+      setSelectedGroup(0);
+    } catch (err) {
+      showToast(err.response?.data?.message || '탈퇴하지 못했어요');
+    }
   }
 
-  // 아이폰 기본 공유 시트 (카카오톡/인스타그램/메시지 등)
+  const current = groups[selectedGroup] ?? null;
+  const inviteCode = current?.inviteCode;
+  const members = (current?.members ?? []).filter(m => m.userId !== myUserId);
+
+  // 아이폰 기본 공유 시트 (카카오톡/인스타그램/메시지 등) — 선택된 그룹의 실제 초대 코드 사용
   async function handleNativeShare() {
+    if (!inviteCode) return;
     const text = `델타에서 함께 맵을 즐겨요! 내 초대 코드: ${inviteCode}`;
     if (navigator.share) {
       try {
@@ -93,14 +79,13 @@ export default function GroupComposeScreen({ onBack }) {
   }
 
   async function handleCopyCode() {
+    if (!inviteCode) return;
     try {
       await navigator.clipboard.writeText(inviteCode);
       showToast('초대 코드가 복사되었어요!');
     } catch { /* noop */ }
   }
 
-  const current = groups[selectedGroup];
-  const members = current?.members ?? [];
   // 카드 수 = 멤버 + 대기중 1장 → 탈퇴 버튼 위치 계산
   const cardCount = members.length + (members.length < MAX_MEMBERS ? 1 : 0);
   const gridRows = Math.max(1, Math.ceil(cardCount / 2));
@@ -169,9 +154,9 @@ export default function GroupComposeScreen({ onBack }) {
           gap: '32px',
         }}
       >
-        {GROUPS.map((label, i) => {
+        {GROUP_LABELS.map((label, i) => {
           const active = selectedGroup === i;
-          const created = groups[i] !== null;
+          const created = Boolean(groups[i]);
           return (
             <button
               key={label}
@@ -268,10 +253,10 @@ export default function GroupComposeScreen({ onBack }) {
               rowGap: '21px',
             }}
           >
-            {/* 합류한 멤버들 — 초록 배지 + 닉네임 */}
-            {members.map(({ nickname }) => (
+            {/* 합류한 멤버들 — 실제 캐릭터 색상/눈모양 + 닉네임 배지 */}
+            {members.map(({ userId, nickname, bodyColor, eyeShape }) => (
               <div
-                key={nickname}
+                key={userId}
                 style={{
                   width: '166px',
                   height: '156px',
@@ -285,7 +270,12 @@ export default function GroupComposeScreen({ onBack }) {
                   overflow: 'hidden',
                 }}
               >
-                <CharacterAvatar size={140} style={{ marginTop: -8 }} color="#FFFFFF" eyes="round" />
+                <CharacterAvatar
+                  size={140}
+                  style={{ marginTop: -8 }}
+                  color={ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF'}
+                  eyes={ENUM_TO_EYE_SHAPE[eyeShape] || 'round'}
+                />
                 <div
                   style={{
                     position: 'absolute',

@@ -31,6 +31,7 @@ import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
 import { updateSavings, getFinanceSummary } from './api/finance';
 import { getMe, ENUM_TO_BODY_COLOR, ENUM_TO_EYE_SHAPE } from './api/user';
 import { joinGroupByInviteCode } from './api/group';
+import { claimAdReward, AD_REWARD_TYPES } from './api/ads';
 import {
   getDailyExpenses,
   transformExpense,
@@ -187,6 +188,10 @@ export default function App() {
     if (!localStorage.getItem('delta_uuid') && !localStorage.getItem('delta_access_token')) return;
     try {
       const data = await getMe();
+      if (typeof data.userId === 'number') {
+        // 그룹 화면에서 구성원 목록 중 '나'를 가려내는 데 사용 (명세: GET /groups)
+        localStorage.setItem('delta_user_id', JSON.stringify(data.userId));
+      }
       if (typeof data.coinBalance === 'number') {
         localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
       }
@@ -492,7 +497,11 @@ export default function App() {
           <AdScreen
             onDone={() => {
               if (adReturn === 'dice') {
-                // 소비 입력 → 광고 → 주사위 플로우
+                // 소비 입력 → 광고 → 코인 2배 보상(명세: POST /ads/reward) → 주사위 플로우
+                // TODO: 실제 광고 SDK 연동 시 adId를 SDK가 주는 실제 광고 단위 식별자로 교체
+                claimAdReward(AD_REWARD_TYPES.EXPENSE_RECORD, 'house_ad_expense_record')
+                  .then(r => { if (typeof r?.coinBalance === 'number') localStorage.setItem('delta_coins', JSON.stringify(r.coinBalance)); })
+                  .catch(() => {}); // 실패해도(중복 수령 등) 주사위 플로우는 그대로 진행
                 setAdReturn('home');
                 setScreen('diceRoll');
                 return;
@@ -505,10 +514,20 @@ export default function App() {
         )}
         {screen === 'diceRoll' && (
           <DiceRollScreen
-            onDone={(value) => {
-              // 나온 눈만큼 맵 이동 예약 → 캐릭터 탭에서 소비
-              localStorage.setItem('delta_pending_dice', JSON.stringify(value));
+            onDone={(data) => {
+              // 명세(POST /map/dice): 서버가 위치/이벤트까지 결정한 경우 그대로 전달,
+              // 서버 미가동으로 눈금만 받은 경우엔 캐릭터 탭의 기존 로컬 규칙으로 폴백
+              if (data.event) {
+                localStorage.setItem('delta_pending_dice_result', JSON.stringify(data));
+              } else {
+                localStorage.setItem('delta_pending_dice', JSON.stringify(data.diceResult));
+              }
               localStorage.setItem(DICE_ROLLED_KEY, todayString()); // 오늘의 미션: 주사위 완료 기록
+              setTab('character');
+              setScreen('home');
+            }}
+            onError={(message) => {
+              alert(message);
               setTab('character');
               setScreen('home');
             }}

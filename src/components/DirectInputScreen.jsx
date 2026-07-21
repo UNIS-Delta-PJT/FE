@@ -18,14 +18,6 @@ function applyCoinBalance(coinBalance) {
   }
 }
 
-// 광고 시청 보너스 — 서버에 대응 엔드포인트가 없는 로컬 전용 보상
-function giveExtraCoin() {
-  try {
-    const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
-    localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
-  } catch { /* noop */ }
-}
-
 function emptyEntry() {
   return { id: Date.now() + Math.random(), amount: '', place: '', category: null, date: new Date(), memo: '' };
 }
@@ -329,7 +321,7 @@ function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) 
           다음
         </button>
         <button
-          onClick={() => { giveExtraCoin(); onDoubleAd(); }}
+          onClick={onDoubleAd}
           className="active:scale-95 transition-transform"
           style={{ width: 353, height: 56, padding: 20, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 100, backgroundColor: '#FFFFFF', border: 'none', cursor: 'pointer', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: 16, color: '#1CD1A1', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)', whiteSpace: 'nowrap' }}
         >

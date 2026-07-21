@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import budgetCompleteImg from '../assets/budget_complete_character.png';
 import WarningToast from './WarningToast';
-import { getBudget, updateExpenseBudget, copyLastMonthBudget, getExpenseCategories, addExpenseCategory } from '../api/finance';
+import { getBudget, updateExpenseBudget, copyLastMonthBudget, getExpenseCategories, addExpenseCategory, deleteExpenseCategory } from '../api/finance';
 import { CATEGORY_ID_MAP } from '../api/expenses';
 
 // ─── 고정 카테고리 아이콘 맵 ──────────────────────────────────────────
@@ -300,6 +300,8 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
     } catch { return []; }
   });
   const [budgetInput, setBudgetInput] = useState(initialBudget > 0 ? String(initialBudget) : '');
+  // 삭제된 커스텀 카테고리명 — 저장 시 서버에도 삭제 요청 (명세: DELETE /finances/expense-categories/{categoryId})
+  const removedNamesRef = useRef([]);
 
   const [toast, setToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
@@ -357,6 +359,18 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   async function syncBudgetToServer(allCats, total) {
     const named = allCats.filter(c => c.name?.trim());
     const idMap = await resolveCategoryIds(named.map(c => c.name));
+
+    // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/문화/여가)는 서버가 삭제를 거부하므로 제외
+    const removedNames = removedNamesRef.current.filter(name => !CATEGORY_ID_MAP[name]);
+    if (removedNames.length) {
+      const serverCats = await getExpenseCategories().catch(() => []);
+      for (const name of removedNames) {
+        const existing = serverCats.find(c => c.name === name);
+        if (existing) await deleteExpenseCategory(existing.categoryId).catch(() => {});
+      }
+      removedNamesRef.current = [];
+    }
+
     const expenseBudgets = named
       .map(c => ({ categoryId: idMap[c.name], amount: c.amount || 0 }))
       .filter(b => b.categoryId);
@@ -472,7 +486,11 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   }
 
   function deleteCustomCategory(category_id) {
-    setCustomCategories(prev => prev.filter(c => c.category_id !== category_id));
+    setCustomCategories(prev => {
+      const target = prev.find(c => c.category_id === category_id);
+      if (target?.name?.trim()) removedNamesRef.current.push(target.name.trim());
+      return prev.filter(c => c.category_id !== category_id);
+    });
   }
 
   return (

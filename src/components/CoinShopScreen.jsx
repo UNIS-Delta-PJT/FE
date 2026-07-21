@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { hexToFilter } from './CategoryIcons';
+import { getCoinPackages } from '../api/shop';
 import coinIcon from '../assets/icon_coin.png';
 
-// 코인 상품 — TODO: 실제 앱스토어 인앱결제(IAP) 연동 시 교체
-const PRODUCTS = [
+// 코인 상품 — 서버 미가동 시 폴백 (명세: GET /shop/coins)
+// TODO: 실제 앱스토어 인앱결제(IAP) 연동 시 결제 승인 콜백으로 handlePurchase 교체 — 명세에 구매 확정 API가 아직 없음
+const FALLBACK_PRODUCTS = [
   { id: 'coin-10',  coins: 10,  bonus: 0,  price: '1,000원' },
-  { id: 'coin-20',  coins: 20,  bonus: 0,  price: '3,000원' },
+  { id: 'coin-30',  coins: 30,  bonus: 0,  price: '3,000원' },
   { id: 'coin-50',  coins: 50,  bonus: 0,  price: '5,000원' },
   { id: 'coin-100', coins: 100, bonus: 10, price: '10,000원' },
   { id: 'coin-300', coins: 300, bonus: 50, price: '30,000원' },
@@ -18,15 +20,35 @@ function loadCoins() {
 
 export default function CoinShopScreen({ onBack }) {
   const [coins, setCoins] = useState(loadCoins);
+  const [products, setProducts] = useState(FALLBACK_PRODUCTS);
   const [pending, setPending] = useState(null); // 결제 시트에 표시할 상품
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    getCoinPackages()
+      .then(data => {
+        if (Array.isArray(data.packages) && data.packages.length) {
+          setProducts(data.packages.map(p => ({
+            id: p.packageId,
+            coins: p.coinAmount,
+            bonus: p.bonusCoin,
+            price: `${p.price.toLocaleString('ko-KR')}원`,
+          })));
+        }
+        if (typeof data.coinBalance === 'number') {
+          setCoins(data.coinBalance);
+          localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
+        }
+      })
+      .catch(() => {}); // 서버 미가동 — 폴백 상품 목록 유지
+  }, []);
 
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 1600);
   }
 
-  // 모의 결제 승인 — TODO: 앱스토어 결제 승인 콜백으로 대체
+  // 모의 결제 승인 — TODO: 앱스토어 결제 승인 콜백으로 대체 (명세에 구매 확정 API 없음)
   function handlePurchase() {
     if (!pending) return;
     const total = pending.coins + pending.bonus;
@@ -139,7 +161,7 @@ export default function CoinShopScreen({ onBack }) {
           justifyContent: 'space-between',
         }}
       >
-        {PRODUCTS.map(({ id, coins: amount, bonus, price }) => (
+        {products.map(({ id, coins: amount, bonus, price }) => (
           <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
             {/* 코인 수량 (좌) */}
             <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '16px', fontWeight: 500, color: '#1A1A1A' }}>

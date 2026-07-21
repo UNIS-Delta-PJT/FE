@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import CharacterAvatar from './CharacterAvatar';
 import { hexToFilter } from './CategoryIcons';
 import { updateCharacter } from '../api/user';
+import { getShopItems, buyItem, getMyItems, equipItem } from '../api/items';
 import coinIcon from '../assets/icon_coin.png';
 import storeMenuIcon from '../assets/store_menu.png';
 import storePaletteIcon from '../assets/store_palette.png';
@@ -43,25 +44,35 @@ const EYE_OPTIONS = [
 const CATEGORIES = [
   { id: 'menu',      icon: storeMenuIcon, size: 48, keepColor: true },
   { id: 'palette',   icon: storePaletteIcon, size: 18 },
-  { id: 'shirts',    icon: storeShirtsIcon, size: 18 },
-  { id: 'pants',     icon: storePantsIcon, size: 18 },
-  { id: 'eyewears',  icon: storeEyewearsIcon, size: 18 },
-  { id: 'headwears', icon: storeHeadwearsIcon, size: 18 },
+  { id: 'shirts',    icon: storeShirtsIcon, size: 18, itemType: 'TOP' },
+  { id: 'pants',     icon: storePantsIcon, size: 18, itemType: 'BOTTOM' },
+  { id: 'eyewears',  icon: storeEyewearsIcon, size: 18, itemType: 'GLASSES' },
+  { id: 'headwears', icon: storeHeadwearsIcon, size: 18, itemType: 'HAT' },
 ];
 
-// 판매 상품 — 최저 10코인 ~ 최고 30코인 (TODO: 백엔드 연동 시 API로 대체)
-// wear: 착용 미리보기 오버레이 — 위치/크기(캐릭터 크기 대비 비율) + 착용감을 위한 변형 (카탈로그 이미지는 원본 유지)
-const STORE_ITEMS = [
-  { id: 'glasses',  src: itemGlasses,  price: 10, category: 'eyewears',  wear: { left: 0.31, top: 0.40, w: 0.38 } },
-  { id: 'ribbons',  src: itemRibbons,  price: 12, category: 'headwears', wear: { left: 0.55, top: 0.27, w: 0.22, transform: 'rotate(18deg)' } },
-  { id: 'bowtie',   src: itemBowtie,   price: 15, category: 'shirts',    wear: { left: 0.385, top: 0.66, w: 0.23 } },
-  { id: 'luckybag', src: itemLuckybag, price: 15, category: 'pants',     wear: { left: 0.67, top: 0.56, w: 0.26, transform: 'rotate(-12deg)' } },
-  { id: 'flowers',  src: itemFlowers,  price: 18, category: 'headwears', wear: { left: 0.28, top: 0.28, w: 0.44, transform: 'rotate(-3deg) scaleY(0.85)' } },
-  { id: 'muffler',  src: itemMuffler,  price: 20, category: 'shirts',    wear: { left: 0.26, top: 0.60, w: 0.48, transform: 'rotate(-4deg)' } },
-  { id: 'cash',     src: itemCash,     price: 22, category: 'pants',     wear: { left: 0.07, top: 0.60, w: 0.28, transform: 'rotate(-18deg)' } },
-  { id: 'stars',    src: itemStars,    price: 25, category: 'headwears', wear: { left: 0.62, top: 0.30, w: 0.28 } },
-  { id: 'coins',    src: itemCoins,    price: 30, category: 'pants',     wear: { left: 0.63, top: 0.66, w: 0.20, transform: 'rotate(10deg)' } },
-];
+// 명세(GET /items/shop, GET /items/my)는 itemId/name/price/itemType만 내려주고 이미지는 주지 않음 —
+// 실제 itemId ↔ 이미지 매핑표가 없어 itemType별로 로컬 그림을 순환 배정하는 임시 매칭 (TODO: 매핑표 확정되면 교체)
+const ART_BY_TYPE = {
+  GLASSES: [{ src: itemGlasses,  wear: { left: 0.31, top: 0.40, w: 0.38 } }],
+  HAT: [
+    { src: itemRibbons, wear: { left: 0.55, top: 0.27, w: 0.22, transform: 'rotate(18deg)' } },
+    { src: itemFlowers, wear: { left: 0.28, top: 0.28, w: 0.44, transform: 'rotate(-3deg) scaleY(0.85)' } },
+    { src: itemStars,   wear: { left: 0.62, top: 0.30, w: 0.28 } },
+  ],
+  TOP: [
+    { src: itemBowtie,  wear: { left: 0.385, top: 0.66, w: 0.23 } },
+    { src: itemMuffler, wear: { left: 0.26, top: 0.60, w: 0.48, transform: 'rotate(-4deg)' } },
+  ],
+  BOTTOM: [
+    { src: itemLuckybag, wear: { left: 0.67, top: 0.56, w: 0.26, transform: 'rotate(-12deg)' } },
+    { src: itemCash,     wear: { left: 0.07, top: 0.60, w: 0.28, transform: 'rotate(-18deg)' } },
+    { src: itemCoins,    wear: { left: 0.63, top: 0.66, w: 0.20, transform: 'rotate(10deg)' } },
+  ],
+};
+function artFor(itemType, itemId) {
+  const bucket = ART_BY_TYPE[itemType] || ART_BY_TYPE.HAT;
+  return bucket[itemId % bucket.length];
+}
 
 const TABS = [
   { id: 'shop',  label: '코인 상점' },
@@ -75,15 +86,44 @@ function loadCoins() {
 export default function StoreScreen({ onBack, onCoinShop }) {
   const [tab, setTab] = useState('shop');
   const [category, setCategory] = useState('menu');
-  // 착용 미리보기 — 카테고리당 1개 { category: itemId }
-  const [worn, setWorn] = useState({});
-  const [coins] = useState(loadCoins);
+  const [toast, setToast] = useState(null);
+
+  // 명세: GET /items/shop — 상점 아이템 + 코인 잔액
+  const [shopItems, setShopItems] = useState([]);
+  const [coins, setCoins] = useState(loadCoins);
+  // 명세: GET /items/my — 보유 아이템의 착용 여부 (itemId → isEquipped)
+  const [equippedMap, setEquippedMap] = useState({});
+
   const [color, setColor] = useState(() => {
     try { return localStorage.getItem('delta_character_color') || '#FFFFFF'; } catch { return '#FFFFFF'; }
   });
   const [eyes, setEyes] = useState(() => {
     try { return localStorage.getItem('delta_character_eyes') || 'round'; } catch { return 'round'; }
   });
+
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1600);
+  }
+
+  function refreshMyItems() {
+    getMyItems()
+      .then(items => setEquippedMap(Object.fromEntries(items.map(i => [i.itemId, i.isEquipped]))))
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    getShopItems()
+      .then(data => {
+        setShopItems(data.items ?? []);
+        if (typeof data.coinBalance === 'number') {
+          setCoins(data.coinBalance);
+          localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
+        }
+      })
+      .catch(() => {}); // 서버 미가동 — 로컬 값 유지, 상점은 빈 목록으로 표시
+    refreshMyItems();
+  }, []);
 
   function equipColor(c) {
     setColor(c);
@@ -98,22 +138,69 @@ export default function StoreScreen({ onBack, onCoinShop }) {
     updateCharacter({ eyes: id }).catch(() => {});
   }
 
-  // 아이템 착용 토글 — 같은 카테고리는 1개만 (다시 누르면 벗기)
-  function toggleWear(item) {
-    setWorn(prev => ({
-      ...prev,
-      [item.category]: prev[item.category] === item.id ? null : item.id,
-    }));
+  // 아이템 클릭 — 미보유면 구매(POST /items/{itemId}/buy), 보유 중이면 착용/해제(PATCH /items/my/{itemId}/equip)
+  async function handleItemClick(item) {
+    if (!item.isOwned) {
+      try {
+        const res = await buyItem(item.itemId);
+        setShopItems(prev => prev.map(i => i.itemId === item.itemId ? { ...i, isOwned: true } : i));
+        if (typeof res?.coinBalance === 'number') {
+          setCoins(res.coinBalance);
+          localStorage.setItem('delta_coins', JSON.stringify(res.coinBalance));
+        }
+        refreshMyItems();
+        showToast(`${item.name} 구매 완료!`);
+      } catch (err) {
+        showToast(err.response?.data?.message || '구매하지 못했어요');
+      }
+      return;
+    }
+
+    try {
+      const nextEquip = !equippedMap[item.itemId];
+      await equipItem(item.itemId, nextEquip);
+      refreshMyItems(); // 같은 itemType 기존 장착 해제 등 서버 결과를 그대로 반영
+    } catch (err) {
+      showToast(err.response?.data?.message || '착용 상태를 바꾸지 못했어요');
+    }
   }
 
-  const wornItems = STORE_ITEMS.filter(item => worn[item.category] === item.id);
-  const gridItems = category === 'menu' ? STORE_ITEMS : STORE_ITEMS.filter(item => item.category === category);
+  const gridItems = category === 'menu'
+    ? shopItems
+    : shopItems.filter(item => item.itemType === CATEGORIES.find(c => c.id === category)?.itemType);
+
+  // 캐릭터 미리보기에 실제로 착용 중인 아이템만 오버레이
+  const wornItems = shopItems
+    .filter(item => equippedMap[item.itemId])
+    .map(item => ({ id: item.itemId, ...artFor(item.itemType, item.itemId) }));
 
   return (
     <div
       className="bg-white"
       style={{ width: '390px', minHeight: '940px', position: 'relative' }}
     >
+      {/* 토스트 */}
+      {toast && (
+        <div
+          className="toast-enter"
+          style={{
+            position: 'fixed',
+            bottom: 110,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '6px 16px',
+            borderRadius: 20,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            zIndex: 70,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, fontWeight: 500, color: '#FFFFFF' }}>
+            {toast}
+          </span>
+        </div>
+      )}
+
       {/* 뒤로가기 */}
       <button
         onClick={onBack}
@@ -158,7 +245,7 @@ export default function StoreScreen({ onBack, onCoinShop }) {
         </span>
       </button>
 
-      {/* 내 캐릭터 (x60 y120, 272x272) — 온보딩 커스텀 + 착용 미리보기 오버레이 */}
+      {/* 내 캐릭터 (x60 y120, 272x272) — 온보딩 커스텀 + 실제 착용 중인 아이템 오버레이 */}
       <div style={{ position: 'absolute', top: '120px', left: '60px', width: '272px', height: '272px' }}>
         <CharacterAvatar size={272} color={color} eyes={eyes} />
         {wornItems.map(({ id, src, wear }) => (
@@ -284,7 +371,7 @@ export default function StoreScreen({ onBack, onCoinShop }) {
               })}
             </div>
           ) : (
-            /* 아이템 그리드 (y518.88, 343x384, 3열 / 상하 gap 9, 좌우 gap 7) — 클릭 시 착용 미리보기 */
+            /* 아이템 그리드 (y518.88, 343x384, 3열 / 상하 gap 9, 좌우 gap 7) — 미보유: 구매 / 보유: 착용 토글 */
             <div
               style={{
                 position: 'absolute',
@@ -298,27 +385,29 @@ export default function StoreScreen({ onBack, onCoinShop }) {
               }}
             >
               {gridItems.map((item) => {
-                const isWorn = worn[item.category] === item.id;
+                const isEquipped = Boolean(equippedMap[item.itemId]);
+                const art = artFor(item.itemType, item.itemId);
                 return (
                   <button
-                    key={item.id}
-                    onClick={() => toggleWear(item)}
+                    key={item.itemId}
+                    onClick={() => handleItemClick(item)}
                     style={{
                       width: '109px',
                       height: '122px',
                       borderRadius: '15px',
                       backgroundColor: '#FFFFFF',
-                      border: isWorn ? '2px solid #1CD1A1' : 'none',
+                      border: isEquipped ? '2px solid #1CD1A1' : 'none',
                       boxShadow: '0 4px 14px rgba(0, 0, 0, 0.10)',
                       position: 'relative',
                       cursor: 'pointer',
                       padding: 0,
                       boxSizing: 'border-box',
+                      opacity: item.isOwned && !isEquipped ? 0.85 : 1,
                     }}
                   >
                     <img
-                      src={item.src}
-                      alt={item.id}
+                      src={art.src}
+                      alt={item.name}
                       draggable={false}
                       style={{
                         position: 'absolute',
@@ -330,6 +419,21 @@ export default function StoreScreen({ onBack, onCoinShop }) {
                         objectFit: 'contain',
                       }}
                     />
+                    {item.isOwned && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '6px',
+                          right: '8px',
+                          fontFamily: 'Pretendard, sans-serif',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          color: isEquipped ? '#1CD1A1' : '#999999',
+                        }}
+                      >
+                        {isEquipped ? '착용중' : '보유'}
+                      </span>
+                    )}
                     <div
                       style={{
                         position: 'absolute',
@@ -342,15 +446,19 @@ export default function StoreScreen({ onBack, onCoinShop }) {
                         gap: '3px',
                       }}
                     >
-                      <img
-                        src={coinIcon}
-                        alt="코인"
-                        draggable={false}
-                        style={{ width: 12, height: 12, objectFit: 'contain', filter: hexToFilter('#1CD1A1') }}
-                      />
-                      <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 600, color: '#1CD1A1' }}>
-                        {item.price}
-                      </span>
+                      {!item.isOwned && (
+                        <>
+                          <img
+                            src={coinIcon}
+                            alt="코인"
+                            draggable={false}
+                            style={{ width: 12, height: 12, objectFit: 'contain', filter: hexToFilter('#1CD1A1') }}
+                          />
+                          <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 600, color: '#1CD1A1' }}>
+                            {item.price}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </button>
                 );

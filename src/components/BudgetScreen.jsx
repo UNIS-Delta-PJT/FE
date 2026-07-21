@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { X, Trash2, PlusCircle } from 'lucide-react';
 import settingImg from '../assets/setting.png';
 import CategoryIcon from './CategoryIcons';
-import { getBudget, getExpenseCategories, addExpenseCategory, updateExpenseBudget } from '../api/finance';
+import { getBudget, getExpenseCategories, addExpenseCategory, deleteExpenseCategory, updateExpenseBudget } from '../api/finance';
 import { CATEGORY_ID_MAP } from '../api/expenses';
+
+const FIXED_CATEGORY_NAMES = new Set(['식비', '교통', '문화/여가']);
 
 function EditIcon({ color = '#1CD1A1', width = 20, height = 25 }) {
   return (
@@ -49,13 +51,21 @@ function BudgetEditPopup({ onClose, onSaved }) {
   // 새 카테고리 추가 상태
   const [newCatName, setNewCatName] = useState('');
   const [newCatAmount, setNewCatAmount] = useState('');
+  // 삭제된 커스텀 카테고리명 — 저장 시 서버에도 삭제 요청 (명세: DELETE /finances/expense-categories/{categoryId})
+  const [removedNames, setRemovedNames] = useState([]);
 
   function handleChange(id, val) {
     setCats(prev => prev.map(c => c.category_id === id ? { ...c, amount: parseInt(val) || 0 } : c));
   }
 
   function handleDelete(id) {
-    setCats(prev => prev.filter(c => c.category_id !== id));
+    setCats(prev => {
+      const target = prev.find(c => c.category_id === id);
+      if (target && !FIXED_CATEGORY_NAMES.has(target.name)) {
+        setRemovedNames(names => [...names, target.name]);
+      }
+      return prev.filter(c => c.category_id !== id);
+    });
   }
 
   function handleAdd() {
@@ -89,13 +99,18 @@ function BudgetEditPopup({ onClose, onSaved }) {
         if (CATEGORY_ID_MAP[c.name]) idMap[c.name] = CATEGORY_ID_MAP[c.name];
         else unresolved.push(c.name);
       });
-      if (unresolved.length) {
+      if (unresolved.length || removedNames.length) {
         const serverCats = await getExpenseCategories().catch(() => []);
         for (const name of unresolved) {
           const existing = serverCats.find(c => c.name === name);
           if (existing) { idMap[name] = existing.categoryId; continue; }
           const created = await addExpenseCategory(name).catch(() => null);
           if (created?.categoryId) idMap[name] = created.categoryId;
+        }
+        // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/문화/여가)는 서버가 삭제를 거부하므로 제외
+        for (const name of removedNames) {
+          const existing = serverCats.find(c => c.name === name);
+          if (existing) await deleteExpenseCategory(existing.categoryId).catch(() => {});
         }
       }
       const expenseBudgets = named
@@ -120,9 +135,11 @@ function BudgetEditPopup({ onClose, onSaved }) {
             <div key={cat.category_id} className="flex flex-col" style={{ gap: 6 }}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
-                <button onClick={() => handleDelete(cat.category_id)} className="active:scale-90 transition-transform">
-                  <Trash2 size={14} className="text-red-400" />
-                </button>
+                {!FIXED_CATEGORY_NAMES.has(cat.name) && (
+                  <button onClick={() => handleDelete(cat.category_id)} className="active:scale-90 transition-transform">
+                    <Trash2 size={14} className="text-red-400" />
+                  </button>
+                )}
               </div>
               <div className="flex items-center justify-between bg-gray-50 rounded-2xl" style={{ padding: '12px 16px' }}>
                 <span className="text-sm text-gray-400">예산</span>
@@ -244,13 +261,12 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
         }
         if (Array.isArray(data.expenseBudgets)) {
           const prevCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
-          const fixedNames = new Set(['식비', '교통', '문화/여가']);
           const nextCats = data.expenseBudgets.map(b => {
             const name = b.categoryName === '문화' ? '문화/여가' : b.categoryName;
             const existing = prevCats.find(c => c.name === name);
             return {
               category_id: existing?.category_id ?? b.expenseBudgetId,
-              iconId: fixedNames.has(name) ? undefined : (existing?.iconId ?? 'shop'),
+              iconId: FIXED_CATEGORY_NAMES.has(name) ? undefined : (existing?.iconId ?? 'shop'),
               name,
               amount: b.amount,
             };
