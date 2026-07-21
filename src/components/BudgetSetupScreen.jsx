@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import budgetCompleteImg from '../assets/budget_complete_character.png';
 import WarningToast from './WarningToast';
+import { getBudget, updateExpenseBudget, copyLastMonthBudget, getExpenseCategories, addExpenseCategory } from '../api/finance';
+import { CATEGORY_ID_MAP } from '../api/expenses';
 
 // ─── 고정 카테고리 아이콘 맵 ──────────────────────────────────────────
 const ICON_MAP = {
@@ -304,6 +306,64 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
   const [budgetToast, setBudgetToast] = useState(null);
   const [budgetToastFading, setBudgetToastFading] = useState(false);
 
+  // 서버에 저장된 이번 달 예산으로 최초 1회 보정 (예산 탭에서 수정하러 들어온 경우 최신 값 반영)
+  useEffect(() => {
+    getBudget()
+      .then(data => {
+        if (!Array.isArray(data?.expenseBudgets)) return;
+        const fixedNames = new Set(DEFAULT_CATEGORIES.map(c => c.name));
+        const matchServer = (name) => data.expenseBudgets.find(b =>
+          b.categoryName === name || (name === '문화/여가' && b.categoryName === '문화')
+        );
+        setCategories(prev => DEFAULT_CATEGORIES.map(d => ({ ...d, amount: matchServer(d.name)?.amount ?? 0 })));
+        setCustomCategories(prev => data.expenseBudgets
+          .filter(b => !fixedNames.has(b.categoryName) && b.categoryName !== '문화')
+          .map(b => {
+            const existing = prev.find(c => c.name === b.categoryName);
+            return {
+              category_id: existing?.category_id ?? Date.now() + Math.random(),
+              iconId: existing?.iconId ?? 'shop',
+              name: b.categoryName,
+              amount: b.amount,
+              confirmed: true,
+            };
+          }));
+        if (data.totalExpenseBudget) setBudgetInput(String(data.totalExpenseBudget));
+      })
+      .catch(() => {}); // 서버 미가동/데이터 없음 — 로컬 값 유지
+  }, []);
+
+  // FE 카테고리명 → 서버 categoryId 해석 (기본 4종 외엔 서버에서 조회/생성)
+  async function resolveCategoryIds(names) {
+    const map = {};
+    const unresolved = [];
+    names.forEach(name => {
+      if (CATEGORY_ID_MAP[name]) map[name] = CATEGORY_ID_MAP[name];
+      else unresolved.push(name);
+    });
+    if (unresolved.length) {
+      const serverCats = await getExpenseCategories().catch(() => []);
+      for (const name of unresolved) {
+        const existing = serverCats.find(c => c.name === name);
+        if (existing) { map[name] = existing.categoryId; continue; }
+        const created = await addExpenseCategory(name).catch(() => null);
+        if (created?.categoryId) map[name] = created.categoryId;
+      }
+    }
+    return map;
+  }
+
+  // 목표 지출 예산 서버 동기화 — 로컬 플로우를 막지 않도록 백그라운드로 호출
+  async function syncBudgetToServer(allCats, total) {
+    const named = allCats.filter(c => c.name?.trim());
+    const idMap = await resolveCategoryIds(named.map(c => c.name));
+    const expenseBudgets = named
+      .map(c => ({ categoryId: idMap[c.name], amount: c.amount || 0 }))
+      .filter(b => b.categoryId);
+    if (expenseBudgets.length) {
+      await updateExpenseBudget(total, expenseBudgets);
+    }
+  }
 
   const totalIncome = (() => {
     try {
@@ -372,15 +432,32 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       return;
     }
     onComplete(totalBudget);
+    // 서버 동기화 (명세: PUT /finances/expense-budget) — 실패해도 로컬 플로우는 이미 진행됨
+    syncBudgetToServer([...categories, ...customCategories], totalBudget).catch(() => {});
   }
 
-  function handleCopyLastMonth() {
-    setToast(true);
-    setToastFading(false);
-    setTimeout(() => {
-      setToastFading(true);
-      setTimeout(() => setToast(false), 300);
-    }, 1700);
+  async function handleCopyLastMonth() {
+    try {
+      const data = await copyLastMonthBudget();
+      if (!data?.expenseBudgets?.length) throw new Error('empty');
+      const fixedNames = new Set(DEFAULT_CATEGORIES.map(c => c.name));
+      const matchServer = (name) => data.expenseBudgets.find(b =>
+        b.categoryName === name || (name === '문화/여가' && b.categoryName === '문화')
+      );
+      setCategories(DEFAULT_CATEGORIES.map(d => ({ ...d, amount: matchServer(d.name)?.amount ?? 0 })));
+      setCustomCategories(data.expenseBudgets
+        .filter(b => !fixedNames.has(b.categoryName) && b.categoryName !== '문화')
+        .map(b => ({ category_id: Date.now() + Math.random(), iconId: 'shop', name: b.categoryName, amount: b.amount, confirmed: true })));
+      setBudgetInput(String(data.totalExpenseBudget || 0));
+    } catch {
+      // 404(MONTHLY_FINANCE_NOT_FOUND) 등 — 지난달 계획 없음
+      setToast(true);
+      setToastFading(false);
+      setTimeout(() => {
+        setToastFading(true);
+        setTimeout(() => setToast(false), 300);
+      }, 1700);
+    }
   }
 
   function addCustomCategory() {

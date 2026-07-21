@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Pencil, PlusCircle, Trash2, X, PiggyBank, Briefcase, BookOpen, Gift, Building2, Star, Coins, GraduationCap, Wallet, Coffee } from 'lucide-react';
+import { getBudget, updateIncome } from '../api/finance';
 
 const ICON_CONFIG = [
   { id: 'piggy',      Icon: PiggyBank,      bg: '#FED02333', color: '#735C00' },
@@ -143,8 +144,32 @@ export default function IncomeSetupScreen({ onNext, onBack }) {
   // TODO: 백엔드 연동 시 지난달 예산 잔액으로 대체
   const lastMonthLeftover = 0;
 
+  // 서버 값으로 최초 1회 보정 — 아이콘은 서버가 모르므로 카테고리명으로 매칭해 로컬 아이콘 유지
+  const didSyncRef = useRef(false);
+  useEffect(() => {
+    getBudget()
+      .then(data => {
+        if (!Array.isArray(data?.incomeDetails)) return;
+        setIncomes(prev => data.incomeDetails.map(({ category, amount }) => {
+          const existing = prev.find(p => p.name === category);
+          return {
+            income_id: existing?.income_id ?? Date.now() + Math.random(),
+            iconId: existing?.iconId ?? 'piggy',
+            name: category,
+            amount,
+          };
+        }));
+      })
+      .catch(() => {}) // 서버 미가동 시 로컬 값 유지
+      .finally(() => { didSyncRef.current = true; });
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('delta_incomes', JSON.stringify(incomes));
+    // 최초 서버 동기화가 끝난 뒤의 변경만 서버로 전송 (동기화로 세팅되는 첫 반영은 되돌려 보내지 않음)
+    if (!didSyncRef.current) return;
+    if (incomes.length === 0) return; // 명세: incomeDetails 1건 이상 필수
+    updateIncome(incomes.map(({ name, amount }) => ({ category: name, amount }))).catch(() => {});
   }, [incomes]);
 
   function openAdd() {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import tickIcon from '../assets/clipboard_tick.png';
 import { todayString } from '../api/expenses';
-import { checkAttendance } from '../api/missions';
+import { checkAttendance, getAttendance, claimMissionReward } from '../api/missions';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const STORAGE_KEY = 'delta_attendance_days';
@@ -27,8 +27,8 @@ export default function AttendanceCheckScreen({ onNext }) {
   const year = today.getFullYear();
   const month = today.getMonth(); // 0-based
 
-  // 출석 기록 읽기 — 오늘이 처음이면 애니메이션 대상으로 표시
-  const [{ attendedSet, newlyChecked }] = useState(() => {
+  // 출석 기록 읽기 — 오늘이 처음이면 애니메이션 대상으로 표시 (오프라인에서도 즉시 렌더)
+  const [{ attendedSet, newlyChecked }, setAttendState] = useState(() => {
     const days = loadAttendanceDays();
     const newly = !days.includes(todayStr);
     return {
@@ -36,21 +36,49 @@ export default function AttendanceCheckScreen({ onNext }) {
       newlyChecked: newly,
     };
   });
-  const totalCount = attendedSet.size;
+  // 서버 기준 연속 출석 일수 — 로드되면 로컬 계산값 대신 이 값을 표시
+  const [serverStreak, setServerStreak] = useState(null);
+  const totalCount = serverStreak ?? attendedSet.size;
 
-  // 오늘 출석 저장 (이미 기록돼 있으면 그대로 유지)
+  // 오늘 출석 저장 (이미 기록돼 있으면 그대로 유지) + 서버 동기화
   useEffect(() => {
     const days = loadAttendanceDays();
-    if (!days.includes(todayStr)) {
+    const isFirstToday = !days.includes(todayStr);
+    if (isFirstToday) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...days, todayStr]));
-      // 출석 리워드 +1코인 — 하루 첫 출석에만 적립 (TODO: 미션 리워드 API 배포 시 서버 지급으로 교체)
-      try {
-        const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
-        localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
-      } catch { /* noop */ }
     }
-    // 서버에도 출석 기록 — 실패나 409(이미 출석)는 무시하고 로컬 기준으로 표시
-    checkAttendance().catch(() => {});
+
+    (async () => {
+      // 서버에 출석 기록 — 이미 출석(409)이면 무시하고 로컬 기준으로 표시
+      try {
+        const { continuousAttendance } = await checkAttendance();
+        if (typeof continuousAttendance === 'number') setServerStreak(continuousAttendance);
+      } catch { /* noop */ }
+
+      // 출석 리워드(1코인) 수령 — 오늘 처음 출석한 경우에만 시도 (서버가 중복 수령도 막아줌)
+      if (isFirstToday) {
+        claimMissionReward('ATTENDANCE')
+          .then(r => {
+            if (typeof r?.coinBalance === 'number') {
+              localStorage.setItem('delta_coins', JSON.stringify(r.coinBalance));
+            }
+          })
+          .catch(() => {});
+      }
+
+      // 이번 달 실제 출석 현황으로 달력 보정 (서버가 최종 소스)
+      try {
+        const mm = String(month + 1).padStart(2, '0');
+        const { attendances } = await getAttendance(`${year}-${mm}-01`, todayStr);
+        if (Array.isArray(attendances)) {
+          setAttendState(prev => {
+            const merged = new Set(prev.attendedSet);
+            attendances.forEach(a => { if (a.isAttended) merged.add(a.date); });
+            return { ...prev, attendedSet: merged };
+          });
+        }
+      } catch { /* noop */ }
+    })();
   }, [todayStr]);
 
   // 오늘 칸이 회색 → 초록으로 넘어가는 타이밍 (처음 출석한 날만 연출)

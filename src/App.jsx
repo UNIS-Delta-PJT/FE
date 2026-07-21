@@ -18,8 +18,6 @@ import DiceRollScreen from './components/DiceRollScreen';
 import BudgetSetupScreen from './components/BudgetSetupScreen';
 import BudgetGoalScreen from './components/BudgetGoalScreen';
 import IncomeSetupScreen from './components/IncomeSetupScreen';
-import MascotStatusScreen from './components/MascotStatusScreen';
-import AttendanceScreen from './components/AttendanceScreen';
 import BudgetScreen from './components/BudgetScreen';
 import ReportScreen from './components/ReportScreen';
 import AIReportScreen from './components/AIReportScreen';
@@ -30,14 +28,13 @@ import StoreScreen from './components/StoreScreen';
 import CoinShopScreen from './components/CoinShopScreen';
 
 import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
-import { updateSavings } from './api/finance';
+import { updateSavings, getFinanceSummary } from './api/finance';
+import { getMe, ENUM_TO_BODY_COLOR, ENUM_TO_EYE_SHAPE } from './api/user';
 import {
   getDailyExpenses,
   transformExpense,
   todayString,
 } from './api/expenses';
-// TODO: 백엔드 연동 후 아래 import 및 사용 제거
-import { MOCK_YEARLY_EXPENSES } from './data/mockData';
 
 export default function App() {
   const [screen, setScreen] = useState('splash');
@@ -80,18 +77,22 @@ export default function App() {
     } catch { return null; }
   });
 
-  // 이번 달 전체 소비 내역 (API에서 로드)
+  // 소비 내역 — 명세에 일별 조회만 있어 오늘 항목 위주로 채워짐 (리포트/캘린더용, 제한적)
   const [expenses, setExpenses] = useState([]);
 
-  // 이번 달 총 지출액
+  // 이번 달 총 지출액 (리포트 화면용 — 로컬에 쌓인 항목 기준이라 부정확할 수 있음)
   const spent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
 
-  // TODO: 백엔드 연동 후 제거 — 리포트용 더미 데이터 병합 (API expense_id와 겹치지 않는 9000번대)
-  const reportExpenses = useMemo(() => {
-    const apiIds = new Set(expenses.map(e => e.expense_id));
-    const mockFiltered = MOCK_YEARLY_EXPENSES.filter(e => !apiIds.has(e.expense_id));
-    return [...expenses, ...mockFiltered];
-  }, [expenses]);
+  // 홈 화면 예산 요약 — 명세 GET /finances/summary (서버가 계산한 정확한 이번 달 총 지출/잔여예산)
+  const [financeSummary, setFinanceSummary] = useState(null);
+  const loadSummary = useCallback(async () => {
+    if (!localStorage.getItem('delta_uuid') && !localStorage.getItem('delta_access_token')) return;
+    try {
+      setFinanceSummary(await getFinanceSummary());
+    } catch (err) {
+      console.warn('[loadSummary] API 실패 — 로컬 계산값 유지:', err.message);
+    }
+  }, []);
 
   // 오늘 소비 내역만 필터링 — 최신 저장 순(saved_at) 정렬
   const todayExpenses = useMemo(() => {
@@ -142,10 +143,45 @@ export default function App() {
     }
   }, []);
 
+  // ─── API: 내 정보 로드 (GET /users/me) — 다른 화면들이 참조하는 localStorage 캐시에 동기화 ──
+  // coins/character/mapPosition/streak는 여러 화면이 localStorage로 직접 읽으므로,
+  // 여기서 서버 값을 그 키들에 그대로 써주는 방식으로 화면 코드 변경 없이 전체 반영시킴
+  const loadMe = useCallback(async () => {
+    if (!localStorage.getItem('delta_uuid') && !localStorage.getItem('delta_access_token')) return;
+    try {
+      const data = await getMe();
+      if (typeof data.coinBalance === 'number') {
+        localStorage.setItem('delta_coins', JSON.stringify(data.coinBalance));
+      }
+      if (typeof data.mapPosition === 'number') {
+        localStorage.setItem('delta_map_position', JSON.stringify(data.mapPosition));
+      }
+      if (data.character) {
+        if (data.character.nickname) localStorage.setItem('delta_nickname', data.character.nickname);
+        if (data.character.bodyColor) {
+          localStorage.setItem('delta_character_color', ENUM_TO_BODY_COLOR[data.character.bodyColor] || '#FFFFFF');
+        }
+        if (data.character.eyeShape) {
+          localStorage.setItem('delta_character_eyes', ENUM_TO_EYE_SHAPE[data.character.eyeShape] || 'round');
+        }
+      }
+      if (data.notification && typeof data.notification.isNightPushDisabled === 'boolean') {
+        localStorage.setItem('delta_dnd_night', JSON.stringify(data.notification.isNightPushDisabled));
+      }
+    } catch (err) {
+      // 서버 라우트 미배포(404) 등 — 로컬 데이터로 계속 동작
+      console.warn('[loadMe] API 실패 — 로컬 데이터 유지:', err.message);
+    }
+  }, []);
+
   // home 화면 진입 시마다 새로고침
   useEffect(() => {
-    if (screen === 'home') loadExpenses();
-  }, [screen, loadExpenses]);
+    if (screen === 'home') {
+      loadExpenses();
+      loadMe();
+      loadSummary();
+    }
+  }, [screen, loadExpenses, loadMe, loadSummary]);
 
   // ─── API: 임시 로그인 ───────────────────────────────────────────
   // TODO: 백엔드 연동 시 로컬 fallback 제거 (현재 서버 미가동으로 임시 처리)
@@ -157,6 +193,7 @@ export default function App() {
       console.warn('[tempLogin] API 실패 — 로컬 임시 UUID로 진행:', err.message);
       localStorage.setItem('delta_uuid', `local-${crypto.randomUUID()}`);
     }
+    loadMe();
     setScreen('characterSetup'); // 첫 로그인: 캐릭터 꾸미기부터
   }
 
@@ -169,6 +206,7 @@ export default function App() {
     (async () => {
       try {
         const data = await completeKakaoLogin(code);
+        loadMe();
         // 신규 유저는 캐릭터 꾸미기부터, 기존 유저는 홈으로
         setScreen(data?.isNewUser ? 'characterSetup' : 'home');
       } catch (err) {
@@ -201,6 +239,7 @@ export default function App() {
   function addExpenses(newExpenses) {
     setExpenses(prev => [...prev, ...newExpenses]);
     loadExpenses(); // 백그라운드에서 API 동기화
+    loadSummary(); // 남은 예산 카드도 최신화
   }
 
   // ─── 토스트 ─────────────────────────────────────────────────────
@@ -396,6 +435,7 @@ export default function App() {
           <BudgetSetupScreen
             onComplete={(total) => {
               setBudgetTotal(total);
+              setBudgetGoal(total); // 배분 화면에서 총액을 바꿔도 목표 예산과 항상 일치 (예산 탭 반영)
               // 온보딩/수정 모두 완료 후 광고 시청 → 각자 위치로 복귀
               if (budgetFrom === 'budget') {
                 setBudgetFrom(null);
@@ -438,7 +478,7 @@ export default function App() {
         )}
         {screen === 'categoryExpense' && (
           <CategoryExpenseScreen
-            expenses={reportExpenses}
+            expenses={expenses}
             onBack={() => { setTab('report'); setScreen('home'); }}
           />
         )}
@@ -455,12 +495,6 @@ export default function App() {
               setScreen('login');
             }}
           />
-        )}
-        {screen === 'mascotStatus' && (
-          <MascotStatusScreen onNext={() => setScreen('attendance')} />
-        )}
-        {screen === 'attendance' && (
-          <AttendanceScreen onNext={() => setScreen('home')} />
         )}
         {screen === 'aiGuide' && (
           <AIGuideScreen onBack={() => setScreen('home')} />
@@ -500,8 +534,8 @@ export default function App() {
         {screen === 'home' && tab === 'home' && (
           <HomeScreen
             expenses={todayExpenses}
-            budgetTotal={budgetTotal}
-            spent={spent}
+            budgetTotal={financeSummary?.totalExpenseBudget ?? budgetTotal}
+            spent={financeSummary?.totalSpent ?? spent}
             onDirectInput={() => setScreen('directInput')}
             onMission={() => { setMissionFrom('home'); setScreen('todayMission'); }}
             onAttendance={() => { setAttendFrom('home'); setScreen('attendanceCheck'); }}
@@ -509,7 +543,7 @@ export default function App() {
           />
         )}
         {screen === 'home' && tab === 'report' && (
-          <ReportScreen expenses={reportExpenses} budgetTotal={budgetTotal} spent={spent} onCategoryDetail={() => setScreen('categoryExpense')} />
+          <ReportScreen expenses={expenses} budgetTotal={budgetTotal} spent={spent} onCategoryDetail={() => setScreen('categoryExpense')} />
         )}
         {screen === 'home' && tab === 'budget' && (
           <BudgetScreen
@@ -528,8 +562,8 @@ export default function App() {
           <CharacterMapScreen
             onGroupCompose={() => setScreen('groupCompose')}
             onStore={() => setScreen('store')}
-            // 퀴즈 정답 보상: 광고 → 주사위 한 번 더 → 눈만큼 이동
-            onExtraDice={() => { setAdReturn('dice'); setScreen('ad'); }}
+            // 퀴즈 정답 → 주사위 굴리기 화면으로 바로 이동
+            onRollDice={() => setScreen('diceRoll')}
           />
         )}
         {screen === 'groupCompose' && (

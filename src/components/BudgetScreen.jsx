@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2, PlusCircle, Check, Pencil } from 'lucide-react';
+import { X, Trash2, PlusCircle } from 'lucide-react';
 import settingImg from '../assets/setting.png';
 import CategoryIcon from './CategoryIcons';
+import { getBudget, getExpenseCategories, addExpenseCategory, updateExpenseBudget } from '../api/finance';
+import { CATEGORY_ID_MAP } from '../api/expenses';
 
 function EditIcon({ color = '#1CD1A1', width = 20, height = 25 }) {
   return (
@@ -31,190 +33,6 @@ function Toggle({ active, onToggle }) {
       <div
         style={{ position: 'absolute', top: 4, left: active ? 28 : 4, width: 16, height: 16, borderRadius: 8, backgroundColor: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
       />
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────
-   수입 수정 팝업 — 추가 / 수정 / 삭제 모두 지원
-───────────────────────────────────────────────────────── */
-function IncomeEditPopup({ onClose, onSaved }) {
-  const [incomes, setIncomes] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('delta_incomes') || '[]'); }
-    catch { return []; }
-  });
-
-  // 인라인 편집 상태
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editAmount, setEditAmount] = useState('');
-
-  // 새 항목 추가 상태
-  const [newName, setNewName] = useState('');
-  const [newAmount, setNewAmount] = useState('');
-
-  function handleStartEdit(income) {
-    setEditingId(income.income_id);
-    setEditName(income.name);
-    setEditAmount(String(income.amount));
-  }
-
-  function handleSaveEdit(income_id) {
-    if (!editName.trim() || !editAmount) return;
-    setIncomes(prev => prev.map(i =>
-      i.income_id === income_id
-        ? { ...i, name: editName.trim(), amount: parseInt(editAmount) }
-        : i
-    ));
-    setEditingId(null);
-  }
-
-  function handleCancelEdit() {
-    setEditingId(null);
-  }
-
-  function handleDelete(income_id) {
-    setIncomes(prev => prev.filter(i => i.income_id !== income_id));
-    if (editingId === income_id) setEditingId(null);
-  }
-
-  function handleAdd() {
-    if (!newName.trim() || !newAmount) return;
-    setIncomes(prev => [...prev, { income_id: Date.now(), name: newName.trim(), amount: parseInt(newAmount) }]);
-    setNewName('');
-    setNewAmount('');
-  }
-
-  function handleSave() {
-    localStorage.setItem('delta_incomes', JSON.stringify(incomes));
-    onSaved?.();
-    onClose();
-  }
-
-  return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: '0 20px' }} onClick={onClose}>
-      <div className="w-full bg-white" style={{ borderRadius: 20, maxHeight: '75%', overflowY: 'auto', padding: 32 }} onClick={e => e.stopPropagation()}>
-        <p className="font-bold text-gray-900" style={{ fontSize: 16, marginBottom: 20 }}>수입 리스트</p>
-
-        {/* 기존 수입 목록 */}
-        <div className="flex flex-col" style={{ gap: 10 }}>
-          {incomes.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center" style={{ paddingTop: 16, paddingBottom: 16 }}>등록된 수입이 없어요</p>
-          ) : incomes.map(item => (
-            <div key={item.income_id} className="flex flex-col bg-gray-50 rounded-2xl" style={{ padding: '14px 16px' }}>
-              {editingId === item.income_id ? (
-                /* 편집 모드 */
-                <div className="flex flex-col" style={{ gap: 8 }}>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    className="text-sm outline-none bg-transparent text-gray-800"
-                    style={{ fontWeight: 600 }}
-                  />
-                  <div style={{ height: 1, backgroundColor: '#EAEAEA' }} />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center" style={{ gap: 4 }}>
-                      <input
-                        type="number"
-                        value={editAmount}
-                        onChange={e => setEditAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="text-sm outline-none bg-transparent"
-                        style={{ color: '#1CD1A1', fontWeight: 600, width: 120 }}
-                      />
-                      <span className="text-sm text-gray-400">원</span>
-                    </div>
-                    <div className="flex items-center" style={{ gap: 8 }}>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                        style={{ backgroundColor: '#F4F4F4' }}
-                      >
-                        <X size={13} className="text-gray-500" />
-                      </button>
-                      <button
-                        onClick={() => handleSaveEdit(item.income_id)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                        style={{ backgroundColor: '#1CD1A1' }}
-                      >
-                        <Check size={13} className="text-white" strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* 표시 모드 */
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{item.name}</p>
-                    <p className="text-xs text-gray-400" style={{ marginTop: 2 }}>{item.amount.toLocaleString('ko-KR')}원</p>
-                  </div>
-                  <div className="flex items-center" style={{ gap: 10 }}>
-                    <button onClick={() => handleStartEdit(item)} className="active:scale-90 transition-transform">
-                      <Pencil size={14} className="text-gray-400" />
-                    </button>
-                    <button onClick={() => handleDelete(item.income_id)} className="active:scale-90 transition-transform">
-                      <Trash2 size={14} className="text-red-400" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* 새 수입 추가 */}
-        <div className="flex flex-col" style={{ gap: 8, marginTop: 20 }}>
-          <p className="text-sm font-semibold text-gray-700">새 수입 추가</p>
-          <div className="flex flex-col bg-gray-50 rounded-2xl" style={{ padding: '14px 20px', gap: 10 }}>
-            <input
-              type="text"
-              placeholder="수입 이름"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              className="text-sm outline-none bg-transparent text-gray-800 placeholder-gray-300"
-              style={{ width: '100%' }}
-            />
-            <div style={{ height: 1, backgroundColor: '#EAEAEA' }} />
-            <div className="flex items-center justify-between">
-              <input
-                type="number"
-                placeholder="금액 입력"
-                value={newAmount}
-                onChange={e => setNewAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                className="text-sm outline-none bg-transparent placeholder-gray-300"
-                style={{ color: '#1CD1A1', fontWeight: 600, width: '80%' }}
-              />
-              <span className="text-sm text-gray-400">원</span>
-            </div>
-          </div>
-          <button
-            onClick={handleAdd}
-            className="active:scale-95 transition-transform"
-            style={{ height: 44, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 14, fontWeight: 600, color: '#1CD1A1', border: 'none' }}
-          >
-            + 추가
-          </button>
-        </div>
-
-        <div className="flex gap-3" style={{ marginTop: 24 }}>
-          <button
-            onClick={onClose}
-            className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#F4F4F4', fontSize: 15, fontWeight: 600, color: '#555555' }}
-          >
-            취소
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 active:scale-95 transition-transform"
-            style={{ height: 48, borderRadius: 9999, backgroundColor: '#1CD1A1', fontSize: 15, fontWeight: 600, color: '#FFFFFF' }}
-          >
-            저장
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -252,7 +70,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
     setNewCatAmount('');
   }
 
-  function handleSave() {
+  async function handleSave() {
     // 카테고리 저장
     localStorage.setItem('delta_budget_categories', JSON.stringify(cats));
     // 총 예산·목표 예산 모두 카테고리 합계로 동기화 (합계 일치 규칙)
@@ -261,6 +79,32 @@ function BudgetEditPopup({ onClose, onSaved }) {
     localStorage.setItem('delta_budget_goal', JSON.stringify(newTotal));
     onSaved?.();
     onClose();
+
+    // 서버 동기화 (명세: PUT /finances/expense-budget) — 새 카테고리명은 먼저 생성
+    try {
+      const named = cats.filter(c => c.name?.trim());
+      const idMap = {};
+      const unresolved = [];
+      named.forEach(c => {
+        if (CATEGORY_ID_MAP[c.name]) idMap[c.name] = CATEGORY_ID_MAP[c.name];
+        else unresolved.push(c.name);
+      });
+      if (unresolved.length) {
+        const serverCats = await getExpenseCategories().catch(() => []);
+        for (const name of unresolved) {
+          const existing = serverCats.find(c => c.name === name);
+          if (existing) { idMap[name] = existing.categoryId; continue; }
+          const created = await addExpenseCategory(name).catch(() => null);
+          if (created?.categoryId) idMap[name] = created.categoryId;
+        }
+      }
+      const expenseBudgets = named
+        .map(c => ({ categoryId: idMap[c.name], amount: c.amount || 0 }))
+        .filter(b => b.categoryId);
+      if (expenseBudgets.length) {
+        await updateExpenseBudget(newTotal, expenseBudgets);
+      }
+    } catch { /* noop — 로컬 값은 이미 반영됨 */ }
   }
 
   return (
@@ -373,7 +217,6 @@ function readFromStorage() {
    메인 예산 화면
 ───────────────────────────────────────────────────────── */
 export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, onSettings }) {
-  const [showIncomePopup, setShowIncomePopup] = useState(false);
   const [showBudgetEditPopup, setShowBudgetEditPopup] = useState(false);
 
   const [{ totalIncome, budgetTotal, budgetGoal, budgetCats, savingsGoal }, setData] = useState(readFromStorage);
@@ -381,6 +224,43 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
   function refresh() {
     setData(readFromStorage());
   }
+
+  // 서버에 저장된 이번 달 예산 현황으로 로컬 캐시 보정 (명세: GET /finances/budget)
+  // 다른 화면들이 참조하는 localStorage 키에 그대로 반영해 화면 전반에 자동 동기화
+  useEffect(() => {
+    getBudget()
+      .then(data => {
+        if (Array.isArray(data.incomeDetails)) {
+          localStorage.setItem('delta_incomes', JSON.stringify(
+            data.incomeDetails.map(d => ({ income_id: d.incomeDetailId, iconId: 'piggy', name: d.category, amount: d.amount }))
+          ));
+        }
+        if (typeof data.totalExpenseBudget === 'number') {
+          localStorage.setItem('delta_budget_total', JSON.stringify(data.totalExpenseBudget));
+          localStorage.setItem('delta_budget_goal', JSON.stringify(data.totalExpenseBudget));
+        }
+        if (typeof data.targetSavings === 'number') {
+          localStorage.setItem('delta_savings_goal', JSON.stringify(data.targetSavings));
+        }
+        if (Array.isArray(data.expenseBudgets)) {
+          const prevCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
+          const fixedNames = new Set(['식비', '교통', '문화/여가']);
+          const nextCats = data.expenseBudgets.map(b => {
+            const name = b.categoryName === '문화' ? '문화/여가' : b.categoryName;
+            const existing = prevCats.find(c => c.name === name);
+            return {
+              category_id: existing?.category_id ?? b.expenseBudgetId,
+              iconId: fixedNames.has(name) ? undefined : (existing?.iconId ?? 'shop'),
+              name,
+              amount: b.amount,
+            };
+          });
+          localStorage.setItem('delta_budget_categories', JSON.stringify(nextCats));
+        }
+        refresh();
+      })
+      .catch(() => {}); // 서버 미가동/이번 달 데이터 없음 — 로컬 값 유지
+  }, []);
 
   // 현재 저축액 = 수입 총합 − 목표 예산 (한 달 소비 계획 입력값, 없으면 확정 예산 총액으로 fallback)
   const savings = Math.max(0, totalIncome - (budgetGoal || budgetTotal));
@@ -408,8 +288,8 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>한 달 총 수입</span>
-            {/* 수정: 수입 리스트 화면(IncomeSetupScreen)으로 전환. prop 미전달 시 기존 팝업 fallback */}
-            <button onClick={() => (onEditIncome ? onEditIncome() : setShowIncomePopup(true))} className="active:scale-90 transition-transform">
+            {/* 수정 → 수입 리스트 화면(IncomeSetupScreen) */}
+            <button onClick={onEditIncome} className="active:scale-90 transition-transform">
               <EditIcon />
             </button>
           </div>
@@ -530,8 +410,7 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
         </div>
       </div>
 
-      {/* 팝업들 */}
-      {showIncomePopup && <IncomeEditPopup onClose={() => setShowIncomePopup(false)} onSaved={refresh} />}
+      {/* 팝업 */}
       {showBudgetEditPopup && <BudgetEditPopup onClose={() => setShowBudgetEditPopup(false)} onSaved={refresh} />}
     </div>
   );

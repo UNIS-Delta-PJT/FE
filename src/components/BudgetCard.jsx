@@ -1,8 +1,5 @@
-import { mockBudget } from '../data/mockData';
-
 export default function BudgetCard({ totalAmount, spent = 0 }) {
-  const { total_amount: defaultTotal } = mockBudget;
-  const total_amount = totalAmount ?? defaultTotal;
+  const total_amount = totalAmount ?? 0;
   const remaining = total_amount - spent;
   const percent = total_amount > 0 ? Math.round((spent / total_amount) * 100) : 0;
 

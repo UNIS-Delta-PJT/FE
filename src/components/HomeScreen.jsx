@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stamp, PlusCircle } from 'lucide-react';
 import AdScreen from './AdScreen';
 import BudgetCard from './BudgetCard';
@@ -7,8 +7,9 @@ import CharacterAvatar from './CharacterAvatar';
 import missionIcon from '../assets/home_todays_mission.png';
 import coinIcon from '../assets/icon_coin.png';
 import { TOTAL_STEPS, stepColor, STEP_W, STEP_H, DEPTH, stepPos, MAP_HEIGHT, ROAD_PATH } from './mapConfig';
+import { getDailyQuiz, submitDailyQuiz } from '../api/quiz';
 
-// ── OX 퀴즈 은행 — 날짜 기준으로 오늘의 문제 선정 (TODO: API 대체) ──
+// ── OX 퀴즈 은행 — 서버 미가동 시 날짜 기준으로 오늘의 문제 선정하는 로컬 폴백 ──
 const OX_BANK = [
   { q: '체크카드는 통장 잔액 내에서만 결제된다', answer: 'O' },
   { q: '적금을 중도 해지해도 약정 이자를 전부 받는다', answer: 'X' },
@@ -113,39 +114,91 @@ function MiniMap({ position }) {
   );
 }
 
-// ── OX 퀴즈 카드 ─────────────────────────────────────────────────────
+// ── OX 퀴즈 카드 (명세: GET/POST /quiz/daily) — 서버 미가동 시 로컬 문제은행으로 폴백 ──
+function readLocalOxCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('delta_ox_quiz') || 'null');
+    return saved?.date === todayKey() ? saved : null; // { date, pick, correct }
+  } catch { return null; }
+}
+
 function OxQuizCard({ onCoin }) {
-  const quiz = getTodayQuiz();
-  const [answered, setAnswered] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('delta_ox_quiz') || 'null');
-      return saved?.date === todayKey() ? saved : null; // { date, pick, correct }
-    } catch { return null; }
-  });
+  const [state, setState] = useState(null); // { quizId, question, isSubmitted, isCorrect, correctAnswer, explanation, pick, source }
   const [pendingPick, setPendingPick] = useState(null); // 답 선택 후 광고 시청 대기
 
+  useEffect(() => {
+    getDailyQuiz()
+      .then(data => {
+        const local = readLocalOxCache();
+        setState({
+          quizId: data.quizId,
+          question: data.question,
+          isSubmitted: data.isSubmitted,
+          isCorrect: data.isCorrect,
+          correctAnswer: data.correctAnswer,
+          explanation: data.explanation,
+          pick: local?.pick, // 같은 기기에서 방금 제출한 경우에만 알 수 있음 (GET 응답엔 없음)
+          source: 'server',
+        });
+      })
+      .catch(() => {
+        // 서버 미가동 — 날짜 기반 로컬 문제은행으로 폴백
+        const quiz = getTodayQuiz();
+        const local = readLocalOxCache();
+        setState({
+          quizId: null,
+          question: quiz.q,
+          isSubmitted: !!local,
+          isCorrect: local?.correct,
+          correctAnswer: quiz.answer,
+          explanation: undefined,
+          pick: local?.pick,
+          source: 'local',
+        });
+      });
+  }, []);
+
+  if (!state) return null; // 로딩 중 — 지연이 짧아 스켈레톤 생략
+
   function answer(pick) {
-    if (answered || pendingPick) return;
+    if (state.isSubmitted || pendingPick) return;
     setPendingPick(pick); // 10초 광고 시청 후 정답 공개
   }
 
-  // 광고 종료 → 정답 공개
-  function revealResult() {
+  // 광고 종료 → 서버에 제출하고 정답 공개 (실패 시 로컬 채점으로 폴백)
+  async function revealResult() {
     const pick = pendingPick;
     setPendingPick(null);
-    const correct = pick === quiz.answer;
-    const result = { date: todayKey(), pick, correct };
-    setAnswered(result);
-    try { localStorage.setItem('delta_ox_quiz', JSON.stringify(result)); } catch { /* noop */ }
+
+    if (state.source === 'server' && state.quizId != null) {
+      try {
+        const res = await submitDailyQuiz(state.quizId, pick);
+        setState(prev => ({
+          ...prev,
+          isSubmitted: true,
+          isCorrect: res.isCorrect,
+          correctAnswer: res.correctAnswer ?? prev.correctAnswer,
+          explanation: res.explanation,
+          pick,
+        }));
+        localStorage.setItem('delta_ox_quiz', JSON.stringify({ date: todayKey(), pick, correct: res.isCorrect }));
+        if (res.isCorrect) onCoin(res.coinBalance);
+        return;
+      } catch { /* 제출 실패 — 아래 로컬 채점으로 폴백 */ }
+    }
+
+    const correct = pick === state.correctAnswer;
+    setState(prev => ({ ...prev, isSubmitted: true, isCorrect: correct, pick }));
+    localStorage.setItem('delta_ox_quiz', JSON.stringify({ date: todayKey(), pick, correct }));
     if (correct) onCoin();
   }
 
   // 정답 공개 후 버튼 상태: 정답이 아닌 선지는 회색 비활성화
-  const isGrayed = (type) => answered && type !== quiz.answer;
+  const isGrayed = (type) => state.isSubmitted && type !== state.correctAnswer;
   const btnState = (type) => {
-    if (!answered) return {};
-    if (answered.pick === type) {
-      return { outline: `2px solid ${answered.correct ? '#1CD1A1' : '#FF7682'}`, outlineOffset: 2 };
+    if (!state.isSubmitted) return {};
+    if (state.pick === type) {
+      return { outline: `2px solid ${state.isCorrect ? '#1CD1A1' : '#FF7682'}`, outlineOffset: 2 };
     }
     return {};
   };
@@ -168,20 +221,20 @@ function OxQuizCard({ onCoin }) {
       {/* 문제 */}
       <p style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 18, fontWeight: 500, color: '#1A1A1A', margin: 0, lineHeight: 1.4 }}>
         <span style={{ color: '#1CD1A1' }}>Q. </span>
-        {quiz.q}
+        {state.question}
       </p>
 
       {/* O / X 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button
           onClick={() => answer('O')}
-          className={answered ? undefined : 'active:scale-95 transition-transform'}
+          className={state.isSubmitted ? undefined : 'active:scale-95 transition-transform'}
           style={{
             width: 150,
             height: 56,
             borderRadius: 15,
             border: 'none',
-            cursor: answered ? 'default' : 'pointer',
+            cursor: state.isSubmitted ? 'default' : 'pointer',
             backgroundColor: isGrayed('O') ? '#F0F0F0' : '#D7E9FA',
             display: 'flex',
             alignItems: 'center',
@@ -195,13 +248,13 @@ function OxQuizCard({ onCoin }) {
         </button>
         <button
           onClick={() => answer('X')}
-          className={answered ? undefined : 'active:scale-95 transition-transform'}
+          className={state.isSubmitted ? undefined : 'active:scale-95 transition-transform'}
           style={{
             width: 150,
             height: 56,
             borderRadius: 15,
             border: 'none',
-            cursor: answered ? 'default' : 'pointer',
+            cursor: state.isSubmitted ? 'default' : 'pointer',
             backgroundColor: isGrayed('X') ? '#F0F0F0' : '#FCDDDF',
             display: 'flex',
             alignItems: 'center',
@@ -232,10 +285,15 @@ export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDi
   })();
   const [coinToast, setCoinToast] = useState(false);
 
-  function handleCoin() {
+  // coinBalance가 주어지면(서버 제출 응답) 그 값으로 설정, 없으면 로컬 +1 폴백
+  function handleCoin(coinBalance) {
     try {
-      const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
-      localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
+      if (typeof coinBalance === 'number') {
+        localStorage.setItem('delta_coins', JSON.stringify(coinBalance));
+      } else {
+        const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
+        localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
+      }
     } catch { /* noop */ }
     setCoinToast(true);
     setTimeout(() => setCoinToast(false), 2500);
@@ -281,7 +339,7 @@ export default function HomeScreen({ expenses = [], budgetTotal, spent = 0, onDi
           </button>
           {/* 환경설정 */}
           <button onClick={onMission} className="active:scale-90 transition-transform" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <img src={missionIcon} alt="오늘의 미션" width={36} height={36} draggable={false} />
+            <img src={missionIcon} alt="오늘의 미션" width={18} height={18} draggable={false} />
           </button>
         </div>
       </div>

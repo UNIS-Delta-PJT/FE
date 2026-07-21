@@ -6,7 +6,7 @@ import diceIcon from '../assets/icon_mission_dice.png';
 import { useEffect, useState } from 'react';
 import { hasAttendedToday } from './AttendanceCheckScreen';
 import { todayString } from '../api/expenses';
-import { getDailyMissions } from '../api/missions';
+import { getDailyMissions, claimMissionReward } from '../api/missions';
 
 export const DICE_ROLLED_KEY = 'delta_dice_rolled_date';
 
@@ -18,25 +18,47 @@ export function hasRolledDiceToday() {
 export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
   // 서버 미션 상태 (GET /api/v1/missions/daily) — 성공 시 로컬 판정보다 우선
   const [serverDone, setServerDone] = useState(null);
+  const [serverRewarded, setServerRewarded] = useState({});
+
   useEffect(() => {
     getDailyMissions()
       .then(list => {
         if (!Array.isArray(list) || !list.length) return;
-        const map = {};
-        list.forEach(({ missionType, isDone }) => { map[missionType] = isDone; });
-        setServerDone(map);
+        const doneMap = {};
+        const rewardedMap = {};
+        list.forEach(({ missionType, isDone, isRewarded }) => {
+          doneMap[missionType] = isDone;
+          rewardedMap[missionType] = isRewarded;
+        });
+        setServerDone(doneMap);
+        setServerRewarded(rewardedMap);
+
+        // 달성했지만 아직 수령하지 않은 리워드는 자동으로 수령 (버튼 없이 즉시 +1 Coin 반영)
+        list
+          .filter(m => m.isDone && !m.isRewarded)
+          .forEach(({ missionType }) => {
+            claimMissionReward(missionType)
+              .then(r => {
+                setServerRewarded(prev => ({ ...prev, [missionType]: true }));
+                if (typeof r?.coinBalance === 'number') {
+                  localStorage.setItem('delta_coins', JSON.stringify(r.coinBalance));
+                }
+              })
+              .catch(() => {}); // 아직 미달성(400)이거나 서버 미가동 — 다음 방문 때 재시도
+          });
       })
       .catch(() => {}); // 서버 미가동 시 로컬 판정 유지
   }, []);
 
   // ── 미션 상태 — 서버 응답 우선, 없으면 로컬 액션 여부로 계산 ──
+  // done 배지는 '리워드 수령 완료' 기준으로 표시 (서버 상태 없을 땐 달성 여부로 대체)
   const missions = [
     {
       name: '오늘의 출석',
       icon: calendarIcon,
       iconBg: 'rgba(88, 204, 2, 0.1)',   // #58CC02 10%
       iconColor: '#449F01',
-      done: serverDone?.ATTENDANCE ?? hasAttendedToday(),
+      done: serverDone ? (serverRewarded.ATTENDANCE ?? serverDone.ATTENDANCE) : hasAttendedToday(),
       progress: 0,
     },
     {
@@ -44,7 +66,7 @@ export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
       icon: receiptIcon,
       iconBg: 'rgba(28, 176, 246, 0.1)', // #1CB0F6 10%
       iconColor: '#1CB0F6',
-      done: serverDone?.EXPENSE_RECORD ?? (todayExpenseCount > 0),
+      done: serverDone ? (serverRewarded.EXPENSE_RECORD ?? serverDone.EXPENSE_RECORD) : (todayExpenseCount > 0),
       progress: 0,
     },
     {
@@ -52,7 +74,7 @@ export default function TodayMissionScreen({ onNext, todayExpenseCount = 0 }) {
       icon: diceIcon,
       iconBg: 'rgba(144, 186, 255, 0.1)', // #90BAFF 10%
       iconColor: '#90BAFF',
-      done: serverDone?.DICE ?? hasRolledDiceToday(),
+      done: serverDone ? (serverRewarded.DICE ?? serverDone.DICE) : hasRolledDiceToday(),
       progress: 0,
     },
   ];

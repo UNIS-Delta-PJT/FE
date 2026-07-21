@@ -13,6 +13,7 @@ import foundTreasureImg from '../assets/found_treasure.png';
 import trapImg from '../assets/trap.png';
 import ribbonsBannerImg from '../assets/store_ribbons.png';
 import { loadGroups } from './GroupComposeScreen';
+import { todayString } from '../api/expenses';
 
 // ── 맵 구성 (공용 설정에서 로드) ─────────────────────────────────────
 import {
@@ -132,7 +133,7 @@ function PlayerMarker({ stroke, isRainbow, nickname, animateKey }) {
   );
 }
 
-export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStore }) {
+export default function CharacterMapScreen({ onGroupCompose, onRollDice, onStore }) {
   const [mapLevel, setMapLevel] = useState(() => {
     try { return JSON.parse(localStorage.getItem('delta_map_level') || '1'); } catch { return 1; }
   });
@@ -272,16 +273,6 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
     // 초록: 대기 — 해당 칸을 클릭하면 퀴즈 시작
   }, [displayPos, position]);
 
-  // 스텝 클릭 — 현재 서 있는 초록 칸만 반응 (퀴즈 열기)
-  function handleStepClick(n) {
-    if (n !== position || displayPos !== position) return; // 현재 칸 외 클릭 무시
-    if (YELLOW_STEPS.has(n) || RED_EFFECTS[n] || n >= TOTAL_STEPS) return;
-    setSelectedOption(null);
-    setAnswered(null);
-    setShowExplain(false);
-    setQuiz({ step: n, quiz: QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)] });
-  }
-
   function closeQuiz() {
     setQuiz(null);
     setSelectedOption(null);
@@ -289,8 +280,12 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
     setShowExplain(false);
   }
 
-  // 배너 '퀴즈 풀기' — 칸과 무관하게 문제 은행에서 랜덤 1문제 (step: null → 링에 ★ 표시)
+  // 배너 '퀴즈 풀기' — 문제 은행에서 랜덤 1문제, 하루에 한 번만 (맞춰야 주사위를 굴릴 수 있음)
   function openBannerQuiz() {
+    if (localStorage.getItem('delta_map_quiz_date') === todayString()) {
+      showToast('오늘의 퀴즈는 이미 풀었어요!');
+      return;
+    }
     setSelectedOption(null);
     setAnswered(null);
     setShowExplain(false);
@@ -299,6 +294,8 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
 
   function handleAnswer(i) {
     if (answered) return; // 이미 답변함
+    // 오늘의 퀴즈 사용 처리 — 재도전은 광고를 통해서만 (openBannerQuiz의 하루 1회 가드)
+    localStorage.setItem('delta_map_quiz_date', todayString());
     setSelectedOption(i);
     if (i === quiz.quiz.answer) {
       setAnswered('correct');
@@ -668,14 +665,14 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
             {/* 결과 버튼 영역 */}
             {answered && (
               <>
-                {/* 광고 버튼 — 오답: 재도전 / 정답: 주사위 한 번 더 (광고 → 주사위 → 이동) */}
+                {/* 주 버튼 — 오답: 광고 보고 재도전 / 정답: 주사위 굴리기 */}
                 <button
                   onClick={() => {
                     if (answered === 'wrong') {
                       setQuizAd('retry');
                     } else {
                       closeQuiz();
-                      onExtraDice?.();
+                      onRollDice?.();
                     }
                   }}
                   className="active:scale-95 transition-transform"
@@ -696,30 +693,32 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
                   }}
                 >
                   <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 16, fontWeight: 600, color: '#FFFFFF' }}>
-                    {answered === 'wrong' ? '광고 보고 재도전하기' : '광고 보고 주사위 한 번 더!'}
+                    {answered === 'wrong' ? '광고 보고 재도전하기' : '주사위 굴리기'}
                   </span>
                 </button>
 
-                {/* 텍스트 버튼 — 오답: 정답보기 / 정답: 홈으로 */}
-                <button
-                  onClick={() => (answered === 'wrong' ? setShowExplain(true) : closeQuiz())}
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 660,
-                    margin: '0 auto',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontFamily: 'Pretendard, sans-serif',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: '#FFFFFF',
-                  }}
-                >
-                  {answered === 'wrong' ? '정답보기' : '홈으로'}
-                </button>
+                {/* 텍스트 버튼 — 오답일 때만: 정답보기 */}
+                {answered === 'wrong' && (
+                  <button
+                    onClick={() => setShowExplain(true)}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      top: 660,
+                      margin: '0 auto',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'Pretendard, sans-serif',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    정답보기
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -874,38 +873,38 @@ export default function CharacterMapScreen({ onGroupCompose, onExtraDice, onStor
           />
         ))}
 
-        {/* 스텝 버튼들 — 현재 서 있는 초록 칸만 클릭 가능 (퀴즈) */}
+        {/* 스텝들 — 위치 표시 전용 (일반 초록 칸은 아무 기능 없음, 퀴즈는 하단 배너에서만) */}
         {Array.from({ length: TOTAL_STEPS }, (_, i) => {
           const n = i + 1;
           const { x, y } = stepPos(n);
           const color = stepColor(n);
-          const clickable = n === position && displayPos === position && !YELLOW_STEPS.has(n) && !RED_EFFECTS[n] && n < TOTAL_STEPS;
           return (
             <div
               key={n}
               ref={el => { stepRefs.current[n] = el; }}
               style={{ position: 'absolute', left: x - STEP_W / 2, top: y - STEP_H / 2, width: STEP_W, textAlign: 'center' }}
             >
-              <button
-                onClick={() => handleStepClick(n)}
-                className={clickable ? 'active:scale-95 transition-transform' : undefined}
+              <div
                 style={{
                   width: STEP_W,
                   height: STEP_H,
                   borderRadius: 30,
                   border: 'none',
-                  cursor: clickable ? 'pointer' : 'default',
                   backgroundColor: color.top,
                   // 입체: 아래 어두운 같은 도형 레이어 + 안쪽 하이라이트
                   boxShadow: `0 ${DEPTH}px 0 ${color.base}, inset 0 2px 3px rgba(255,255,255,0.45)`,
                   position: 'relative',
                   zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box',
                 }}
               >
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 26, fontWeight: 600, color: '#FFFFFF' }}>
                   {n}
                 </span>
-              </button>
+              </div>
             </div>
           );
         })}

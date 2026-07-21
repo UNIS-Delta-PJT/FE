@@ -4,20 +4,27 @@ import CategoryIcon from './CategoryIcons';
 import coinIconImg from '../assets/icon_coin.png';
 import fireIcon from '../assets/fire_succession.png';
 import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString } from '../api/expenses';
+import { claimMissionReward } from '../api/missions';
 import { loadAttendanceDays } from './AttendanceCheckScreen';
 
 const CATEGORIES = ['식비', '교통', '문화', '기타'];
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
 const CAT_BUDGET_KEY = { '식비': '식비', '교통': '교통', '문화': '문화/여가', '기타': '기타' };
 
-// 코인 지급 (기록 완료 기본 +1, 광고 시청 시 +1 추가 = 2배)
-function giveRecordCoin() {
+// 코인 지급 결과를 로컬 캐시에 즉시 반영 (다음 getMe() 동기화 전까지 화면에 바로 보이도록)
+function applyCoinBalance(coinBalance) {
+  if (typeof coinBalance === 'number') {
+    localStorage.setItem('delta_coins', JSON.stringify(coinBalance));
+  }
+}
+
+// 광고 시청 보너스 — 서버에 대응 엔드포인트가 없는 로컬 전용 보상
+function giveExtraCoin() {
   try {
     const coins = JSON.parse(localStorage.getItem('delta_coins') || '0');
     localStorage.setItem('delta_coins', JSON.stringify(coins + 1));
   } catch { /* noop */ }
 }
-const giveExtraCoin = giveRecordCoin;
 
 function emptyEntry() {
   return { id: Date.now() + Math.random(), amount: '', place: '', category: null, date: new Date(), memo: '' };
@@ -365,13 +372,19 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
     try {
       // API 일괄 저장 (명세: POST /api/v1/finances/expenses) — 실패해도 로컬 저장으로 진행
       try {
-        await createExpenses(valid.map(e => ({
+        const result = await createExpenses(valid.map(e => ({
           amount: parseInt(e.amount),
           placeName: e.place?.trim() || e.memo || e.category,
           categoryId: CATEGORY_ID_MAP[e.category] ?? 3,
           expenseDate: toDateTimeString(e.date),
           memo: e.memo || null,
         })));
+        // 오늘의 첫 기록이면 '지출 기록' 미션 리워드(1코인) 수령
+        if (result?.isFirstRecordOfDay) {
+          claimMissionReward('EXPENSE_RECORD')
+            .then(r => applyCoinBalance(r?.coinBalance))
+            .catch(() => {});
+        }
       } catch (err) {
         console.warn('[handleSave] API 실패 — 로컬 저장으로 진행:', err.message);
       }
@@ -389,7 +402,6 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
 
       onSave(parsed);
       localStorage.setItem('delta_streak', String(newStreak));
-      giveRecordCoin(); // 기록 완료 기본 보상 +1코인
       setSavedEntries(parsed);
       setView('saved');
       // 코인 토스트(1.5초 시점)와 함께 그 아래에 표시
