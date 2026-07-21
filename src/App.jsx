@@ -167,11 +167,10 @@ export default function App() {
           return item;
         });
 
-        // 오늘이 아닌 항목과, API에 없는 오늘의 로컬 전용 항목(스캔 결과 등)은 보존
-        const apiIds = new Set(apiItems.map(i => i.expense_id));
-        const keep = prev.filter(e =>
-          e.expense_date !== today || (e.saved_at && !apiIds.has(e.expense_id))
-        );
+        // 오늘이 아닌 항목과, 서버에 전송된 적 없는 오늘의 로컬 전용 항목(스캔 결과, 저장 실패분 등)만 보존
+        // 서버에 이미 저장된 항목은 매번 apiItems로 다시 내려오므로 여기서 따로 유지할 필요가 없고,
+        // 유지하면 임시 로컬 id로 인해 같은 지출이 두 번 표시되는 중복 버그가 생김
+        const keep = prev.filter(e => e.expense_date !== today || (e.saved_at && e.localOnly));
 
         return [...keep, ...apiItems];
       });
@@ -465,9 +464,12 @@ export default function App() {
                   나의 한 달 총수입: {totalIncome.toLocaleString('ko-KR')}원
                 </p>
               }
-              onNext={(amount) => {
+              onNext={async (amount) => {
                 localStorage.setItem('delta_savings_goal', JSON.stringify(amount));
-                updateSavings(amount).catch(() => {}); // 서버 동기화 — 실패 시 로컬만 유지
+                // 저장 완료를 기다린 뒤 돌아가야 함 — BudgetScreen이 재마운트되며 곧바로
+                // getBudget()으로 서버 값을 다시 읽어오는데, 여기서 기다리지 않으면
+                // 아직 반영 안 된 이전 값으로 로컬 캐시가 덮어써져 한 번에 반영되지 않음
+                try { await updateSavings(amount); } catch { /* 실패 시 로컬 값 유지 */ }
                 backToBudgetTab();
               }}
               onBack={backToBudgetTab}

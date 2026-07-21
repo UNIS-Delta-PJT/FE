@@ -5,7 +5,7 @@ import CategoryIcon from './CategoryIcons';
 import { getBudget, getExpenseCategories, addExpenseCategory, deleteExpenseCategory, updateExpenseBudget } from '../api/finance';
 import { CATEGORY_ID_MAP } from '../api/expenses';
 
-const FIXED_CATEGORY_NAMES = new Set(['식비', '교통', '문화/여가']);
+const FIXED_CATEGORY_NAMES = new Set(['식비', '교통', '쇼핑', '문화']);
 
 function EditIcon({ color = '#1CD1A1', width = 20, height = 25 }) {
   return (
@@ -107,7 +107,7 @@ function BudgetEditPopup({ onClose, onSaved }) {
           const created = await addExpenseCategory(name).catch(() => null);
           if (created?.categoryId) idMap[name] = created.categoryId;
         }
-        // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/문화/여가)는 서버가 삭제를 거부하므로 제외
+        // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/쇼핑/문화)는 서버가 삭제를 거부하므로 제외
         for (const name of removedNames) {
           const existing = serverCats.find(c => c.name === name);
           if (existing) await deleteExpenseCategory(existing.categoryId).catch(() => {});
@@ -262,7 +262,7 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
         if (Array.isArray(data.expenseBudgets)) {
           const prevCats = JSON.parse(localStorage.getItem('delta_budget_categories') || '[]');
           const nextCats = data.expenseBudgets.map(b => {
-            const name = b.categoryName === '문화' ? '문화/여가' : b.categoryName;
+            const name = b.categoryName;
             const existing = prevCats.find(c => c.name === name);
             return {
               category_id: existing?.category_id ?? b.expenseBudgetId,
@@ -333,7 +333,7 @@ export default function BudgetScreen({ onEditIncome, onEditGoal, onEditSavings, 
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-700" style={{ fontSize: 14 }}>저축 유형</span>
             <span style={{ fontSize: 12, color: '#1CD1A1', fontWeight: 600 }}>
-              현재 저축액: {savings.toLocaleString('ko-KR')}원
+              현재 저축액: {displaySavingsGoal.toLocaleString('ko-KR')}원
             </span>
           </div>
           <div className="relative" style={{ height: 12, backgroundColor: '#F4F4F4', borderRadius: 6, overflow: 'hidden' }}>

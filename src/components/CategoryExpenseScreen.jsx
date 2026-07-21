@@ -1,23 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, Utensils, Ticket, Bus, ShoppingBag } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import reactionImg from '../assets/reaction_character.png';
+import CategoryIcon, { getCategoryBg } from './CategoryIcons';
 import { getWeeklyReport } from '../api/reports';
 
-// ── 카테고리 설정: 아이콘 + 프로그레스 그라데이션 (오른쪽으로 갈수록 진해짐) ──
-const CATEGORY_CONFIG = [
-  { key: '식비',   Icon: Utensils,    color: '#1CD1A1', gradient: 'linear-gradient(90deg, #CDF8E6 0%, #1CD1A1 100%)' },
-  { key: '문화비', Icon: Ticket,      color: '#FCD644', gradient: 'linear-gradient(90deg, #FCF6C8 0%, #FCD644 100%)' },
-  { key: '교통비', Icon: Bus,         color: '#90BAFF', gradient: 'linear-gradient(90deg, #DCE9FF 0%, #90BAFF 100%)' },
-  { key: '기타',   Icon: ShoppingBag, color: '#B78CF7', gradient: 'linear-gradient(90deg, #EFE4FF 0%, #B78CF7 100%)' },
-];
-
-// 지출 카테고리명 → 화면 카테고리 그룹 매핑
-function groupOf(name) {
-  if (name === '식비' || name === '카페') return '식비';
-  if (name?.startsWith('문화')) return '문화비';
-  if (name === '교통') return '교통비';
-  return '기타';
-}
+const ROW_H = 105; // 카드 안 한 항목이 차지하는 높이
+const CARD_TOP = 145;
+const CARD_TOP_PADDING = 32;
 
 // 이번 주 월요일~일요일 범위 계산
 function getThisWeekRange() {
@@ -49,29 +38,35 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
     getWeeklyReport(dateStr).then(setWeeklyReport).catch(() => {});
   }, []);
 
-  // 이번 주 지출을 카테고리 그룹별로 합산
+  // 이번 주 지출을 실제 카테고리명별로 합산 — 커스텀 카테고리도 각자의 이름으로 표시
   const stats = useMemo(() => {
-    const sums = { 식비: 0, 문화비: 0, 교통비: 0, 기타: 0 };
+    let rows;
     if (weeklyReport?.categoryExpenses) {
-      weeklyReport.categoryExpenses.forEach(c => {
-        sums[groupOf(c.categoryName)] += c.amount || 0;
-      });
+      rows = weeklyReport.categoryExpenses.map(c => ({ name: c.categoryName, amount: c.amount || 0 }));
     } else {
+      const sums = {};
       expenses.forEach(e => {
         const d = new Date(e.expense_date);
         if (d >= monday && d <= sunday) {
-          sums[groupOf(e.category)] += e.amount || 0;
+          const name = e.name || '기타';
+          sums[name] = (sums[name] || 0) + (e.amount || 0);
         }
       });
+      rows = Object.entries(sums).map(([name, amount]) => ({ name, amount }));
     }
-    const total = Object.values(sums).reduce((a, b) => a + b, 0);
-    return { sums, total };
+    rows = rows.filter(r => r.amount > 0).sort((a, b) => b.amount - a.amount);
+    const total = rows.reduce((s, r) => s + r.amount, 0);
+    return { rows, total };
   }, [weeklyReport, expenses, monday, sunday]);
+
+  const cardHeight = CARD_TOP_PADDING + Math.max(stats.rows.length, 1) * ROW_H;
+  const bubbleTop = CARD_TOP + cardHeight + 23;
+  const charTop = bubbleTop + 70;
 
   return (
     <div
       className="bg-white"
-      style={{ width: '390px', minHeight: '930px', position: 'relative' }}
+      style={{ width: '390px', minHeight: `${charTop + 160}px`, position: 'relative' }}
     >
       {/* 뒤로가기 */}
       <button
@@ -143,21 +138,38 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
       <div
         style={{
           position: 'absolute',
-          top: '145px',
+          top: `${CARD_TOP}px`,
           left: '20px',
           width: '353px',
-          height: '452px',
+          height: `${cardHeight}px`,
           borderRadius: '20px',
           backgroundColor: '#FFFFFF',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
         }}
       >
-        {CATEGORY_CONFIG.map(({ key, Icon, color, gradient }, i) => {
-          const amount = stats.sums[key];
+        {stats.rows.length === 0 ? (
+          <p
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: 0,
+              right: 0,
+              transform: 'translateY(-50%)',
+              textAlign: 'center',
+              fontFamily: 'Pretendard, sans-serif',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#999999',
+            }}
+          >
+            이번 주 지출이 아직 없어요
+          </p>
+        ) : stats.rows.map(({ name, amount }, i) => {
           const pct = stats.total > 0 ? Math.round((amount / stats.total) * 100) : 0;
-          const top = 32 + i * 105; // 첫 항목 y246(카드 기준 32), 항목 간 105px 간격
+          const color = getCategoryBg(name);
+          const top = CARD_TOP_PADDING + i * ROW_H;
           return (
-            <div key={key}>
+            <div key={name}>
               {/* 아이콘 */}
               <div
                 style={{
@@ -173,13 +185,13 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
                   justifyContent: 'center',
                 }}
               >
-                <Icon size={17} color={color} strokeWidth={2} />
+                <CategoryIcon name={name} width={17} height={15} color={color} />
               </div>
 
               {/* 카테고리명 + 금액 */}
               <div style={{ position: 'absolute', top: `${top - 3}px`, left: '62px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '18px', fontWeight: 600, color: '#000000' }}>
-                  {key}
+                  {name}
                 </span>
                 <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 500, color: '#999999' }}>
                   {amount.toLocaleString('ko-KR')}원
@@ -215,7 +227,7 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
                 }}
               >
                 {pct > 0 && (
-                  <div style={{ width: `${pct}%`, height: '100%', borderRadius: '9999px', background: gradient }} />
+                  <div style={{ width: `${pct}%`, height: '100%', borderRadius: '9999px', backgroundColor: color }} />
                 )}
               </div>
             </div>
@@ -224,45 +236,36 @@ export default function CategoryExpenseScreen({ expenses = [], onBack }) {
       </div>
 
       {/* 리액션 캐릭터 + 말풍선 */}
-      {(() => {
-        // 이번 주 지출 1위 카테고리
-        const topKey = stats.total > 0
-          ? Object.entries(stats.sums).reduce((a, b) => (a[1] >= b[1] ? a : b))[0]
-          : null;
-        return (
-          // 카드 아래 전용 공간 (카드 끝 y597 이후)
-          <div>
-            {/* 말풍선 */}
-            <div style={{ position: 'absolute', top: '620px', right: '20px' }}>
-              <div
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
-                  padding: '10px 16px',
-                  whiteSpace: 'pre-line',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
-                }}
-              >
-                <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555', lineHeight: 1.4 }}>
-                  {topKey
-                    ? `${topKey} 지출이 가장 많았네!\n계획대로 잘 하고 있어`
-                    : '이번 주 지출이 아직 없어!\n계획대로 잘 하고 있어'}
-                </span>
-              </div>
-              {/* 꼬리 — 캐릭터 방향(아래) */}
-              <div style={{ position: 'absolute', bottom: '-8px', right: '48px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '8px solid #FFFFFF' }} />
-            </div>
-            {/* 캐릭터 */}
-            <img
-              src={reactionImg}
-              alt="리액션 캐릭터"
-              draggable={false}
-              style={{ position: 'absolute', top: '690px', left: '212px', width: '144px', height: '144px', objectFit: 'contain' }}
-            />
+      <div>
+        {/* 말풍선 */}
+        <div style={{ position: 'absolute', top: `${bubbleTop}px`, right: '20px' }}>
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              padding: '10px 16px',
+              whiteSpace: 'pre-line',
+              textAlign: 'center',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+            }}
+          >
+            <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '14px', fontWeight: 500, color: '#555555', lineHeight: 1.4 }}>
+              {stats.rows.length > 0
+                ? `${stats.rows[0].name} 지출이 가장 많았네!\n계획대로 잘 하고 있어`
+                : '이번 주 지출이 아직 없어!\n계획대로 잘 하고 있어'}
+            </span>
           </div>
-        );
-      })()}
+          {/* 꼬리 — 캐릭터 방향(아래) */}
+          <div style={{ position: 'absolute', bottom: '-8px', right: '48px', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '8px solid #FFFFFF' }} />
+        </div>
+        {/* 캐릭터 */}
+        <img
+          src={reactionImg}
+          alt="리액션 캐릭터"
+          draggable={false}
+          style={{ position: 'absolute', top: `${charTop}px`, left: '212px', width: '144px', height: '144px', objectFit: 'contain' }}
+        />
+      </div>
     </div>
   );
 }

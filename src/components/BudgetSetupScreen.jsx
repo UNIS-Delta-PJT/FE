@@ -11,9 +11,10 @@ import { CATEGORY_ID_MAP } from '../api/expenses';
 
 // ─── 고정 카테고리 아이콘 맵 ──────────────────────────────────────────
 const ICON_MAP = {
-  '식비':      { Icon: Utensils },
-  '교통':      { Icon: Bus      },
-  '문화/여가': { Icon: Film     },
+  '식비': { Icon: Utensils },
+  '교통': { Icon: Bus      },
+  '쇼핑': { Icon: ShoppingBag },
+  '문화': { Icon: Film     },
 };
 
 // ─── 커스텀 카테고리 아이콘 설정 ──────────────────────────────────────
@@ -34,9 +35,10 @@ function getCustomIcon(id) {
 }
 
 const DEFAULT_CATEGORIES = [
-  { category_id: 1, name: '식비',      amount: 0 },
-  { category_id: 2, name: '교통',      amount: 0 },
-  { category_id: 3, name: '문화/여가', amount: 0 },
+  { category_id: 1, name: '식비', amount: 0 },
+  { category_id: 2, name: '교통', amount: 0 },
+  { category_id: 3, name: '쇼핑', amount: 0 },
+  { category_id: 4, name: '문화', amount: 0 },
 ];
 
 // ─── 커스텀 아이콘 픽커 ───────────────────────────────────────────────
@@ -314,12 +316,10 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       .then(data => {
         if (!Array.isArray(data?.expenseBudgets)) return;
         const fixedNames = new Set(DEFAULT_CATEGORIES.map(c => c.name));
-        const matchServer = (name) => data.expenseBudgets.find(b =>
-          b.categoryName === name || (name === '문화/여가' && b.categoryName === '문화')
-        );
+        const matchServer = (name) => data.expenseBudgets.find(b => b.categoryName === name);
         setCategories(prev => DEFAULT_CATEGORIES.map(d => ({ ...d, amount: matchServer(d.name)?.amount ?? 0 })));
         setCustomCategories(prev => data.expenseBudgets
-          .filter(b => !fixedNames.has(b.categoryName) && b.categoryName !== '문화')
+          .filter(b => !fixedNames.has(b.categoryName))
           .map(b => {
             const existing = prev.find(c => c.name === b.categoryName);
             return {
@@ -360,7 +360,7 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
     const named = allCats.filter(c => c.name?.trim());
     const idMap = await resolveCategoryIds(named.map(c => c.name));
 
-    // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/문화/여가)는 서버가 삭제를 거부하므로 제외
+    // 삭제된 커스텀 카테고리 — 기본 카테고리(식비/교통/쇼핑/문화)는 서버가 삭제를 거부하므로 제외
     const removedNames = removedNamesRef.current.filter(name => !CATEGORY_ID_MAP[name]);
     if (removedNames.length) {
       const serverCats = await getExpenseCategories().catch(() => []);
@@ -455,12 +455,10 @@ export default function BudgetSetupScreen({ onComplete, onBack, initialBudget = 
       const data = await copyLastMonthBudget();
       if (!data?.expenseBudgets?.length) throw new Error('empty');
       const fixedNames = new Set(DEFAULT_CATEGORIES.map(c => c.name));
-      const matchServer = (name) => data.expenseBudgets.find(b =>
-        b.categoryName === name || (name === '문화/여가' && b.categoryName === '문화')
-      );
+      const matchServer = (name) => data.expenseBudgets.find(b => b.categoryName === name);
       setCategories(DEFAULT_CATEGORIES.map(d => ({ ...d, amount: matchServer(d.name)?.amount ?? 0 })));
       setCustomCategories(data.expenseBudgets
-        .filter(b => !fixedNames.has(b.categoryName) && b.categoryName !== '문화')
+        .filter(b => !fixedNames.has(b.categoryName))
         .map(b => ({ category_id: Date.now() + Math.random(), iconId: 'shop', name: b.categoryName, amount: b.amount, confirmed: true })));
       setBudgetInput(String(data.totalExpenseBudget || 0));
     } catch {

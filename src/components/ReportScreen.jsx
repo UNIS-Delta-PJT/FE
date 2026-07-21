@@ -989,7 +989,7 @@ export default function ReportScreen({ expenses = [], budgetTotal = 0, spent = 0
           <YearlyFlowCard expenses={expenses} monthlyTotals={annualMonthlyTotals} prevYearTotal={prevYearTotal} />
           <YearlySummaryCard expenses={expenses} summary={annualReport?.annualSummary} />
           <CalendarView calendarData={calendarData} />
-          <TotalSavingsCard categorySavings={annualReport?.categorySavings} />
+          <TotalSavingsCard categorySavings={annualReport?.categorySavings?.map(c => ({ name: c.categoryName, amount: c.savedAmount }))} />
         </div>
       )}
     </div>

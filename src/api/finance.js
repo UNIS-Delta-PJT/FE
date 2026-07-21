@@ -60,13 +60,34 @@ export async function copyLastMonthBudget() {
   return res.data.data;
 }
 
+const CATEGORIES_CACHE_KEY = 'delta_categories_cache';
+
+// 서버 기본 카테고리 — 서버 미가동 시에만 사용하는 폴백
+export const DEFAULT_CATEGORIES = [
+  { categoryId: 1, name: '식비', isDefault: true },
+  { categoryId: 2, name: '교통', isDefault: true },
+  { categoryId: 3, name: '쇼핑', isDefault: true },
+  { categoryId: 4, name: '문화', isDefault: true },
+];
+
 /**
  * 지출 카테고리 목록 조회 (GET /api/v1/finances/expense-categories)
+ * 성공 시 로컬 캐시에도 저장 — 동기적으로 카테고리 목록이 필요한 곳에서 loadCategoriesCache()로 참조
  * @returns {Array<{ categoryId, name, isDefault }>}
  */
 export async function getExpenseCategories() {
   const res = await apiClient.get('/api/v1/finances/expense-categories');
-  return res.data.data?.categories ?? [];
+  const categories = res.data.data?.categories ?? [];
+  localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify(categories));
+  return categories;
+}
+
+/** 마지막으로 동기화된 카테고리 목록 캐시 — 없으면 기본 4종 */
+export function loadCategoriesCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CATEGORIES_CACHE_KEY) || 'null');
+    return Array.isArray(c) && c.length ? c : DEFAULT_CATEGORIES;
+  } catch { return DEFAULT_CATEGORIES; }
 }
 
 /** 커스텀 지출 카테고리 추가 (POST /api/v1/finances/expense-categories) */

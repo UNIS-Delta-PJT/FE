@@ -22,16 +22,14 @@ export async function getDailyExpenses(date) {
 }
 
 /**
- * 카테고리 이름 → categoryId 매핑 (명세 기본 카테고리: 1 식비, 2 교통, 3 쇼핑, 4 문화)
- * TODO: FE의 '기타'는 서버 기본 카테고리에 없음 — 임시로 쇼핑(3) 매핑, 커스텀 카테고리 API로 대체 검토
+ * 카테고리 이름 → categoryId 매핑 (서버 기본 카테고리: 1 식비, 2 교통, 3 쇼핑, 4 문화)
+ * 커스텀 카테고리는 여기 없으므로 getExpenseCategories()로 조회한 실제 목록을 함께 사용해야 함
  */
 export const CATEGORY_ID_MAP = {
   '식비': 1,
   '교통': 2,
   '쇼핑': 3,
   '문화': 4,
-  '문화/여가': 4,
-  '기타': 3,
 };
 
 /**

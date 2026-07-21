@@ -3,13 +3,12 @@ import { ArrowLeft, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import CategoryIcon from './CategoryIcons';
 import coinIconImg from '../assets/icon_coin.png';
 import fireIcon from '../assets/fire_succession.png';
-import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString } from '../api/expenses';
+import { createExpenses, CATEGORY_ID_MAP, toDateString, toDateTimeString, currentYearMonth } from '../api/expenses';
+import { getExpenseCategories, loadCategoriesCache } from '../api/finance';
 import { claimMissionReward } from '../api/missions';
 import { loadAttendanceDays } from './AttendanceCheckScreen';
 
-const CATEGORIES = ['식비', '교통', '문화', '기타'];
 const MONTH_NAMES = ['1','2','3','4','5','6','7','8','9','10','11','12'];
-const CAT_BUDGET_KEY = { '식비': '식비', '교통': '교통', '문화': '문화/여가', '기타': '기타' };
 
 // 코인 지급 결과를 로컬 캐시에 즉시 반영 (다음 getMe() 동기화 전까지 화면에 바로 보이도록)
 function applyCoinBalance(coinBalance) {
@@ -88,7 +87,7 @@ function MiniCalendar({ selected, onSelect }) {
 }
 
 /* ─── 단일 입력 폼 ─── */
-function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
+function EntryForm({ entry, onUpdate, calOpen, onToggleCal, categoryNames }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
 
@@ -129,7 +128,7 @@ function EntryForm({ entry, onUpdate, calOpen, onToggleCal }) {
           <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#EF4444', marginBottom: 8 }} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-          {CATEGORIES.map(cat => {
+          {categoryNames.map(cat => {
             const active = entry.category === cat;
             return (
               <button key={cat} onClick={() => onUpdate('category', cat)} style={{
@@ -219,13 +218,20 @@ function SavedScreen({ savedEntries, allExpenses, streak, onNext, onDoubleAd }) 
   const budgetCats  = (() => { try { return JSON.parse(localStorage.getItem('delta_budget_categories') || '[]'); } catch { return []; } })();
 
   const sessionTotal = savedEntries.reduce((sum, e) => sum + e.amount, 0);
-  const allTotal     = allExpenses.reduce((sum, e) => sum + e.amount, 0) + sessionTotal;
-  const remaining    = budgetTotal - allTotal;
+  // 예산은 월 단위(budgetTotal)인데 allExpenses는 전체 기간 내역이라 이번 달로 범위를 좁혀야 함.
+  // allExpenses는 App의 상태 업데이트 타이밍에 따라 이번 세션에 방금 저장한 항목을 이미
+  // 포함할 수도 있어, savedEntries와 겹치는 id는 제외하고 합산해 이중 계산을 막음
+  const currentYM  = currentYearMonth();
+  const savedIds   = new Set(savedEntries.map(e => e.expense_id));
+  const monthTotal = allExpenses
+    .filter(e => e.expense_date?.startsWith(currentYM) && !savedIds.has(e.expense_id))
+    .reduce((sum, e) => sum + e.amount, 0) + sessionTotal;
+  const remaining  = budgetTotal - monthTotal;
 
   const catSpending = {};
   savedEntries.forEach(e => { catSpending[e.name] = (catSpending[e.name] || 0) + e.amount; });
 
-  const getCatBudget = name => budgetCats.find(c => c.name === CAT_BUDGET_KEY[name])?.amount || 0;
+  const getCatBudget = name => budgetCats.find(c => c.name === name)?.amount || 0;
   const usedCats = Object.keys(catSpending);
 
   return (
@@ -341,6 +347,10 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
   const [toastVisible, setToastVisible] = useState(false);
   const [toastFading, setToastFading]   = useState(false);
   const [saving, setSaving]         = useState(false);
+  // 명세: GET /finances/expense-categories — 커스텀 카테고리 포함 실제 목록 (캐시로 즉시 렌더 후 최신화)
+  const [categories, setCategories] = useState(loadCategoriesCache);
+  useEffect(() => { getExpenseCategories().then(setCategories).catch(() => {}); }, []);
+  const categoryNames = categories.map(c => c.name);
 
   const streak = (() => { try { return parseInt(localStorage.getItem('delta_streak') || '0'); } catch { return 0; } })();
   const newStreak = streak + 1;
@@ -363,14 +373,19 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
     setSaving(true);
     try {
       // API 일괄 저장 (명세: POST /api/v1/finances/expenses) — 실패해도 로컬 저장으로 진행
+      let synced = false;
       try {
         const result = await createExpenses(valid.map(e => ({
           amount: parseInt(e.amount),
           placeName: e.place?.trim() || e.memo || e.category,
-          categoryId: CATEGORY_ID_MAP[e.category] ?? 3,
+          categoryId: categories.find(c => c.name === e.category)?.categoryId
+            ?? CATEGORY_ID_MAP[e.category]
+            ?? categories[0]?.categoryId
+            ?? 1,
           expenseDate: toDateTimeString(e.date),
           memo: e.memo || null,
         })));
+        synced = true;
         // 오늘의 첫 기록이면 '지출 기록' 미션 리워드(1코인) 수령
         if (result?.isFirstRecordOfDay) {
           claimMissionReward('EXPENSE_RECORD')
@@ -381,7 +396,8 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
         console.warn('[handleSave] API 실패 — 로컬 저장으로 진행:', err.message);
       }
 
-      // 옵티미스틱 업데이트용 로컬 형식 생성 (서버 ID는 이후 loadExpenses 동기화로 반영)
+      // 옵티미스틱 업데이트용 로컬 형식 생성 — synced=true면 다음 loadExpenses() 동기화 때
+      // 진짜 서버 데이터로 교체되므로(App.jsx) 여기선 화면에 즉시 보여주는 용도로만 사용
       const parsed = valid.map((e) => ({
         expense_id: Date.now() + Math.random(),
         place: e.place?.trim() || e.memo || e.category,
@@ -390,6 +406,7 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
         expense_date: toDateString(e.date), // 'YYYY-MM-DD' (필터링용)
         memo: e.memo,
         saved_at: savedAt.toISOString(),    // 저장 시각 (표시·정렬용)
+        localOnly: !synced,                 // 서버 저장 실패 시에만 true — loadExpenses 병합 시 유지 기준
       }));
 
       onSave(parsed);
@@ -469,6 +486,7 @@ export default function DirectInputScreen({ onBack, onSave, onNext, onDoubleAd, 
               onUpdate={(field, val) => updateEntry(entry.id, field, val)}
               calOpen={openCalId === entry.id}
               onToggleCal={() => setOpenCalId(prev => prev === entry.id ? null : entry.id)}
+              categoryNames={categoryNames}
             />
           </div>
         ))}

@@ -261,6 +261,7 @@ export default function ScanResultScreen({ onBack, onHome }) {
       expense_date: todayString(),
       saved_at: now.toISOString(),
       amount: r.amount,
+      localOnly: true, // 서버에 저장하는 API 호출이 없는 로컬 전용 항목
     }));
     onHome(scannedExpenses);
   }
