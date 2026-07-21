@@ -5,7 +5,7 @@ import { createGroup, getMyGroups, leaveGroup } from '../api/group';
 import { ENUM_TO_BODY_COLOR, ENUM_TO_EYE_SHAPE } from '../api/user';
 
 const GROUP_LABELS = ['그룹 1', '그룹 2', '그룹 3', '그룹 4'];
-const MAX_MEMBERS = 3; // 나를 제외한 화면 표시용 카드 수 (서버에 그룹 인원 상한 명세는 없음 — 순수 UI 연출)
+const MAX_MEMBERS = 4; // 나를 포함한 화면 표시용 카드 수 (서버에 그룹 인원 상한 명세는 없음 — 순수 UI 연출)
 
 function loadMyUserId() {
   try { return JSON.parse(localStorage.getItem('delta_user_id') || 'null'); } catch { return null; }
@@ -20,7 +20,12 @@ export default function GroupComposeScreen({ onBack }) {
   const myUserId = loadMyUserId();
 
   useEffect(() => {
-    getMyGroups().then(setGroups).catch(() => {}); // 서버 미가동 시 빈 목록 유지
+    const refresh = () => getMyGroups().then(setGroups).catch(() => {}); // 서버 미가동 시 빈 목록 유지
+    refresh();
+    // 초대 링크로 친구가 참여한 직후처럼, 이 화면을 이미 띄워둔 채로 그룹 구성이 바뀌었을 수 있어
+    // 탭/창이 다시 포커스될 때마다 최신 멤버 목록으로 갱신
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
   }, []);
 
   function showToast(msg) {
@@ -59,7 +64,12 @@ export default function GroupComposeScreen({ onBack }) {
 
   const current = groups[selectedGroup] ?? null;
   const inviteCode = current?.inviteCode;
-  const members = (current?.members ?? []).filter(m => m.userId !== myUserId);
+  // 나를 포함한 전체 구성원 — 내가 맨 앞에 오도록 정렬
+  const members = [...(current?.members ?? [])].sort((a, b) => {
+    if (a.userId === myUserId) return -1;
+    if (b.userId === myUserId) return 1;
+    return 0;
+  });
 
   // 아이폰 기본 공유 시트 (카카오톡/인스타그램/메시지 등) — 선택된 그룹의 실제 초대 코드 사용
   async function handleNativeShare() {
@@ -253,53 +263,56 @@ export default function GroupComposeScreen({ onBack }) {
               rowGap: '21px',
             }}
           >
-            {/* 합류한 멤버들 — 실제 캐릭터 색상/눈모양 + 닉네임 배지 */}
-            {members.map(({ userId, nickname, bodyColor, eyeShape }) => (
-              <div
-                key={userId}
-                style={{
-                  width: '166px',
-                  height: '156px',
-                  borderRadius: '40px',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                }}
-              >
-                <CharacterAvatar
-                  size={140}
-                  style={{ marginTop: -8 }}
-                  color={ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF'}
-                  eyes={ENUM_TO_EYE_SHAPE[eyeShape] || 'round'}
-                />
+            {/* 구성원들 — 나 포함, 실제 캐릭터 색상/눈모양 + 닉네임 배지 (나는 초록 배지로 구분) */}
+            {members.map(({ userId, nickname, bodyColor, eyeShape }) => {
+              const isMe = userId === myUserId;
+              return (
                 <div
+                  key={userId}
                   style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    minWidth: '59px',
-                    height: '21px',
-                    padding: '0 10.5px',
-                    borderRadius: '100px',
-                    backgroundColor: '#2EE2B0',
+                    width: '166px',
+                    height: '156px',
+                    borderRadius: '40px',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                    position: 'relative',
                     display: 'flex',
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     justifyContent: 'center',
-                    boxSizing: 'border-box',
-                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
                   }}
                 >
-                  <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>
-                    {nickname}
-                  </span>
+                  <CharacterAvatar
+                    size={140}
+                    style={{ marginTop: -8 }}
+                    color={ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF'}
+                    eyes={ENUM_TO_EYE_SHAPE[eyeShape] || 'round'}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '10px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      minWidth: '59px',
+                      height: '21px',
+                      padding: '0 10.5px',
+                      borderRadius: '100px',
+                      backgroundColor: isMe ? '#1CD1A1' : '#2EE2B0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxSizing: 'border-box',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>
+                      {isMe ? `나 (${nickname})` : nickname}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* 멤버 대기중 — 남은 자리가 있을 때 */}
             {members.length < MAX_MEMBERS && (
