@@ -11,6 +11,19 @@ function loadMyUserId() {
   try { return JSON.parse(localStorage.getItem('delta_user_id') || 'null'); } catch { return null; }
 }
 
+// 명세: GET /api/v1/users/me — App.jsx의 loadMe()가 character 정보를 여기 캐시해둠.
+// 그룹 목록 API가 내 캐릭터 정보를 못 채워줄 때(온보딩 저장이 아직 서버에 반영 안 됐거나 하는 경우)를
+// 대비해 '나' 카드는 이 값을 우선 사용
+function loadMyNickname() {
+  try { return localStorage.getItem('delta_nickname') || ''; } catch { return ''; }
+}
+function loadMyColor() {
+  try { return localStorage.getItem('delta_character_color') || ''; } catch { return ''; }
+}
+function loadMyEyes() {
+  try { return localStorage.getItem('delta_character_eyes') || ''; } catch { return ''; }
+}
+
 export default function GroupComposeScreen({ onBack }) {
   // 명세: GET /api/v1/groups — 내가 속한 그룹(최대 4개) + 구성원 현황
   const [groups, setGroups] = useState([]);
@@ -18,6 +31,7 @@ export default function GroupComposeScreen({ onBack }) {
   const [showShare, setShowShare] = useState(false);
   const [toast, setToast] = useState(null);
   const myUserId = loadMyUserId();
+  const myNickname = loadMyNickname();
 
   useEffect(() => {
     const refresh = () => getMyGroups().then(setGroups).catch(() => {}); // 서버 미가동 시 빈 목록 유지
@@ -285,8 +299,8 @@ export default function GroupComposeScreen({ onBack }) {
                   <CharacterAvatar
                     size={140}
                     style={{ marginTop: -8 }}
-                    color={ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF'}
-                    eyes={ENUM_TO_EYE_SHAPE[eyeShape] || 'round'}
+                    color={isMe ? (loadMyColor() || ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF') : (ENUM_TO_BODY_COLOR[bodyColor] || '#FFFFFF')}
+                    eyes={isMe ? (loadMyEyes() || ENUM_TO_EYE_SHAPE[eyeShape] || 'round') : (ENUM_TO_EYE_SHAPE[eyeShape] || 'round')}
                   />
                   <div
                     style={{
@@ -307,7 +321,7 @@ export default function GroupComposeScreen({ onBack }) {
                     }}
                   >
                     <span style={{ fontFamily: 'Pretendard, sans-serif', fontSize: '12px', fontWeight: 600, color: '#FFFFFF' }}>
-                      {isMe ? `나 (${nickname})` : nickname}
+                      {isMe ? `나 (${myNickname || nickname || '닉네임 없음'})` : (nickname || '친구')}
                     </span>
                   </div>
                 </div>
