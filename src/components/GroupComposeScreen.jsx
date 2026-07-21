@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Copy } from 'lucide-react';
 import CharacterAvatar from './CharacterAvatar';
 
@@ -47,29 +47,11 @@ export default function GroupComposeScreen({ onBack }) {
     saveGroups(next);
   }
 
-  // 초대 링크(?invite=코드)로 진입한 경우 멤버 합류 처리
-  // TODO: 백엔드 연동 시 실제 참여 플로우로 대체 — 참여자의 그룹 4개가 모두 차 있으면 참여를 거부해야 함
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const invite = params.get('invite');
-    if (!invite || invite !== inviteCode) return;
-    const nickname = params.get('nickname') || '친구';
-    setGroups(prev => {
-      // 친구는 내가 만든 첫 그룹에 합류 — 없으면 빈 슬롯에 그룹 생성
-      let idx = prev.findIndex(g => g !== null);
-      const next = [...prev];
-      if (idx === -1) {
-        idx = next.findIndex(g => g === null);
-        if (idx === -1) return prev; // 4개 모두 가득 참 — 참여 불가
-        next[idx] = { members: [] };
-      }
-      const grp = next[idx];
-      if (grp.members.some(m => m.nickname === nickname) || grp.members.length >= MAX_MEMBERS) return prev;
-      next[idx] = { ...grp, members: [...grp.members, { nickname }] };
-      saveGroups(next);
-      return next;
-    });
-  }, [inviteCode]);
+  // 초대 링크(?invite=코드) 실제 참여 처리는 App.jsx의 processPendingInvite()가 담당
+  // (POST /api/v1/groups/join) — 로그인 후 home 진입 시 자동 전송되고, 성공하면 URL의
+  // ?invite= 는 App 마운트 시점에 이미 정리되므로 이 화면에서는 쿼리를 다시 읽지 않음.
+  // TODO: 그룹 목록/멤버 API가 없어 아래 groups 상태는 여전히 localStorage 기반 목업 —
+  // 그룹 조회 API가 나오면 joinGroupByInviteCode()가 반환한 groupId로 목록을 새로고침해야 함
 
   function showToast(msg) {
     setToast(msg);

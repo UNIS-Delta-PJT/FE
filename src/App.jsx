@@ -30,6 +30,7 @@ import CoinShopScreen from './components/CoinShopScreen';
 import { tempLogin, completeKakaoLogin, logout as apiLogout } from './api/auth';
 import { updateSavings, getFinanceSummary } from './api/finance';
 import { getMe, ENUM_TO_BODY_COLOR, ENUM_TO_EYE_SHAPE } from './api/user';
+import { joinGroupByInviteCode } from './api/group';
 import {
   getDailyExpenses,
   transformExpense,
@@ -111,6 +112,42 @@ export default function App() {
     localStorage.setItem('delta_budget_total', JSON.stringify(budgetTotal));
   }, [budgetTotal]);
 
+  // ─── 초대 코드 보관 및 그룹 참여 API 전송 ───────────────────────
+  useEffect(() => {
+    // 1. 링크 접속 시 ?invite=HM2JXX 코드가 있으면 localStorage에 보관
+    const inviteCode = new URLSearchParams(window.location.search).get('invite');
+    if (inviteCode) {
+      localStorage.setItem('delta_pending_invite', inviteCode);
+      window.history.replaceState({}, '', window.location.pathname); // URL 깔끔하게 정리
+    }
+  }, []);
+
+  // 2. 보관된 초대 코드를 백엔드로 보내는 함수 (POST /api/v1/groups/join, 로그인 필요)
+  const processPendingInvite = useCallback(async () => {
+    const pendingInvite = localStorage.getItem('delta_pending_invite');
+    if (!pendingInvite) return; // 보관된 코드가 없으면 실행 안 함
+    // 로그인 전이면 대기 — 로그인 완료 후 home 진입 시 다시 시도됨
+    if (!localStorage.getItem('delta_access_token') && !localStorage.getItem('delta_uuid')) return;
+
+    try {
+      await joinGroupByInviteCode(pendingInvite);
+      alert('그룹 참여에 성공했습니다!');
+      localStorage.removeItem('delta_pending_invite');
+    } catch (err) {
+      const code = err.response?.data?.code;
+      if (code === 'ALREADY_JOINED') {
+        // 이미 가입된 그룹 — 정상 흐름으로 간주하고 재시도하지 않음
+        localStorage.removeItem('delta_pending_invite');
+      } else if (code === 'GROUP_NOT_FOUND' || code === 'GROUP_LIMIT_EXCEEDED') {
+        alert(err.response?.data?.message || '그룹 참여에 실패했습니다.');
+        localStorage.removeItem('delta_pending_invite');
+      } else {
+        // 네트워크 오류 등은 코드를 보관해 다음 home 진입 시 재시도
+        console.warn('[invite] 그룹 참여 실패 — 다음 진입 시 재시도:', err.message);
+      }
+    }
+  }, []);
+
   // ─── API: 소비 내역 로드 (saved_at 보존 + 로컬 전용 항목 유지) ──────
   // 명세에는 일별 조회만 있어 오늘 내역만 서버와 동기화, 과거 내역은 로컬 유지
   const loadExpenses = useCallback(async () => {
@@ -180,8 +217,9 @@ export default function App() {
       loadExpenses();
       loadMe();
       loadSummary();
+      processPendingInvite(); // 로그인 완료 후 보관된 초대 코드가 있으면 그룹 참여 시도
     }
-  }, [screen, loadExpenses, loadMe, loadSummary]);
+  }, [screen, loadExpenses, loadMe, loadSummary, processPendingInvite]);
 
   // ─── API: 임시 로그인 ───────────────────────────────────────────
   // TODO: 백엔드 연동 시 로컬 fallback 제거 (현재 서버 미가동으로 임시 처리)
